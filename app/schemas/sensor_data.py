@@ -10,6 +10,9 @@ class SensorDataBase(BaseModel):
     heart_rate: Optional[float] = None
     blood_oxygen: Optional[float] = None
     temperature: Optional[float] = None
+    noise: Optional[float] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class SensorDataCreate(SensorDataBase):
     """Schema for creating new SensorData."""
@@ -20,6 +23,9 @@ class SensorDataUpdate(BaseModel):
     heart_rate: Optional[float] = None
     blood_oxygen: Optional[float] = None
     temperature: Optional[float] = None
+    noise: Optional[float] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class SensorDataResponse(SensorDataBase):
     """Response schema for SensorData."""

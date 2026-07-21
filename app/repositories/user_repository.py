@@ -26,8 +26,7 @@ class UserRepository:
             db_user = User(**user_in.model_dump())
             self.db.add(db_user)
             await self.db.commit()
-            await self.db.refresh(db_user)
-            return db_user
+            return await self.get_user_by_id(db_user.id)
         except SQLAlchemyError as e:
             await self.db.rollback()
             logger.error(f"Database error while creating user: {e}")

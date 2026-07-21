@@ -16,10 +16,12 @@ class SensorData(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    
     heart_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     blood_oxygen: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     temperature: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    noise: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
