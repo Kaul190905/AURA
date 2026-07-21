@@ -29,10 +29,24 @@ def get_sensor_data_repository(db: AsyncSession = Depends(get_db)) -> SensorData
     return SensorDataRepository(db)
 
 def get_sensor_data_service(
-    sensor_repo: SensorDataRepository = Depends(get_sensor_data_repository)
+    sensor_repo: SensorDataRepository = Depends(get_sensor_data_repository),
+    prefs_repo: UserPreferenceRepository = Depends(get_user_preference_repository),
+    alert_service: AlertService = Depends(get_alert_service)
 ) -> SensorDataService:
     """Dependency to provide a SensorDataService instance."""
-    return SensorDataService(sensor_repo)
+    from app.ai.risk_engine import RiskEngine
+    from app.ai.recommendation_engine import RecommendationEngine
+    
+    risk_engine = RiskEngine()
+    recommendation_engine = RecommendationEngine()
+    
+    return SensorDataService(
+        sensor_data_repo=sensor_repo,
+        prefs_repo=prefs_repo,
+        alert_service=alert_service,
+        risk_engine=risk_engine,
+        recommendation_engine=recommendation_engine
+    )
 
 def get_alert_repository(db: AsyncSession = Depends(get_db)) -> AlertRepository:
     """Dependency to provide a AlertRepository instance."""

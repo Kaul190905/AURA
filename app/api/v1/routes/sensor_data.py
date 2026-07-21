@@ -3,14 +3,14 @@ from typing import List, Optional
 from datetime import datetime
 from uuid import UUID
 
-from app.schemas.sensor_data import SensorDataCreate, SensorDataResponse
+from app.schemas.sensor_data import SensorDataCreate, SensorDataResponse, SensorDataAnalysisResponse
 from app.services.sensor_data_service import SensorDataService
 from app.api.dependencies.services import get_sensor_data_service
 from app.core.security import get_current_user
 
 router = APIRouter()
 
-@router.post("/", response_model=SensorDataResponse, status_code=status.HTTP_201_CREATED, summary="Submit Sensor Data")
+@router.post("/", response_model=SensorDataAnalysisResponse, status_code=status.HTTP_201_CREATED, summary="Submit Sensor Data")
 async def submit_sensor_data(
     data_in: SensorDataCreate,
     # TODO: RESTORE AUTHENTICATION BEFORE PRODUCTION DEPLOYMENT

@@ -35,3 +35,12 @@ class SensorDataResponse(SensorDataBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class SensorDataAnalysisResponse(BaseModel):
+    """Aggregated response containing telemetry, risk analysis, and recommendations."""
+    sensor_data: SensorDataResponse
+    risk_score: float
+    risk_level: str
+    reasons: list[str]
+    recommendations: list[str]
+
