@@ -5,7 +5,6 @@ from datetime import datetime
 
 class SensorDataBase(BaseModel):
     """Base validation schema for SensorData."""
-    user_id: UUID
     timestamp: Optional[datetime] = None
     heart_rate: Optional[float] = None
     blood_oxygen: Optional[float] = None
@@ -30,6 +29,7 @@ class SensorDataUpdate(BaseModel):
 class SensorDataResponse(SensorDataBase):
     """Response schema for SensorData."""
     id: UUID
+    user_id: UUID
     timestamp: datetime
     created_at: datetime
     updated_at: datetime

@@ -10,11 +10,11 @@ class SensorDataService:
     def __init__(self, sensor_data_repo: SensorDataRepository):
         self.sensor_data_repo = sensor_data_repo
 
-    async def create_sensor_data(self, data_in: SensorDataCreate) -> SensorDataResponse:
+    async def create_sensor_data(self, user_id: uuid.UUID, data_in: SensorDataCreate) -> SensorDataResponse:
         """
         Validate and create new sensor data.
         """
-        created_data = await self.sensor_data_repo.create(data_in)
+        created_data = await self.sensor_data_repo.create(user_id, data_in)
         return created_data
 
     async def get_history(

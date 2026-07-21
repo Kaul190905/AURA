@@ -12,10 +12,11 @@ class SensorDataRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
         
-    async def create(self, data_in: SensorDataCreate) -> SensorData:
+    async def create(self, user_id: uuid.UUID, data_in: SensorDataCreate) -> SensorData:
         """Create a new sensor data record."""
         # Convert schema to model dictionary
         data_dict = data_in.model_dump()
+        data_dict["user_id"] = user_id
         
         new_data = SensorData(**data_dict)
         self.db.add(new_data)

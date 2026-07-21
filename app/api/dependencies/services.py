@@ -6,6 +6,8 @@ from app.repositories.user_preference_repository import UserPreferenceRepository
 from app.services.user_service import UserService
 from app.repositories.sensor_data_repository import SensorDataRepository
 from app.services.sensor_data_service import SensorDataService
+from app.repositories.alert_repository import AlertRepository
+from app.services.alert_service import AlertService
 
 def get_user_repository(db: AsyncSession = Depends(get_db)) -> UserRepository:
     """Dependency to provide a UserRepository instance."""
@@ -31,3 +33,13 @@ def get_sensor_data_service(
 ) -> SensorDataService:
     """Dependency to provide a SensorDataService instance."""
     return SensorDataService(sensor_repo)
+
+def get_alert_repository(db: AsyncSession = Depends(get_db)) -> AlertRepository:
+    """Dependency to provide a AlertRepository instance."""
+    return AlertRepository(db)
+
+def get_alert_service(
+    alert_repo: AlertRepository = Depends(get_alert_repository)
+) -> AlertService:
+    """Dependency to provide a AlertService instance."""
+    return AlertService(alert_repo)

@@ -6,18 +6,25 @@ from uuid import UUID
 from app.schemas.sensor_data import SensorDataCreate, SensorDataResponse
 from app.services.sensor_data_service import SensorDataService
 from app.api.dependencies.services import get_sensor_data_service
+from app.core.security import get_current_user
 
 router = APIRouter()
 
 @router.post("/", response_model=SensorDataResponse, status_code=status.HTTP_201_CREATED, summary="Submit Sensor Data")
 async def submit_sensor_data(
     data_in: SensorDataCreate,
+    # TODO: RESTORE AUTHENTICATION BEFORE PRODUCTION DEPLOYMENT
+    # current_user = Depends(get_current_user),
+    dev_user_id: Optional[UUID] = Query(None, description="DEV ONLY: Use this user ID when auth is disabled"),
     sensor_data_service: SensorDataService = Depends(get_sensor_data_service)
 ):
     """
     Submit new sensor data (e.g. noise, temperature, heart_rate, latitude, longitude).
     """
-    return await sensor_data_service.create_sensor_data(data_in)
+    import uuid
+    # Temporarily using the provided dev_user_id or a generated dummy UUID since authentication is disabled for development
+    user_id_to_use = dev_user_id if dev_user_id else uuid.uuid4()
+    return await sensor_data_service.create_sensor_data(user_id_to_use, data_in)
 
 @router.get("/history", response_model=List[SensorDataResponse], summary="Get Sensor Data History")
 async def get_sensor_data_history(
