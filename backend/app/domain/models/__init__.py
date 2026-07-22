@@ -4,5 +4,9 @@ from app.domain.models.alert import Alert
 from app.domain.models.recommendation import Recommendation
 from app.domain.models.overload_event import OverloadEvent
 from app.domain.models.user_preference import UserPreference
+from app.domain.models.wellness_checkin import WellnessCheckin
 
-__all__ = ["User", "SensorData", "Alert", "Recommendation", "OverloadEvent", "UserPreference"]
+__all__ = [
+    "User", "SensorData", "Alert", "Recommendation", "OverloadEvent",
+    "UserPreference", "WellnessCheckin",
+]

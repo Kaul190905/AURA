@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 
@@ -25,3 +25,11 @@ class RecommendationResponse(RecommendationBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class PersonalizedRecommendationResponse(BaseModel):
+    """On-demand recommendation response, optionally AI-phrased."""
+    user_id: UUID
+    risk_score: float
+    risk_level: str
+    recommendations: List[str]
+    method: str

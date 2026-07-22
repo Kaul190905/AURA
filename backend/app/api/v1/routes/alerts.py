@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 from uuid import UUID
 
-from app.schemas.alert import AlertCreate, AlertResponse
+from app.schemas.alert import AlertCreate, AlertResponse, AlertFeedback
 from app.services.alert_service import AlertService
 from app.api.dependencies.services import get_alert_service
 
@@ -52,3 +52,17 @@ async def delete_alert(
     Delete a specific alert by ID.
     """
     await alert_service.delete_alert(alert_id)
+
+@router.patch("/{alert_id}/feedback", response_model=AlertResponse, summary="Confirm or Dismiss an Alert")
+async def submit_alert_feedback(
+    alert_id: UUID,
+    feedback: AlertFeedback,
+    alert_service: AlertService = Depends(get_alert_service)
+):
+    """
+    Record whether an alert was accurate (confirmed=true) or a false positive
+    (confirmed=false). This is the ground-truth signal the ML RiskEngine's
+    `--mode live` training run consumes (see
+    app/ai/ml/training/train_risk_model.py).
+    """
+    return await alert_service.confirm_alert(alert_id, feedback.confirmed)
