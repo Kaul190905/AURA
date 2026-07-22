@@ -15,10 +15,14 @@ from app.ai.pattern_engine import IPatternEngine
 from app.ai.risk_engine import IRiskEngine
 from app.ai.wellness_engine import IWellnessEngine
 from app.ai.recommendation_engine import IRecommendationEngine
+from app.ai.prediction_engine import IPredictionEngine
 from app.services.pattern_service import PatternService
 from app.repositories.wellness_checkin_repository import WellnessCheckinRepository
 from app.services.wellness_service import WellnessService
 from app.services.recommendation_service import RecommendationService
+from app.repositories.overload_event_repository import OverloadEventRepository
+from app.services.overload_event_service import OverloadEventService
+from app.services.prediction_service import PredictionService
 
 logger = logging.getLogger(__name__)
 
@@ -190,3 +194,44 @@ def get_recommendation_service(
 ) -> RecommendationService:
     """Dependency to provide a RecommendationService instance."""
     return RecommendationService(sensor_repo, prefs_repo, risk_engine, recommendation_engine)
+
+def get_overload_event_repository(db: AsyncSession = Depends(get_db)) -> OverloadEventRepository:
+    """Dependency to provide an OverloadEventRepository instance."""
+    return OverloadEventRepository(db)
+
+def get_overload_event_service(
+    overload_event_repo: OverloadEventRepository = Depends(get_overload_event_repository)
+) -> OverloadEventService:
+    """Dependency to provide an OverloadEventService instance."""
+    return OverloadEventService(overload_event_repo)
+
+def get_prediction_engine(
+    sensor_repo: SensorDataRepository = Depends(get_sensor_data_repository),
+) -> IPredictionEngine:
+    """
+    Dependency to provide the active Prediction Engine.
+
+    Uses the ML-backed engine when USE_ML_PREDICTION_ENGINE is enabled and a
+    trained model artifact exists; otherwise (or on load failure) falls back
+    to the deterministic slope-based heuristic so forecasting never
+    hard-fails a request.
+    """
+    from app.ai.prediction_engine import RulePredictionEngine
+
+    if settings.USE_ML_PREDICTION_ENGINE:
+        try:
+            from app.ai.ml.prediction_engine_ml import MLPredictionEngine
+
+            return MLPredictionEngine(sensor_data_repo=sensor_repo)
+        except FileNotFoundError as e:
+            logger.warning("ML prediction model unavailable (%s) — falling back to rule-based PredictionEngine.", e)
+
+    return RulePredictionEngine(sensor_data_repo=sensor_repo)
+
+def get_prediction_service(
+    sensor_repo: SensorDataRepository = Depends(get_sensor_data_repository),
+    risk_engine: IRiskEngine = Depends(get_risk_engine),
+    prediction_engine: IPredictionEngine = Depends(get_prediction_engine),
+) -> PredictionService:
+    """Dependency to provide a PredictionService instance."""
+    return PredictionService(sensor_repo, risk_engine, prediction_engine)

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # AI engines
     USE_ML_RISK_ENGINE: bool = False
     USE_ML_WELLNESS_ENGINE: bool = False
+    USE_ML_PREDICTION_ENGINE: bool = False
 
     # LLM-backed recommendation phrasing (hybrid: rules.json decides eligibility,
     # the LLM only rephrases/personalizes — see app/ai/llm/recommendation_engine_ai.py)

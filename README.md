@@ -91,10 +91,13 @@ AURA/
 │   │   │   ├── pattern_engine_ml.py         # MLPatternEngine — IsolationForest + KMeans
 │   │   │   ├── risk_engine_ml.py            # MLRiskEngine — GradientBoostingRegressor
 │   │   │   ├── wellness_engine_ml.py        # MLWellnessEngine — GradientBoostingRegressor
+│   │   │   ├── prediction_features.py       # feature extraction for the prediction model
+│   │   │   ├── prediction_engine_ml.py      # MLPredictionEngine — GradientBoostingRegressor
 │   │   │   ├── artifacts/                   # trained model files (gitignored, regenerated)
 │   │   │   └── training/
 │   │   │       ├── train_risk_model.py      # offline trainer (distill / live modes)
-│   │   │       └── train_wellness_model.py  # offline trainer (distill / live modes)
+│   │   │       ├── train_wellness_model.py  # offline trainer (distill / live modes)
+│   │   │       └── train_prediction_model.py# offline trainer (distill / live modes)
 │   │   │
 │   │   └── llm/                     # LLM-backed engine implementations (Anthropic API)
 │   │       └── recommendation_engine_ai.py  # AIRecommendationEngine — hybrid rule+LLM phrasing
@@ -108,6 +111,8 @@ AURA/
 │   │   │   ├── risk.py             # historical risk trend (ML-only)
 │   │   │   ├── wellness.py         # check-ins + aggregate wellness score
 │   │   │   ├── recommendations.py  # on-demand, optionally AI-phrased recommendations
+│   │   │   ├── prediction.py       # overload forecast + metric trend
+│   │   │   ├── overload_events.py  # log/list confirmed overload events
 │   │   │   └── __init__.py         # aggregates into `api_router`
 │   │   ├── dependencies/
 │   │   │   ├── db.py               # `get_db` — async session provider
@@ -131,7 +136,7 @@ AURA/
 │   │   ├── sensor_data.py
 │   │   ├── alert.py                # includes user_confirmed/confirmed_at feedback fields
 │   │   ├── recommendation.py
-│   │   ├── overload_event.py
+│   │   ├── overload_event.py       # now written to via POST /overload-events/
 │   │   └── wellness_checkin.py     # self-reported wellness — the WellnessEngine's ground truth
 │   │
 │   ├── repositories/               # DB access layer, one per model
@@ -157,7 +162,8 @@ AURA/
 │   ├── test_pattern_engine.py / test_patterns_api.py
 │   ├── test_risk_engine_ml.py / test_risk_engine_di.py / test_risk_api.py
 │   ├── test_wellness_engine.py / test_wellness_engine_ml.py / test_wellness_api.py
-│   └── test_recommendation_engine_ai.py / test_recommendation_engine_di.py / test_recommendations_api.py / test_recommendation_service.py
+│   ├── test_recommendation_engine_ai.py / test_recommendation_engine_di.py / test_recommendations_api.py / test_recommendation_service.py
+│   └── test_prediction_engine.py / test_prediction_engine_ml.py / test_prediction_engine_di.py / test_prediction_service.py / test_prediction_api.py / test_overload_events_api.py
 │
 ├── get_valid_user.py                # one-off script: fetch a real user ID for manual testing
 ├── alembic.ini
@@ -361,7 +367,7 @@ Reading historical data (`GET /sensor-data/history`) is a simple filtered/pagina
 | `RecommendationEngine` | ✅ Rule-based | Actionable suggestions from `rules.json` |
 | `PatternEngine` | ✅ **ML only** (`MLPatternEngine`) | Anomaly detection + behavioral pattern clustering |
 | `WellnessEngine` | ✅ Rule-based, **+ ML alternative** | Aggregate holistic wellness score + category breakdown |
-| `PredictionEngine` | ⛔ Interface only | Forecasting future overload events / metric trends |
+| `PredictionEngine` | ✅ Rule-based, **+ ML alternative** | Overload-event probability/ETA forecasting + metric trend extrapolation |
 
 ### RiskEngine (`app/ai/risk_engine.py`)
 
@@ -387,11 +393,17 @@ No rule-based implementation exists for this one — only `MLPatternEngine`. See
 
 `RuleWellnessEngine` combines three signals into a weighted composite: **physical** (inverse of current risk score), **mental** (recent self-reported mood, defaulting to a neutral 70 with no check-ins), **stability** (inverse of recent anomaly rate from the pattern engine). `MLWellnessEngine` inherits its signal-gathering but replaces the fixed-weight overall score with a trained regressor — see [Machine Learning Layer](#machine-learning-layer).
 
-### PredictionEngine — not yet implemented
+### PredictionEngine (`app/ai/prediction_engine.py`)
 
-Intended to forecast an upcoming `OverloadEvent` before it happens, writing to the (migrated but currently unused) `overload_events` table. No concrete class exists; implementing one means writing the class, registering it as a dependency provider in `app/api/dependencies/services.py`, and injecting it into the relevant service.
+`RulePredictionEngine` (deterministic, the first implementation this interface ever had) handles two forecasts:
+- `forecast_overload_event(user_id, current_trajectory)`: given an explicit list of recent risk scores, fits a linear slope and combines it with the most recent value into a 0-1 overload probability, plus an ETA in minutes if trending toward the `HIGH` threshold (67) and ETA is otherwise `null`.
+- `predict_metric_trend(user_id, metric_name, horizon_hours)`: fetches the user's own recent sensor history for the requested metric and linearly extrapolates it forward — this needs its own DB access (it isn't handed data explicitly, unlike the method above), so it takes an optional `sensor_data_repo` at construction, same pattern as `extract_behavioral_patterns`/`get_wellness_breakdown`.
 
-**When this gets built, it should be an ML model, not an LLM.** Forecasting overload likelihood/timing from rolling sensor windows is a numeric time-series problem — a `GradientBoostingRegressor`/classifier over lagged features (the same `distill → live` pattern already used for `RiskEngine`/`WellnessEngine`) will be faster, cheaper, and better-calibrated than a generative model for this. This is the one AI engine in the codebase where "use AI" should mean scikit-learn, not an API call — see the contrast with `RecommendationEngine` below, where an LLM earns its place for a different reason (language generation, not numeric prediction).
+`MLPredictionEngine` inherits `predict_metric_trend` unchanged (simple linear extrapolation doesn't benefit from a trained model) but replaces `forecast_overload_event`'s heuristic with a `GradientBoostingRegressor` over trajectory summary features (last value, mean, std, slope, point count) — see [Machine Learning Layer](#machine-learning-layer) for training details.
+
+This is an ML model, deliberately not an LLM — forecasting from rolling sensor windows is a numeric time-series problem, not a language one.
+
+`OverloadEvent` — migrated since the initial schema but unused until now — finally has a writer: `POST /overload-events/` logs a confirmed event, which is the real ground truth `train_prediction_model.py --mode live` needs.
 
 ---
 
@@ -428,6 +440,14 @@ Inherits `RuleWellnessEngine`'s signal-gathering (so the physical/mental/stabili
 - `--mode distill` (default): bootstraps from `RuleWellnessEngine`'s own formula across synthetic signal combinations.
 - `--mode live`: trains on real `WellnessCheckin.mood_score` values, paired with that day's risk score and anomaly rate computed from the user's preceding sensor history, plus their own prior check-in average as a lag feature (never the current check-in — no label leakage). Falls back to `distill` if fewer than 100 real check-ins exist.
 
+### MLPredictionEngine (`app/ai/ml/prediction_engine_ml.py`)
+
+Inherits `RulePredictionEngine`'s `predict_metric_trend` unchanged but replaces `forecast_overload_event`'s heuristic with a `GradientBoostingRegressor` over trajectory summary features: `[last_value, mean, std, slope, n_points]` (see `app/ai/ml/prediction_features.py`), predicting the same 0-1 overload probability the rule engine computes directly.
+
+**Training** (`train_prediction_model.py`):
+- `--mode distill` (default): generates ~6000 synthetic risk-score trajectories (varying length, slope, noise) and labels them with `RulePredictionEngine`'s heuristic.
+- `--mode live`: trains on real `OverloadEvent` rows. For each logged event, the risk-score trajectory in the window immediately preceding it is a positive example; a trajectory from ≥2 hours earlier in the same user's history is a negative example. Falls back to `distill` if fewer than 100 usable samples exist.
+
 ### AIRecommendationEngine (`app/ai/llm/recommendation_engine_ai.py`) — LLM, not scikit-learn
 
 The odd one out: this is language generation, not numeric prediction, so it uses the Anthropic API instead of a trained model. It's a **hybrid, not a full generative handoff**:
@@ -443,11 +463,12 @@ No training script — there's no model to train, just a prompt and a validation
 
 ### The honest state of "AI" here
 
-`distill` mode (Risk/Wellness) means **the model currently predicts what the rule engine would say**, not independent ground truth — it's there to prove the feature → model → serving pipeline works, not to claim the model knows something the rules didn't already encode. Real signal requires:
+`distill` mode (Risk/Wellness/Prediction) means **the model currently predicts what its own rule engine would say**, not independent ground truth — it's there to prove the feature → model → serving pipeline works, not to claim the model knows something the rules didn't already encode. Real signal requires:
 - **Risk**: volume through `PATCH /alerts/{id}/feedback` (confirm/dismiss real alerts).
 - **Wellness**: volume through `POST /wellness/{user_id}/checkins` (real self-reports).
+- **Prediction**: volume through `POST /overload-events/` (log real, confirmed overload events).
 
-Once either has enough data, rerun the corresponding trainer with `--mode live`. The recommendation engine has no equivalent "distill vs. live" concern — it isn't learning from data, it's constrained generation with a hard-coded safety boundary.
+Once any of these has enough data, rerun the corresponding trainer with `--mode live`. The recommendation engine has no equivalent "distill vs. live" concern — it isn't learning from data, it's constrained generation with a hard-coded safety boundary.
 
 ---
 
@@ -508,6 +529,20 @@ Base path: `{API_V1_STR}` = `/api/v1` (configurable via env). Full interactive r
 |---|---|---|---|
 | GET | `/{user_id}` | ❌ none | On-demand recommendations from the user's latest telemetry. AI-phrased when `USE_AI_RECOMMENDATION_ENGINE=true` and `ANTHROPIC_API_KEY` is set, otherwise plain rule text. **Not** the same engine instance used during sensor ingestion — see [Machine Learning Layer](#machine-learning-layer). |
 
+### Prediction — `/api/v1/prediction` *(new)*
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/overload-forecast?user_id=&window=` | ❌ none | Overload probability (0-1) + ETA from the user's last `window` (default 10) sensor readings |
+| GET | `/trend?user_id=&metric_name=&horizon_hours=` | ❌ none | Linear extrapolation of a specific metric (e.g. `heart_rate`, `noise`) forward by `horizon_hours` |
+
+### Overload Events — `/api/v1/overload-events` *(new)*
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/` | ❌ none | Log a confirmed overload event — the label `train_prediction_model.py --mode live` consumes. This table existed since the initial schema but had no writer until now. |
+| GET | `/` | ❌ none | Paginated/filtered/sorted overload events |
+
 ### Misc
 
 | Method | Path | Description |
@@ -559,6 +594,7 @@ cp .env.example .env
 | `BACKEND_CORS_ORIGINS` | Optional list of allowed origins; defaults to `["*"]` |
 | `USE_ML_RISK_ENGINE` | `true` to serve risk scoring from the trained model instead of the rule formula; defaults to `false`. Falls back to rules automatically if no artifact is trained. |
 | `USE_ML_WELLNESS_ENGINE` | Same, for wellness scoring; defaults to `false`. |
+| `USE_ML_PREDICTION_ENGINE` | Same, for overload-event forecasting; defaults to `false`. `predict_metric_trend` is unaffected either way (always the linear-extrapolation heuristic). |
 | `USE_AI_RECOMMENDATION_ENGINE` | `true` to enable LLM-phrased recommendations on the on-demand `/recommendations/{user_id}` endpoint; defaults to `false`. Requires `ANTHROPIC_API_KEY`. Falls back to plain rule text if unset or the API call fails. Never affects sensor-ingestion recommendations (always rule-based, by design). |
 | `ANTHROPIC_API_KEY` | Anthropic API key, required only if `USE_AI_RECOMMENDATION_ENGINE=true`. |
 | `ANTHROPIC_MODEL` | Model used for recommendation phrasing; defaults to `claude-haiku-4-5-20251001` (fast/cheap — this is short text rewriting, not reasoning). |
@@ -605,7 +641,7 @@ alembic downgrade -1
 
 ## Training the ML Models
 
-Both trainers write a joblib artifact + JSON metadata file to `app/ai/ml/artifacts/` (gitignored — regenerate locally, don't commit binaries).
+All three trainers write a joblib artifact + JSON metadata file to `app/ai/ml/artifacts/` (gitignored — regenerate locally, don't commit binaries).
 
 ```bash
 # Risk model — bootstraps from the rule engine with zero real data
@@ -614,10 +650,14 @@ python -m app.ai.ml.training.train_risk_model --mode distill
 # Wellness model — same idea, bootstraps from RuleWellnessEngine's formula
 python -m app.ai.ml.training.train_wellness_model --mode distill
 
-# Once you have enough real labeled data (>=200 confirmed alerts / >=100 check-ins),
+# Prediction model — bootstraps from RulePredictionEngine's slope heuristic
+python -m app.ai.ml.training.train_prediction_model --mode distill
+
+# Once you have enough real labeled data (>=200 confirmed alerts / >=100 check-ins / >=100 overload events),
 # retrain against real outcomes instead:
 python -m app.ai.ml.training.train_risk_model --mode live
 python -m app.ai.ml.training.train_wellness_model --mode live
+python -m app.ai.ml.training.train_prediction_model --mode live
 ```
 
 Each run logs a test-set MAE against a held-out split and writes `*_model_metadata.json` alongside the artifact (training mode, sample count, MAE, feature keys) — check that file to see what a deployed model was actually trained on before trusting `USE_ML_*_ENGINE=true` in an environment.
@@ -720,12 +760,12 @@ A minimal image would: install from `requirements.txt`, copy `app/` and `alembic
 Documented here so they aren't rediscovered by surprise:
 
 - **Sensor ingestion has no authentication.** `POST /sensor-data/` accepts a raw `dev_user_id` query param instead of verifying identity. The ESP32 simulator relies on this dev bypass.
-- **Alerts, patterns, risk, and wellness routes have no auth dependency at all** — anyone can act on any user's data through them. Likely an oversight rather than intentional, given every user-scoped route requires auth.
+- **Alerts, patterns, risk, wellness, recommendations, prediction, and overload-events routes have no auth dependency at all** — anyone can act on any user's data through them. Likely an oversight rather than intentional, given every user-scoped route requires auth.
 - **`SupabaseAuthMiddleware` exists but isn't mounted** in `app/main.py`. Route-level `Depends(get_current_user)` is the only active enforcement.
-- **`PredictionEngine` is still an unimplemented stub** — interface only, no concrete class, not wired into DI. It's the only AI engine left with nothing behind it; the recommended direction (ML, not LLM — see its section under [AI Engine Flow](#ai-engine-flow)) has been decided but not built.
 - **`AIRecommendationEngine` has no automated tests against the real Anthropic API** — the test suite mocks the client entirely (no network calls, no API key needed to run `pytest`). Before relying on `USE_AI_RECOMMENDATION_ENGINE=true` in a real environment, manually verify a live call once with a real key.
-- **ML models are currently trained via `--mode distill` only** — they reproduce the rule engines' own logic, not independent ground truth. Real signal requires volume through `PATCH /alerts/{id}/feedback` and `POST /wellness/{user_id}/checkins`, then retraining with `--mode live`.
+- **ML models are currently trained via `--mode distill` only** — they reproduce their own rule engine's logic, not independent ground truth. Real signal requires volume through `PATCH /alerts/{id}/feedback`, `POST /wellness/{user_id}/checkins`, and `POST /overload-events/`, then retraining with `--mode live`.
 - **`MLPatternEngine` fits a fresh model on every request** — no persisted artifact, no training script. Fine at current data volumes; revisit if per-request fitting becomes a latency problem.
-- **`Recommendation` and `OverloadEvent` tables are migrated but unused** — no repository/service writes to them yet. `RecommendationEngine` currently returns plain strings rather than persisting rows.
+- **`Recommendation` table is migrated but unused** — no repository/service writes to it yet. `RecommendationEngine` currently returns plain strings rather than persisting rows. (`OverloadEvent` now has a writer — `POST /overload-events/` — as of the PredictionEngine work.)
+- **All five `app/ai/` interfaces now have a concrete implementation** — `PredictionEngine` (built last) was the final one with nothing behind it.
 - **`app/core/logging.py` and `app/core/logging_config.py` are near-duplicate implementations** of `setup_logging()`; only `logging.py` is actually imported by `main.py`.
 - **No `Dockerfile` or CI config** exists in the repo yet — see [Deployment](#deployment).
