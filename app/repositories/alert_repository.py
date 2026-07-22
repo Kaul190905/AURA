@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 from sqlalchemy import select, desc, asc, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -64,3 +64,19 @@ class AlertRepository:
         result = await self.db.execute(query)
         await self.db.commit()
         return result.rowcount > 0
+
+    async def confirm(self, alert_id: uuid.UUID, confirmed: bool) -> Optional[Alert]:
+        """Record user feedback on whether an alert was accurate — the labeled
+        signal the ML RiskEngine's `--mode live` training run consumes."""
+        stmt = select(Alert).where(Alert.id == alert_id)
+        result = await self.db.execute(stmt)
+        alert = result.scalars().first()
+        if not alert:
+            return None
+
+        alert.user_confirmed = confirmed
+        alert.confirmed_at = datetime.now(timezone.utc)
+
+        await self.db.commit()
+        await self.db.refresh(alert)
+        return alert

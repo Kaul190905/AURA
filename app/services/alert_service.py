@@ -46,3 +46,13 @@ class AlertService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Alert with id {alert_id} not found"
             )
+
+    async def confirm_alert(self, alert_id: uuid.UUID, confirmed: bool) -> AlertResponse:
+        """Record whether an alert was accurate or a false positive."""
+        alert = await self.alert_repository.confirm(alert_id, confirmed)
+        if not alert:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Alert with id {alert_id} not found"
+            )
+        return AlertResponse.model_validate(alert)

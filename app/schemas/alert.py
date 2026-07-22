@@ -22,9 +22,15 @@ class AlertUpdate(BaseModel):
     message: Optional[str] = None
     is_resolved: Optional[bool] = None
 
+class AlertFeedback(BaseModel):
+    """Schema for confirming or dismissing an alert as accurate."""
+    confirmed: bool
+
 class AlertResponse(AlertBase):
     """Response schema for Alert."""
     id: UUID
+    user_confirmed: Optional[bool] = None
+    confirmed_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 

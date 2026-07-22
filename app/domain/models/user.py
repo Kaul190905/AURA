@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.domain.models.recommendation import Recommendation
     from app.domain.models.overload_event import OverloadEvent
     from app.domain.models.user_preference import UserPreference
+    from app.domain.models.wellness_checkin import WellnessCheckin
 
 class User(Base):
     __tablename__ = "users"
@@ -29,3 +30,4 @@ class User(Base):
     alerts: Mapped[List["Alert"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     recommendations: Mapped[List["Recommendation"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     overload_events: Mapped[List["OverloadEvent"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    wellness_checkins: Mapped[List["WellnessCheckin"]] = relationship(back_populates="user", cascade="all, delete-orphan")
