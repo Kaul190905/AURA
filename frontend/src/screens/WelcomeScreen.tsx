@@ -1,9 +1,9 @@
 import React, { useRef, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Sparkles, Shield } from 'lucide-react-native';
+import { Shield } from 'lucide-react-native';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 
 interface Props {
@@ -29,7 +29,11 @@ export default function WelcomeScreen({ onNext }: Props) {
       <View style={styles.top}>
         <View style={styles.logoOuter}>
           <Animated.View style={[styles.breatheRing, { transform: [{ scale: breathe }] }]} />
-          <Sparkles size={44} color={colors.primary} strokeWidth={1.8} />
+          <Image
+            source={require('../assets/images/logo.jpeg')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
 
         <View style={styles.textBlock}>
@@ -80,6 +84,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 8, height: 8 },
     shadowOpacity: 0.55,
     shadowRadius: 20,
+  },
+  logoImage: {
+    width: 88,
+    height: 88,
+    borderRadius: radius.full,
   },
   breatheRing: {
     position: 'absolute',
