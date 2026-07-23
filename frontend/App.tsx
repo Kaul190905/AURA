@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -11,6 +11,14 @@ import { colors } from './src/theme';
 import { TriggerKey, HistoryEvent, Strategy, Accommodation } from './src/types';
 import { DEFAULT_STRATEGIES, seedHistory } from './src/data';
 import { computeRisk } from './src/utils';
+
+// ── API Services ───────────────────────────────────────────────────────────────
+import { DEV_USER_ID } from './src/api/config';
+import { submitSensorData, getSensorHistory } from './src/api/sensorService';
+import { submitCheckin } from './src/api/wellnessService';
+import { logOverloadEvent, getOverloadEvents } from './src/api/overloadService';
+import { createAlert, submitAlertFeedback } from './src/api/alertService';
+import { getRecommendations } from './src/api/recommendationService';
 
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
@@ -33,6 +41,7 @@ const Stack = createStackNavigator();
 
 // ── App State Context ─────────────────────────────────────────────────────────
 export type AppState = {
+  userId: string;
   profile: Partial<Record<TriggerKey, number>>;
   setProfile: (p: Partial<Record<TriggerKey, number>>) => void;
   environments: string[];
@@ -64,6 +73,7 @@ export type AppState = {
   risk: ReturnType<typeof computeRisk>;
   primaryTrigger: TriggerKey;
   suggestions: Strategy[];
+  backendOnline: boolean;
   goCrisis: () => void;
   navigateTo: (s: AppScreen) => void;
 };
@@ -111,6 +121,40 @@ function TabNavigator({ goCrisis }: { goCrisis: () => void }) {
   );
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Map a backend recommendations string array to Strategy[] for CrisisMode/suggestions.
+ * We synthesise stable IDs from index so React list keys don't thrash.
+ */
+function mapRecsToStrategies(recs: string[], primaryTrigger: TriggerKey): Strategy[] {
+  return recs.map((title, i) => ({
+    id: `rec_${i}`,
+    title,
+    trigger: primaryTrigger,
+    helped: 0,
+    tried: 0,
+  }));
+}
+
+/**
+ * Derive a TriggerKey from a backend trigger_metric string.
+ * Backend stores metric names like 'noise', 'sound', 'light', 'crowd', etc.
+ */
+function toTriggerKey(metric: string): TriggerKey | 'self' {
+  const map: Record<string, TriggerKey | 'self'> = {
+    noise: 'sound',
+    sound: 'sound',
+    light: 'light',
+    crowd: 'crowd',
+    touch: 'touch',
+    movement: 'movement',
+    smell: 'smell',
+    self: 'self',
+  };
+  return map[metric?.toLowerCase()] ?? 'sound';
+}
+
 // ── Root App ──────────────────────────────────────────────────────────────────
 export default function App() {
   const [appScreen, setAppScreen] = useState<AppScreen>('welcome');
@@ -134,7 +178,22 @@ export default function App() {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertShownForScore, setAlertShownForScore] = useState<number | null>(null);
 
-  const risk = useMemo(() => computeRisk(noise, light, selfReport, profile), [noise, light, selfReport, profile]);
+  // ── Backend integration state ─────────────────────────────────────────────
+  const userId = DEV_USER_ID;
+  const [backendOnline, setBackendOnline] = useState(true);
+  // Backend-sourced risk overrides the local computation when available
+  const [backendRisk, setBackendRisk] = useState<ReturnType<typeof computeRisk> | null>(null);
+  // Backend-sourced suggestions override local ones when available
+  const [backendSuggestions, setBackendSuggestions] = useState<Strategy[] | null>(null);
+
+  // ── Derived / memoised ────────────────────────────────────────────────────
+  const localRisk = useMemo(
+    () => computeRisk(noise, light, selfReport, profile),
+    [noise, light, selfReport, profile],
+  );
+
+  // Use backend risk when available, fall back to local computation
+  const risk = backendRisk ?? localRisk;
 
   const primaryTrigger = useMemo<TriggerKey>(() => {
     const entries = Object.entries(profile) as [TriggerKey, number][];
@@ -142,37 +201,219 @@ export default function App() {
     return entries.sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0][0];
   }, [profile]);
 
-  const suggestions = useMemo(() => {
+  const localSuggestions = useMemo(() => {
     const matched = strategies.filter((s) => s.trigger === primaryTrigger);
     const rest = strategies.filter((s) => s.trigger !== primaryTrigger);
     return [...matched, ...rest].slice(0, 3);
   }, [strategies, primaryTrigger]);
 
-  const logEvent = (e: Omit<HistoryEvent, 'id' | 'time'>) =>
-    setHistory((h) => [{ id: Math.random().toString(36).slice(2), time: Date.now(), ...e }, ...h]);
+  // Use backend suggestions when available
+  const suggestions = backendSuggestions ?? localSuggestions;
 
-  const goCrisis = () => {
-    setAlertOpen(false);
-    setAppScreen('crisis');
-    logEvent({ trigger: 'self', score: risk.score, action: 'crisis' });
-  };
+  // ── Debounce ref for sensor submission ────────────────────────────────────
+  const sensorDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── On mount: hydrate history from backend ────────────────────────────────
+  useEffect(() => {
+    async function hydrateHistory() {
+      // Fetch both sources concurrently
+      const [sensorHist, overloadEvents] = await Promise.all([
+        getSensorHistory(userId, 100),
+        getOverloadEvents(userId, 50),
+      ]);
+
+      const backendEvents: HistoryEvent[] = [];
+
+      // Map sensor history → HistoryEvent
+      for (const s of sensorHist) {
+        backendEvents.push({
+          id: s.id,
+          time: new Date(s.created_at).getTime(),
+          trigger: s.noise != null ? 'sound' : 'light',
+          score: 0, // sensor data alone doesn't carry risk_score; use 0 as placeholder
+          action: 'ok',
+        });
+      }
+
+      // Map overload events → HistoryEvent (these are real crisis events)
+      for (const oe of overloadEvents) {
+        backendEvents.push({
+          id: oe.id,
+          time: new Date(oe.created_at).getTime(),
+          trigger: toTriggerKey(oe.trigger_metric) as TriggerKey | 'self',
+          score: oe.trigger_value,
+          action: 'crisis',
+        });
+      }
+
+      if (backendEvents.length > 0) {
+        setBackendOnline(true);
+        // Merge backend events with seed (backend wins on same ID)
+        setHistory((prev) => {
+          const prevIds = new Set(prev.map((h) => h.id));
+          const newOnes = backendEvents.filter((e) => !prevIds.has(e.id));
+          return [...newOnes, ...prev].sort((a, b) => b.time - a.time);
+        });
+      }
+    }
+
+    hydrateHistory().catch(() => {
+      setBackendOnline(false);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── On mount: fetch initial recommendations ───────────────────────────────
+  useEffect(() => {
+    async function fetchInitialRecs() {
+      const recResp = await getRecommendations(userId);
+      if (recResp?.recommendations?.length) {
+        setBackendSuggestions(mapRecsToStrategies(recResp.recommendations, primaryTrigger));
+        setBackendOnline(true);
+      }
+    }
+    fetchInitialRecs().catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Debounced sensor submission on noise/light change ─────────────────────
+  useEffect(() => {
+    if (sensorDebounce.current) clearTimeout(sensorDebounce.current);
+
+    sensorDebounce.current = setTimeout(async () => {
+      const result = await submitSensorData(noise, light);
+      if (result) {
+        setBackendOnline(true);
+        // Map backend risk to frontend shape
+        const backendFactors = result.reasons.map((label, i) => ({
+          label,
+          weight: result.risk_score - i * 0.5, // synthetic descending weights
+        }));
+        setBackendRisk({
+          score: Math.round(result.risk_score),
+          level: result.risk_level,
+          factors: backendFactors.slice(0, 3),
+        });
+        // Also refresh recommendations from the inline result
+        if (result.recommendations?.length) {
+          setBackendSuggestions(mapRecsToStrategies(result.recommendations, primaryTrigger));
+        }
+      } else {
+        // Backend unreachable — fall back to local computation
+        setBackendOnline(false);
+        setBackendRisk(null);
+      }
+    }, 300);
+
+    return () => {
+      if (sensorDebounce.current) clearTimeout(sensorDebounce.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noise, light]);
+
+  // ── Debounced self-report wellness check-in ───────────────────────────────
+  const checkinDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (risk.score >= 3 && alertShownForScore === null && appScreen !== 'crisis' && appScreen !== 'welcome' && appScreen !== 'profile') {
+    if (checkinDebounce.current) clearTimeout(checkinDebounce.current);
+
+    checkinDebounce.current = setTimeout(async () => {
+      // selfReport is 1-5, backend expects 0-100
+      const moodScore = Math.round((selfReport / 5) * 100);
+      await submitCheckin(userId, moodScore);
+    }, 500);
+
+    return () => {
+      if (checkinDebounce.current) clearTimeout(checkinDebounce.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selfReport]);
+
+  // ── Event logging ─────────────────────────────────────────────────────────
+  const logEvent = useCallback(
+    (e: Omit<HistoryEvent, 'id' | 'time'>) => {
+      const newEvent: HistoryEvent = {
+        id: Math.random().toString(36).slice(2),
+        time: Date.now(),
+        ...e,
+      };
+      setHistory((h) => [newEvent, ...h]);
+
+      // Persist crisis events to backend
+      if (e.action === 'crisis') {
+        logOverloadEvent(userId, e.trigger, e.score, 0).catch(() => {});
+      }
+    },
+    [userId],
+  );
+
+  // ── Crisis mode ───────────────────────────────────────────────────────────
+  const goCrisis = useCallback(() => {
+    setAlertOpen(false);
+    setAppScreen('crisis');
+    logEvent({ trigger: primaryTrigger, score: risk.score, action: 'crisis' });
+    // logOverloadEvent is already called inside logEvent for 'crisis' action
+  }, [logEvent, primaryTrigger, risk.score]);
+
+  // ── Auto-alert on elevated risk ───────────────────────────────────────────
+  useEffect(() => {
+    if (
+      risk.score >= 3 &&
+      alertShownForScore === null &&
+      appScreen !== 'crisis' &&
+      appScreen !== 'welcome' &&
+      appScreen !== 'profile'
+    ) {
       setAlertOpen(true);
       setAlertShownForScore(risk.score);
     }
     if (risk.score < 3) setAlertShownForScore(null);
   }, [risk.score, appScreen, alertShownForScore]);
 
+  // ── Alert modal action handlers ───────────────────────────────────────────
+  const handleAlertTry = useCallback(async () => {
+    logEvent({ trigger: primaryTrigger, score: risk.score, action: 'tried' });
+    setAlertOpen(false);
+    // Fire-and-forget: create alert then record positive feedback
+    const alertResp = await createAlert(
+      userId,
+      risk.level === 'high' ? 'critical' : 'warning',
+      `Sensory overload risk at ${risk.score}/10 — user tried a strategy`,
+    );
+    if (alertResp?.id) {
+      submitAlertFeedback(alertResp.id, true).catch(() => {});
+    }
+  }, [logEvent, primaryTrigger, risk, userId]);
+
+  const handleAlertDismiss = useCallback(async () => {
+    logEvent({ trigger: primaryTrigger, score: risk.score, action: 'dismissed' });
+    setAlertOpen(false);
+    // Fire-and-forget: create alert then record negative feedback (false positive)
+    const alertResp = await createAlert(
+      userId,
+      risk.level === 'high' ? 'critical' : 'warning',
+      `Sensory overload risk at ${risk.score}/10 — user dismissed`,
+    );
+    if (alertResp?.id) {
+      submitAlertFeedback(alertResp.id, false).catch(() => {});
+    }
+  }, [logEvent, primaryTrigger, risk, userId]);
+
+  const handleAlertOk = useCallback(() => {
+    logEvent({ trigger: primaryTrigger, score: risk.score, action: 'ok' });
+    setAlertOpen(false);
+  }, [logEvent, primaryTrigger, risk.score]);
+
+  // ── Assemble context value ────────────────────────────────────────────────
   const appState: AppState = {
+    userId,
     profile, setProfile, environments, setEnvironments, ageGroup, setAgeGroup,
     commStyle, setCommStyle, noise, setNoise, light, setLight, selfReport, setSelfReport,
     bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
     accommodations, setAccommodations, highContrast, setHighContrast,
     reduceMotion, setReduceMotion, sensitivity, setSensitivity,
-    risk, primaryTrigger, suggestions, goCrisis,
-    navigateTo: setAppScreen,
+    risk, primaryTrigger, suggestions, backendOnline,
+    goCrisis, navigateTo: setAppScreen,
   };
 
   return (
@@ -199,13 +440,13 @@ export default function App() {
           )}
         </NavigationContainer>
 
-        <Modal visible={alertOpen} transparent animationType="slide" onRequestClose={() => setAlertOpen(false)}>
+        <Modal visible={alertOpen} transparent animationType="slide" onRequestClose={handleAlertDismiss}>
           <LiveAlertModal
             suggestions={suggestions}
             risk={risk}
-            onTry={() => { logEvent({ trigger: primaryTrigger, score: risk.score, action: 'tried' }); setAlertOpen(false); }}
-            onDismiss={() => { logEvent({ trigger: primaryTrigger, score: risk.score, action: 'dismissed' }); setAlertOpen(false); }}
-            onOk={() => { logEvent({ trigger: primaryTrigger, score: risk.score, action: 'ok' }); setAlertOpen(false); }}
+            onTry={handleAlertTry}
+            onDismiss={handleAlertDismiss}
+            onOk={handleAlertOk}
             onCrisis={goCrisis}
           />
         </Modal>

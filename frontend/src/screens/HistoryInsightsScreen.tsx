@@ -1,4 +1,4 @@
-import React, { useContext, useState, useMemo } from 'react';
+import React, { useContext, useState, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
@@ -10,24 +10,59 @@ import { Header } from '../components/Header';
 import { Accordion, AccItem } from '../components/Accordion';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { riskColor, timeAgo } from '../utils';
+import { getRiskTrend, RiskTrendResponse } from '../api/riskService';
 
 export default function HistoryInsightsScreen() {
-  const { history } = useContext(AppContext);
+  const { history, userId } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [range, setRange] = useState<'7d' | '30d'>('7d');
   const cutoff = Date.now() - (range === '7d' ? 7 : 30) * 86400000;
   const filtered = history.filter((h) => h.time >= cutoff);
 
+  // ── Backend risk trend data ────────────────────────────────────────────────
+  const [trendData, setTrendData] = useState<RiskTrendResponse | null>(null);
+
+  useEffect(() => {
+    const days = range === '7d' ? 7 : 30;
+    getRiskTrend(userId, days)
+      .then((res) => {
+        if (res && res.status !== 'not_implemented') {
+          setTrendData(res);
+        }
+      })
+      .catch(() => {});
+  }, [range, userId]);
+
+  // ── Chart data: merge backend trend with local history averages ───────────
   const perDay = useMemo(() => {
     const days = range === '7d' ? 7 : 14;
+
+    // Build a date-keyed map from the backend trend, if available
+    const backendByDate = new Map<string, number>();
+    if (trendData?.trend) {
+      for (const entry of trendData.trend) {
+        backendByDate.set(entry.date.slice(0, 10), entry.avg_score);
+      }
+    }
+
     return Array.from({ length: days }).map((_, i) => {
       const d = new Date(Date.now() - (days - 1 - i) * 86400000);
-      const key = d.toLocaleDateString(undefined, { weekday: 'short' });
+      const dateKey = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString(undefined, { weekday: 'short' });
+
+      // Prefer backend trend score when available
+      if (backendByDate.has(dateKey)) {
+        return { value: backendByDate.get(dateKey)!, label };
+      }
+
+      // Fall back to local history average
       const hits = filtered.filter((h) => new Date(h.time).toDateString() === d.toDateString());
-      const avg = hits.length ? Math.round((hits.reduce((a, b) => a + b.score, 0) / hits.length) * 10) / 10 : 0;
-      return { value: avg, label: key };
+      const avg = hits.length
+        ? Math.round((hits.reduce((a, b) => a + b.score, 0) / hits.length) * 10) / 10
+        : 0;
+      return { value: avg, label };
     });
-  }, [filtered, range]);
+  }, [filtered, range, trendData]);
 
   const triggerBreakdown = useMemo(() => {
     const m = new Map<string, number>();
@@ -55,6 +90,9 @@ export default function HistoryInsightsScreen() {
         <Accordion>
           <AccItem id="avg" title="Average risk" defaultOpen icon={<TrendingUp size={18} color={colors.primary} />}>
             <View style={{ marginTop: 8 }}>
+              {trendData?.trend && (
+                <Text style={styles.sourceLabel}>↑ Backend trend data</Text>
+              )}
               <LineChart
                 data={perDay}
                 height={120}
@@ -141,6 +179,7 @@ const styles = StyleSheet.create({
   rangeBtnActive: { backgroundColor: colors.background, ...neuSm },
   rangeBtnText: { fontSize: 12, color: colors.mutedForeground, ...fonts.semibold },
   badge: { fontSize: 12, color: colors.mutedForeground, marginRight: 4 },
+  sourceLabel: { fontSize: 10, color: colors.primary, marginBottom: 4, opacity: 0.7 },
   emptyCard: { backgroundColor: colors.muted, borderRadius: radius.md, padding: 12 },
   emptyText: { fontSize: 12, color: colors.mutedForeground },
   eventRow: {
