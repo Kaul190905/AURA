@@ -1,0 +1,11 @@
+{
+  "trained_at": "2026-07-23T06:33:09.182995+00:00",
+  "mode": "distill",
+  "n_samples": 4000,
+  "test_mae": 0.668,
+  "feature_keys": [
+    "risk_score",
+    "anomaly_rate",
+    "recent_mood_avg"
+  ]
+}

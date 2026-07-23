@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: aura-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PROJECT_NAME
+        value: AURA
+      - key: API_V1_STR
+        value: /api/v1
+      - key: USE_AI_RECOMMENDATION_ENGINE
+        value: "false"
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-4-5-20251001
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false

@@ -1,0 +1,14 @@
+{
+  "trained_at": "2026-07-23T04:32:55.263319+00:00",
+  "mode": "distill",
+  "n_samples": 6000,
+  "test_mae": 0.43,
+  "feature_keys": [
+    "heart_rate",
+    "temperature",
+    "noise",
+    "blood_oxygen",
+    "temp_deviation",
+    "noise_deviation"
+  ]
+}
