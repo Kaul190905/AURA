@@ -21,7 +21,7 @@ async def get_recommendations(
     Compute recommendations from the user's latest telemetry, on demand.
 
     Uses the AI-phrased engine when USE_AI_RECOMMENDATION_ENGINE is enabled
-    and ANTHROPIC_API_KEY is set — a deterministic rule engine (rules.json)
+    and GROQ_API_KEY is set — a deterministic rule engine (rules.json)
     still decides which categories are eligible; the LLM only rephrases them
     personally. Falls back to plain rule-based text if the LLM is
     unavailable or misconfigured.

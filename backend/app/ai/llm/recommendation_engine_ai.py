@@ -43,7 +43,7 @@ class AIRecommendationEngine(IRecommendationEngine):
         self,
         rule_engine: RecommendationEngine,
         api_key: Optional[str] = None,
-        model: str = "claude-haiku-4-5-20251001",
+        model: str = "llama3-8b-8192",
         max_tokens: int = 1024,
         client: Any = None,
     ):
@@ -54,9 +54,9 @@ class AIRecommendationEngine(IRecommendationEngine):
         if client is not None:
             self.client = client
         elif api_key:
-            import anthropic
+            import groq
 
-            self.client = anthropic.AsyncAnthropic(api_key=api_key)
+            self.client = groq.AsyncGroq(api_key=api_key)
         else:
             self.client = None
 
@@ -84,14 +84,16 @@ class AIRecommendationEngine(IRecommendationEngine):
     async def _personalize(self, eligible: List[str], context: Dict[str, Any]) -> List[str]:
         user_prompt = self._build_prompt(eligible, context)
 
-        response = await self.client.messages.create(
+        response = await self.client.chat.completions.create(
             model=self.model,
             max_tokens=self.max_tokens,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_prompt}],
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
         )
+        text = response.choices[0].message.content or ""
 
-        text = "".join(block.text for block in response.content if hasattr(block, "text"))
         return json.loads(self._strip_code_fence(text))
 
     @staticmethod

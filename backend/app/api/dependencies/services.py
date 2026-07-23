@@ -169,19 +169,19 @@ def get_recommendation_engine() -> IRecommendationEngine:
 
     Uses the hybrid AI engine (rules.json decides eligibility, an LLM only
     rephrases/personalizes) when USE_AI_RECOMMENDATION_ENGINE is enabled and
-    ANTHROPIC_API_KEY is set; otherwise falls back to plain rule-based text.
+    GROQ_API_KEY is set; otherwise falls back to plain rule-based text.
     """
     from app.ai.recommendation_engine import RecommendationEngine
 
     rule_engine = RecommendationEngine()
 
-    if settings.USE_AI_RECOMMENDATION_ENGINE and settings.ANTHROPIC_API_KEY:
+    if settings.USE_AI_RECOMMENDATION_ENGINE and settings.GROQ_API_KEY:
         from app.ai.llm.recommendation_engine_ai import AIRecommendationEngine
 
         return AIRecommendationEngine(
             rule_engine=rule_engine,
-            api_key=settings.ANTHROPIC_API_KEY,
-            model=settings.ANTHROPIC_MODEL,
+            api_key=settings.GROQ_API_KEY,
+            model=settings.GROQ_MODEL,
         )
 
     return rule_engine

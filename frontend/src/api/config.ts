@@ -1,13 +1,12 @@
 // ── API Configuration ─────────────────────────────────────────────────────────
-// Real device over USB: use `adb reverse tcp:8000 tcp:8000`, then 127.0.0.1 works.
-// Android emulator: host machine is accessible via 10.0.2.2 instead.
-// iOS simulator / real device on same WiFi: use your machine's local IP.
+// Android emulator: host machine is accessible via 10.0.2.2
+// iOS simulator / real device on same WiFi: use your machine's local IP
 // Change this to match your environment:
-export const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+export const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 // Dev user ID — a stable UUID used across all endpoints during development
 // Replace with a real Supabase user UUID once auth is enabled
-export const DEV_USER_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+export const DEV_USER_ID = '7737ba79-0d30-46e1-b6eb-4f41615bf10c';
 
 const REQUEST_TIMEOUT_MS = 8000;
 
