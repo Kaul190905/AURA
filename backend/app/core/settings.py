@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     USE_AI_RECOMMENDATION_ENGINE: bool = False
     ANTHROPIC_API_KEY: Optional[str] = None
     ANTHROPIC_MODEL: str = "claude-haiku-4-5-20251001"
+    GROQ_API_KEY: Optional[str] = None
+    GROQ_MODEL: str = "llama3-8b-8192"
     
     # Read from .env file
     model_config = SettingsConfigDict(

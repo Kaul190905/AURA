@@ -175,14 +175,22 @@ def get_recommendation_engine() -> IRecommendationEngine:
 
     rule_engine = RecommendationEngine()
 
-    if settings.USE_AI_RECOMMENDATION_ENGINE and settings.ANTHROPIC_API_KEY:
-        from app.ai.llm.recommendation_engine_ai import AIRecommendationEngine
-
-        return AIRecommendationEngine(
-            rule_engine=rule_engine,
-            api_key=settings.ANTHROPIC_API_KEY,
-            model=settings.ANTHROPIC_MODEL,
-        )
+    if settings.USE_AI_RECOMMENDATION_ENGINE:
+        if settings.GROQ_API_KEY:
+            from app.ai.llm.recommendation_engine_ai import AIRecommendationEngine
+            return AIRecommendationEngine(
+                rule_engine=rule_engine,
+                api_key=settings.GROQ_API_KEY,
+                model=settings.GROQ_MODEL,
+                use_groq=True,
+            )
+        elif settings.ANTHROPIC_API_KEY:
+            from app.ai.llm.recommendation_engine_ai import AIRecommendationEngine
+            return AIRecommendationEngine(
+                rule_engine=rule_engine,
+                api_key=settings.ANTHROPIC_API_KEY,
+                model=settings.ANTHROPIC_MODEL,
+            )
 
     return rule_engine
 
