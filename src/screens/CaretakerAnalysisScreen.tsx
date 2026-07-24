@@ -7,6 +7,7 @@ import { TrendingUp, Zap, AudioWaveform, BrainCircuit, Activity, Clock, Target, 
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
 import { Accordion, AccItem } from '../components/Accordion';
+import { DetailedInsightsModal } from '../components/DetailedInsightsModal';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { riskColor, timeAgo } from '../utils';
 
@@ -14,6 +15,7 @@ export default function CaretakerAnalysisScreen() {
   const { history, strategies, darkMode } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [range, setRange] = useState<'7d' | '30d'>('7d');
+  const [insightsVisible, setInsightsVisible] = useState(false);
   
   const containerStyle = darkMode ? { backgroundColor: '#000000' } : {};
   const textStyle = darkMode ? { color: '#ffffff' } : {};
@@ -51,9 +53,13 @@ export default function CaretakerAnalysisScreen() {
           <Text style={styles.topLabel}>CAREGIVER VIEW</Text>
           <Text style={[styles.greeting, textStyle]}>Analysis & Insights</Text>
         </View>
-        <View style={[styles.sparkleBtn, cardStyle, neuSm]}>
+        <TouchableOpacity 
+          activeOpacity={0.7}
+          style={[styles.sparkleBtn, cardStyle, neuSm]}
+          onPress={() => setInsightsVisible(true)}
+        >
           <BrainCircuit size={20} color={colors.primary} />
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Range toggle - Exact Duplicate */}
@@ -239,6 +245,12 @@ export default function CaretakerAnalysisScreen() {
           </AccItem>
         </Accordion>
       </ScrollView>
+      <DetailedInsightsModal 
+        visible={insightsVisible} 
+        onClose={() => setInsightsVisible(false)} 
+        history={history} 
+        strategies={strategies} 
+      />
     </View>
   );
 }

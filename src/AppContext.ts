@@ -27,6 +27,8 @@ export type AppState = {
   setNotifications: (n: AppNotification[]) => void;
   isNotificationCenterOpen: boolean;
   setIsNotificationCenterOpen: (val: boolean) => void;
+  isAIPanelOpen: boolean;
+  setIsAIPanelOpen: (val: boolean) => void;
   profile: Partial<Record<TriggerKey, number>>;
   setProfile: (p: Partial<Record<TriggerKey, number>>) => void;
   environments: string[];

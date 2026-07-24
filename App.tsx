@@ -224,20 +224,21 @@ export default function App() {
     }
   }, [temperature, dangerousTempAlerted]);
 
-  const appState: AppState = {
-    userRole, setUserRole,
-    isCrisisMode, setIsCrisisMode,
-    crisisRiskBefore, setCrisisRiskBefore,
-    notifications, setNotifications,
-    isNotificationCenterOpen, setIsNotificationCenterOpen,
-    profile, setProfile, environments, setEnvironments, ageGroup, setAgeGroup,
-    commStyle, setCommStyle, noise, setNoise, temperature, setTemperature, selfReport, setSelfReport,
-    bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
-    accommodations, setAccommodations, highContrast, setHighContrast,
-    reduceMotion, setReduceMotion, darkMode, setDarkMode, sensitivity, setSensitivity,
-    risk, primaryTrigger, suggestions, goCrisis,
-    navigateTo: setAppScreen,
-  };
+    const appState: AppState = {
+      userRole, setUserRole,
+      isCrisisMode, setIsCrisisMode,
+      crisisRiskBefore, setCrisisRiskBefore,
+      notifications, setNotifications,
+      isNotificationCenterOpen, setIsNotificationCenterOpen,
+      isAIPanelOpen, setIsAIPanelOpen,
+      profile, setProfile, environments, setEnvironments, ageGroup, setAgeGroup,
+      commStyle, setCommStyle, noise, setNoise, temperature, setTemperature, selfReport, setSelfReport,
+      bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
+      accommodations, setAccommodations, highContrast, setHighContrast,
+      reduceMotion, setReduceMotion, darkMode, setDarkMode, sensitivity, setSensitivity,
+      risk, primaryTrigger, suggestions, goCrisis,
+      navigateTo: setAppScreen,
+    };
 
   return (
     <SafeAreaProvider>

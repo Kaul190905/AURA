@@ -12,7 +12,7 @@ import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { riskColor, riskLabel, timeAgo } from '../utils';
 
 export default function CaretakerDashboardScreen() {
-  const { risk, history, isCrisisMode, notifications, setIsNotificationCenterOpen, bleConnected, darkMode } = useContext(AppContext);
+  const { risk, history, isCrisisMode, notifications, setIsNotificationCenterOpen, bleConnected, darkMode, setIsAIPanelOpen } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   
   const containerStyle = darkMode ? { backgroundColor: '#000000' } : {};
@@ -61,9 +61,13 @@ export default function CaretakerDashboardScreen() {
             <Bell size={20} color={colors.primary} />
             {unreadCount > 0 && <View style={styles.unreadBadge} />}
           </TouchableOpacity>
-          <View style={[styles.sparkleBtn, cardStyle, neuSm]}>
-            <Star size={20} color={colors.primary} />
-          </View>
+            <TouchableOpacity 
+              activeOpacity={0.7} 
+              style={[styles.sparkleBtn, cardStyle, neuSm]}
+              onPress={() => setIsAIPanelOpen(true)}
+            >
+              <Star size={20} color={colors.primary} />
+            </TouchableOpacity>
         </View>
       </View>
 
