@@ -12,8 +12,13 @@ import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { riskColor, riskLabel, timeAgo } from '../utils';
 
 export default function CaretakerDashboardScreen() {
-  const { risk, history, isCrisisMode, notifications, setIsNotificationCenterOpen, bleConnected } = useContext(AppContext);
+  const { risk, history, isCrisisMode, notifications, setIsNotificationCenterOpen, bleConnected, darkMode } = useContext(AppContext);
   const insets = useSafeAreaInsets();
+  
+  const containerStyle = darkMode ? { backgroundColor: '#000000' } : {};
+  const textStyle = darkMode ? { color: '#ffffff' } : {};
+  const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : {};
+  const subTextStyle = darkMode ? { color: '#aaaaaa' } : {};
   
   const unreadCount = notifications.filter(n => !n.read).length;
   const riskC = riskColor(risk.score);
@@ -33,7 +38,7 @@ export default function CaretakerDashboardScreen() {
   const mockLocation = "Library";
   
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
       {/* Top bar */}
       <View style={styles.topBar}>
         <View>
@@ -45,36 +50,36 @@ export default function CaretakerDashboardScreen() {
                </View>
             )}
           </View>
-          <Text style={styles.greeting}>Caregiver Dashboard</Text>
+          <Text style={[styles.greeting, textStyle]}>Caregiver Dashboard</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <TouchableOpacity 
-            style={[styles.sparkleBtn, neuSm]}
+            style={[styles.sparkleBtn, cardStyle, neuSm]}
             onPress={() => setIsNotificationCenterOpen(true)}
             activeOpacity={0.8}
           >
             <Bell size={20} color={colors.primary} />
             {unreadCount > 0 && <View style={styles.unreadBadge} />}
           </TouchableOpacity>
-          <View style={[styles.sparkleBtn, neuSm]}>
+          <View style={[styles.sparkleBtn, cardStyle, neuSm]}>
             <Star size={20} color={colors.primary} />
           </View>
         </View>
       </View>
 
-      {/* Risk card - Exact duplicate styling from User Home */}
-      <View style={[styles.riskCard, neuSm]}>
+      {/* Risk card - Exact duplicate styling from User House */}
+      <View style={[styles.riskCard, cardStyle, neuSm]}>
         {/* Ring */}
-        <View style={styles.ringOuter}>
-          <View style={[styles.ringInner, { borderColor: riskC }]}>
-            <Text style={[styles.riskScore, { color: riskC }]}>{risk.score}</Text>
+        <View style={[styles.ringOuter, darkMode && { backgroundColor: '#333' }]}>
+          <View style={[styles.ringInner, cardStyle, { borderColor: riskC }]}>
+            <Text style={[styles.riskScore, textStyle, { color: riskC }]}>{risk.score}</Text>
             <Text style={styles.riskLevelLabel}>{riskLabel(risk.level)}</Text>
           </View>
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.riskSubLabel}>Current status</Text>
-          <Text style={styles.riskLevelText}>{userStatus}</Text>
-          <Text style={styles.riskFactor} numberOfLines={2}>{userStatusDesc}</Text>
+          <Text style={[styles.riskLevelText, textStyle]}>{userStatus}</Text>
+          <Text style={[styles.riskFactor, textStyle]} numberOfLines={2}>{userStatusDesc}</Text>
         </View>
       </View>
 
@@ -87,7 +92,7 @@ export default function CaretakerDashboardScreen() {
             icon={<MapPin size={18} color={isCrisisMode ? colors.riskHigh : colors.primary} />}>
             
             {isCrisisMode ? (
-              <View style={[styles.emergencyContainer]}>
+              <View style={[styles.emergencyContainer, cardStyle]}>
                 <View style={styles.emergencyHeader}>
                   <ShieldAlert size={20} color={colors.riskHigh} />
                   <Text style={styles.emergencyTitle}>Emergency Support Active</Text>
@@ -95,8 +100,8 @@ export default function CaretakerDashboardScreen() {
                 <Text style={styles.emergencySub}>Live Location Enabled</Text>
                 
                 <View style={styles.coordsRow}>
-                  <Text style={styles.coordText}>Lat: 37.7749</Text>
-                  <Text style={styles.coordText}>Lng: -122.4194</Text>
+                  <Text style={[styles.coordText, textStyle]}>Lat: 37.7749</Text>
+                  <Text style={[styles.coordText, textStyle]}>Lng: -122.4194</Text>
                 </View>
                 <Text style={styles.lastUpdatedText}>Updated just now</Text>
 
@@ -105,18 +110,18 @@ export default function CaretakerDashboardScreen() {
                     <Navigation size={14} color="#fff" />
                     <Text style={styles.emergencyBtnText}>Open Navigation</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.emergencyBtn, { backgroundColor: colors.background }]} activeOpacity={0.8}>
-                    <Phone size={14} color={colors.foreground} />
-                    <Text style={[styles.emergencyBtnText, { color: colors.foreground }]}>Call User</Text>
+                  <TouchableOpacity style={[styles.emergencyBtn, cardStyle, { borderColor: darkMode ? '#555' : 'transparent', borderWidth: 1 }]} activeOpacity={0.8}>
+                    <Phone size={14} color={darkMode ? '#fff' : colors.foreground} />
+                    <Text style={[styles.emergencyBtnText, textStyle]}>Call User</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             ) : (
-              <View style={styles.locationContainer}>
+              <View style={[styles.locationContainer, cardStyle, { borderRadius: radius.md, marginTop: 8 }]}>
                 <View style={styles.locationBadge}>
                   <MapPin size={24} color={colors.primary} />
                 </View>
-                <Text style={styles.locationText}>{mockLocation}</Text>
+                <Text style={[styles.locationText, textStyle]}>{mockLocation}</Text>
               </View>
             )}
           </AccItem>
@@ -124,14 +129,14 @@ export default function CaretakerDashboardScreen() {
           {/* Wearable Status */}
           <AccItem id="wearable" title="Wearable Status" icon={<Watch size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
-              <View style={styles.factorItem}>
-                <Text style={styles.factorText}>Connection: <Text style={{ color: colors.primary, ...fonts.semibold }}>Connected</Text></Text>
+              <View style={[styles.factorItem, cardStyle]}>
+                <Text style={[styles.factorText, textStyle]}>Connection: <Text style={{ color: colors.primary, ...fonts.semibold }}>Connected</Text></Text>
               </View>
-              <View style={styles.factorItem}>
-                <Text style={styles.factorText}>Battery: 84%</Text>
+              <View style={[styles.factorItem, cardStyle]}>
+                <Text style={[styles.factorText, textStyle]}>Battery: 84%</Text>
               </View>
-              <View style={styles.factorItem}>
-                <Text style={styles.factorText}>Last Sync: Just now</Text>
+              <View style={[styles.factorItem, cardStyle]}>
+                <Text style={[styles.factorText, textStyle]}>Last Sync: Just now</Text>
               </View>
             </View>
           </AccItem>
@@ -139,14 +144,14 @@ export default function CaretakerDashboardScreen() {
           {/* Today Summary */}
           <AccItem id="summary" title="Today Summary" icon={<Activity size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
-              <View style={styles.factorItem}>
-                <Text style={styles.factorText}>High Risk Events: <Text style={{ ...fonts.bold }}>2</Text></Text>
+              <View style={[styles.factorItem, cardStyle]}>
+                <Text style={[styles.factorText, textStyle]}>High Risk Events: <Text style={{ ...fonts.bold }}>2</Text></Text>
               </View>
-              <View style={styles.factorItem}>
-                <Text style={styles.factorText}>Reset Sessions: <Text style={{ ...fonts.bold }}>1</Text></Text>
+              <View style={[styles.factorItem, cardStyle]}>
+                <Text style={[styles.factorText, textStyle]}>Reset Sessions: <Text style={{ ...fonts.bold }}>1</Text></Text>
               </View>
-              <View style={styles.factorItem}>
-                <Text style={styles.factorText}>Suggestions Accepted: <Text style={{ ...fonts.bold }}>3</Text></Text>
+              <View style={[styles.factorItem, cardStyle]}>
+                <Text style={[styles.factorText, textStyle]}>Suggestions Accepted: <Text style={{ ...fonts.bold }}>3</Text></Text>
               </View>
             </View>
           </AccItem>
@@ -155,35 +160,37 @@ export default function CaretakerDashboardScreen() {
           <AccItem id="recent" title="Recent Activity"
             icon={<Heart size={18} color={colors.primary} />}
             badge={<Text style={styles.badge}>{history.length}</Text>}>
-            {history.slice(0, 4).map((h) => {
-              const c = riskColor(h.score);
-              return (
-                <View key={h.id} style={styles.eventRow}>
-                  <View style={[styles.eventDot, { borderColor: c }]} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.eventTitle}>{h.trigger} · {h.action}</Text>
-                    <Text style={styles.eventTime}>{timeAgo(h.time)}</Text>
+            <View style={{ marginTop: 8 }}>
+              {history.slice(0, 4).map((h) => {
+                const c = riskColor(h.score);
+                return (
+                  <View key={h.id} style={[styles.eventRow, cardStyle]}>
+                    <View style={[styles.eventDot, containerStyle, { borderColor: c }]} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.eventTitle, textStyle]}>{h.trigger} · {h.action}</Text>
+                      <Text style={styles.eventTime}>{timeAgo(h.time)}</Text>
+                    </View>
+                    <Text style={[styles.eventScore, { color: c }]}>{h.score}</Text>
                   </View>
-                  <Text style={[styles.eventScore, { color: c }]}>{h.score}</Text>
-                </View>
-              );
-            })}
+                );
+              })}
+            </View>
           </AccItem>
           
           {/* Quick Support */}
           <AccItem id="support" title="Quick Support" icon={<MessageCircle size={18} color={colors.primary} />}>
              <View style={styles.supportGrid}>
-                <TouchableOpacity style={styles.supportBtn} activeOpacity={0.8}>
+                <TouchableOpacity style={[styles.supportBtn, cardStyle]} activeOpacity={0.8}>
                    <Phone size={20} color={colors.primary} />
-                   <Text style={styles.supportBtnText}>Call</Text>
+                   <Text style={[styles.supportBtnText, textStyle]}>Call</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.supportBtn} activeOpacity={0.8}>
+                <TouchableOpacity style={[styles.supportBtn, cardStyle]} activeOpacity={0.8}>
                    <MessageCircle size={20} color={colors.primary} />
-                   <Text style={styles.supportBtnText}>Message</Text>
+                   <Text style={[styles.supportBtnText, textStyle]}>Message</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.supportBtn} activeOpacity={0.8}>
+                <TouchableOpacity style={[styles.supportBtn, cardStyle]} activeOpacity={0.8}>
                    <Navigation size={20} color={colors.primary} />
-                   <Text style={styles.supportBtnText}>Navigate</Text>
+                   <Text style={[styles.supportBtnText, textStyle]}>Navigate</Text>
                 </TouchableOpacity>
              </View>
           </AccItem>

@@ -37,8 +37,8 @@ export type AppState = {
   setCommStyle: (c: 'text' | 'emoji' | 'visual') => void;
   noise: number;
   setNoise: (n: number) => void;
-  light: number;
-  setLight: (n: number) => void;
+  temperature: number;
+  setTemperature: (v: number) => void;
   selfReport: number;
   setSelfReport: (n: number) => void;
   bleConnected: boolean;
@@ -53,6 +53,8 @@ export type AppState = {
   setHighContrast: (v: boolean) => void;
   reduceMotion: boolean;
   setReduceMotion: (v: boolean) => void;
+  darkMode: boolean;
+  setDarkMode: (v: boolean) => void;
   sensitivity: number;
   setSensitivity: (n: number) => void;
   risk: ReturnType<typeof computeRisk>;

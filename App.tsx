@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, StyleSheet, TouchableOpacity, Text, Modal } from 'react-native';
-import { Home, Library, TrendingUp, Bluetooth, Settings, Heart, User, Sparkles } from 'lucide-react-native';
+import { House, Library, TrendingUp, Bluetooth, Settings, Heart, User, Sparkles } from 'lucide-react-native';
 
 import { colors, fonts } from './src/theme';
 import { TriggerKey, HistoryEvent, Strategy, Accommodation } from './src/types';
@@ -49,9 +49,9 @@ function TabNavigator({ goCrisis }: { goCrisis: () => void }) {
       }}
     >
       <Tab.Screen
-        name="Home"
+        name="House"
         component={HomeScreen}
-        options={{ tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }}
+        options={{ tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }}
       />
       <Tab.Screen
         name="Library"
@@ -79,11 +79,14 @@ function TabNavigator({ goCrisis }: { goCrisis: () => void }) {
 
 // ── Caretaker Tab Navigator ──────────────────────────────────────────────────
 function CaretakerTabNavigator() {
+  const { darkMode } = React.useContext(AppContext);
+  const bg = darkMode ? '#000000' : colors.background;
+  const border = darkMode ? '#1c1c1e' : colors.border;
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [styles.tabBar, { backgroundColor: bg, borderTopColor: border }],
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarLabelStyle: styles.tabLabel,
@@ -92,7 +95,7 @@ function CaretakerTabNavigator() {
       <Tab.Screen
         name="Dashboard"
         component={CaretakerDashboardScreen}
-        options={{ tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }}
+        options={{ tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }}
       />
       <Tab.Screen
         name="Analysis"
@@ -124,12 +127,12 @@ export default function App() {
     { id: '4', title: 'Wearable Battery Low', description: 'Device is at 15%.', time: Date.now() - 172800000, read: true, type: 'system' }
   ]);
 
-  const [profile, setProfile] = useState<Partial<Record<TriggerKey, number>>>({ sound: 4, crowd: 3, light: 2 });
+  const [profile, setProfile] = useState<Partial<Record<TriggerKey, number>>>({ sound: 4, crowd: 3, temp: 2 });
   const [environments, setEnvironments] = useState<string[]>(['Classroom', 'Bus']);
   const [ageGroup, setAgeGroup] = useState('Teen');
   const [commStyle, setCommStyle] = useState<'text' | 'emoji' | 'visual'>('text');
   const [noise, setNoise] = useState(55);
-  const [light, setLight] = useState(350);
+  const [temperature, setTemperature] = useState(98);
   const [selfReport, setSelfReport] = useState(2);
   const [bleConnected, setBleConnected] = useState(false);
   const [strategies, setStrategies] = useState<Strategy[]>(DEFAULT_STRATEGIES);
@@ -140,11 +143,12 @@ export default function App() {
   ]);
   const [highContrast, setHighContrast] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const [sensitivity, setSensitivity] = useState(3);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertShownForScore, setAlertShownForScore] = useState<number | null>(null);
 
-  const risk = useMemo(() => computeRisk(noise, light, selfReport, profile), [noise, light, selfReport, profile]);
+  const risk = useMemo(() => computeRisk(noise, temperature, selfReport, profile), [noise, temperature, selfReport, profile]);
 
   const primaryTrigger = useMemo<TriggerKey>(() => {
     const entries = Object.entries(profile) as [TriggerKey, number][];
@@ -165,17 +169,60 @@ export default function App() {
     setAlertOpen(false);
     setCrisisRiskBefore(risk.score);
     setIsCrisisMode(true);
-    setAppScreen('crisis');
     logEvent({ trigger: 'self', score: risk.score, action: 'crisis' });
   }, [risk.score]);
 
   useEffect(() => {
-    if (risk.score >= 3 && alertShownForScore === null && appScreen !== 'crisis' && appScreen !== 'welcome' && appScreen !== 'profile') {
+    if (risk.score >= 3 && alertShownForScore === null && appScreen !== 'welcome' && appScreen !== 'profile' && !isCrisisMode) {
       setAlertOpen(true);
       setAlertShownForScore(risk.score);
     }
     if (risk.score < 3) setAlertShownForScore(null);
-  }, [risk.score, appScreen, alertShownForScore]);
+  }, [risk.score, appScreen, alertShownForScore, isCrisisMode]);
+
+  const [highNoiseAlerted, setHighNoiseAlerted] = useState(false);
+  const [dangerousTempAlerted, setDangerousTempAlerted] = useState(false);
+  const [popupState, setPopupState] = useState({ visible: false, message: '' });
+  
+  useEffect(() => {
+    if (noise > 75 && !highNoiseAlerted) {
+      setHighNoiseAlerted(true);
+      setNotifications(prev => [{
+        id: Math.random().toString(),
+        title: 'High Noise Alert',
+        description: `Noise level reached ${noise}dB, exceeding safe limits.`,
+        time: Date.now(),
+        read: false,
+        type: 'alert'
+      }, ...prev]);
+      
+      setPopupState({ visible: true, message: `Noise level reached ${noise}dB. An alert has been sent to your caretaker.` });
+      setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
+    } else if (noise <= 75 && highNoiseAlerted) {
+      setHighNoiseAlerted(false);
+    }
+  }, [noise, highNoiseAlerted]);
+
+  useEffect(() => {
+    const isDangerousTemp = temperature >= 104 || temperature <= 95;
+    if (isDangerousTemp && !dangerousTempAlerted) {
+      setDangerousTempAlerted(true);
+      const condition = temperature >= 104 ? 'Overheating (Heat Stroke)' : 'Hypothermia (Extreme Cold)';
+      setNotifications(prev => [{
+        id: Math.random().toString(),
+        title: 'Dangerous Temperature Alert',
+        description: `Core body temperature is ${temperature}°F (${condition}).`,
+        time: Date.now(),
+        read: false,
+        type: 'alert'
+      }, ...prev]);
+      
+      setPopupState({ visible: true, message: `Core temperature is ${temperature}°F. An alert has been sent to your caretaker.` });
+      setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
+    } else if (!isDangerousTemp && dangerousTempAlerted) {
+      setDangerousTempAlerted(false);
+    }
+  }, [temperature, dangerousTempAlerted]);
 
   const appState: AppState = {
     userRole, setUserRole,
@@ -184,10 +231,10 @@ export default function App() {
     notifications, setNotifications,
     isNotificationCenterOpen, setIsNotificationCenterOpen,
     profile, setProfile, environments, setEnvironments, ageGroup, setAgeGroup,
-    commStyle, setCommStyle, noise, setNoise, light, setLight, selfReport, setSelfReport,
+    commStyle, setCommStyle, noise, setNoise, temperature, setTemperature, selfReport, setSelfReport,
     bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
     accommodations, setAccommodations, highContrast, setHighContrast,
-    reduceMotion, setReduceMotion, sensitivity, setSensitivity,
+    reduceMotion, setReduceMotion, darkMode, setDarkMode, sensitivity, setSensitivity,
     risk, primaryTrigger, suggestions, goCrisis,
     navigateTo: setAppScreen,
   };
@@ -201,7 +248,6 @@ export default function App() {
             setAppScreen(role === 'caregiver' ? 'caretaker-home' : 'profile');
           }} />}
           {appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('home')} />}
-          {appScreen === 'crisis' && <CrisisModeScreen />}
           {appScreen === 'recovery' && <RecoverySummaryScreen onExit={() => setAppScreen('home')} />}
           {appScreen === 'speech' && <SpeechDiaryScreen onBack={() => setAppScreen('home')} />}
           {appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
@@ -240,12 +286,26 @@ export default function App() {
           <LiveAlertModal
             suggestions={suggestions}
             risk={risk}
-            onTry={() => { logEvent({ trigger: primaryTrigger, score: risk.score, action: 'tried' }); setAlertOpen(false); }}
-            onDismiss={() => { logEvent({ trigger: primaryTrigger, score: risk.score, action: 'dismissed' }); setAlertOpen(false); }}
-            onOk={() => { logEvent({ trigger: primaryTrigger, score: risk.score, action: 'ok' }); setAlertOpen(false); }}
+            onTry={() => { logEvent({ trigger: 'auto', score: risk.score, action: 'tried' }); setAlertOpen(false); }}
+            onDismiss={() => { logEvent({ trigger: 'auto', score: risk.score, action: 'dismissed' }); setAlertOpen(false); }}
+            onOk={() => { logEvent({ trigger: 'auto', score: risk.score, action: 'ok' }); setAlertOpen(false); }}
             onCrisis={goCrisis}
           />
         </Modal>
+
+        <Modal visible={popupState.visible} transparent animationType="fade">
+          <View style={styles.popupOverlay}>
+            <View style={styles.popupCard}>
+              <Text style={styles.popupTitle}>Caretaker Notified</Text>
+              <Text style={styles.popupText}>{popupState.message}</Text>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal visible={isCrisisMode} animationType="fade" onRequestClose={() => setIsCrisisMode(false)}>
+          <CrisisModeScreen onExit={() => setIsCrisisMode(false)} />
+        </Modal>
+
       </AppContext.Provider>
     </SafeAreaProvider>
   );
@@ -296,5 +356,35 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     shadowColor: '#000', shadowOffset: { width: 4, height: 4 },
     shadowOpacity: 0.15, shadowRadius: 8, elevation: 6,
+  },
+  popupOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  popupCard: {
+    backgroundColor: colors.background,
+    padding: 24,
+    borderRadius: 24,
+    width: '80%',
+    alignItems: 'center',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+  },
+  popupTitle: {
+    fontSize: 18,
+    color: colors.foreground,
+    ...fonts.bold,
+    marginBottom: 8,
+  },
+  popupText: {
+    fontSize: 14,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

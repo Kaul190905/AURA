@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TrendingUp, Zap, Waves, Clock, MapPin, Network, Star } from 'lucide-react-native';
+import { TrendingUp, Zap, AudioWaveform, Clock, MapPin, Network, Star } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
@@ -98,7 +98,7 @@ export default function HistoryInsightsScreen() {
           </AccItem>
 
           <AccItem id="events" title="Past events"
-            icon={<Waves size={18} color={colors.primary} />}
+            icon={<AudioWaveform size={18} color={colors.primary} />}
             badge={<Text style={styles.badge}>{filtered.length}</Text>}>
             {filtered.length === 0 ? (
               <View style={styles.emptyCard}>
@@ -158,8 +158,8 @@ export default function HistoryInsightsScreen() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                     <MapPin size={18} color={colors.riskHigh} />
                     <View>
-                      <Text style={[styles.eventTrigger, fonts.bold]}>{loc.name}</Text>
-                      <Text style={styles.eventTime}>{loc.visits} visits this week</Text>
+                      <Text style={[styles.eventTitle, fonts.bold]}>{loc.name}</Text>
+                      <Text style={styles.eventDate}>{loc.visits} visits this week</Text>
                     </View>
                   </View>
                   <View style={styles.riskBadge}>
@@ -176,8 +176,8 @@ export default function HistoryInsightsScreen() {
               <View style={[styles.eventRow, { alignItems: 'flex-start' }]}>
                 <Zap size={16} color={colors.primary} />
                 <View>
-                   <Text style={[styles.eventTrigger, fonts.bold]}>Noise + Crowds</Text>
-                   <Text style={styles.eventTime}>80% of your overloads occur when these two triggers are combined.</Text>
+                   <Text style={[styles.eventTitle, fonts.bold]}>Noise + Crowds</Text>
+                   <Text style={styles.eventDate}>80% of your overloads occur when these two triggers are combined.</Text>
                 </View>
               </View>
             </View>
@@ -219,4 +219,15 @@ const styles = StyleSheet.create({
   eventDate: { fontSize: 10, color: colors.mutedForeground, marginTop: 1 },
   eventNote: { fontSize: 10, color: colors.foreground, opacity: 0.7, marginTop: 2, fontStyle: 'italic' },
   eventScore: { fontSize: 14, ...fonts.semibold },
+  riskBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+    backgroundColor: `${colors.primary}20`,
+  },
+  riskBadgeText: {
+    fontSize: 10,
+    color: colors.primary,
+    ...fonts.semibold,
+  },
 });

@@ -1,5 +1,5 @@
 // ── Shared Types ──────────────────────────────────────────────────────────────
-export type TriggerKey = 'sound' | 'light' | 'touch' | 'crowd' | 'movement' | 'smell';
+export type TriggerKey = 'sound' | 'temp' | 'touch' | 'crowd' | 'movement' | 'smell';
 
 export type Screen =
   | 'welcome' | 'profile' | 'home' | 'alert' | 'crisis' | 'library'

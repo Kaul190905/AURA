@@ -7,21 +7,24 @@ import { Lock } from 'lucide-react-native';
 import { Header } from '../components/Header';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 
-interface Props { onUnlock: () => void; }
+interface Props {
+  onBack: () => void;
+  onSuccess: () => void;
+}
 
-export default function CaretakerGateScreen({ onUnlock }: Props) {
+export default function CaretakerGateScreen({ onBack, onSuccess }: Props) {
   const [code, setCode] = useState('');
   const [error, setError] = useState(false);
   const insets = useSafeAreaInsets();
 
   const submit = () => {
-    if (code.length === 4) onUnlock();
+    if (code.length === 4) onSuccess();
     else setError(true);
   };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Header title="Caretaker view" subtitle="Private" />
+      <Header title="Caretaker view" subtitle="Private" onBack={onBack} />
       <View style={styles.card}>
         <View style={[styles.lockIcon, neuSm]}>
           <Lock size={22} color={colors.primary} />

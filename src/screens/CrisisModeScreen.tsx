@@ -10,7 +10,7 @@ import { colors, neuSm, radius, spacing, fonts } from '../theme';
 interface Props { onExit: () => void; }
 
 export default function CrisisModeScreen({ onExit }: Props) {
-  const { suggestions } = useContext(AppContext);
+  const { suggestions, reduceMotion } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
@@ -18,6 +18,11 @@ export default function CrisisModeScreen({ onExit }: Props) {
   const breathe2 = useRef(new Animated.Value(0.85)).current;
 
   useEffect(() => {
+    if (reduceMotion) {
+      breathe1.setValue(1);
+      breathe2.setValue(1);
+      return;
+    }
     const anim = Animated.loop(
       Animated.sequence([
         Animated.timing(breathe1, { toValue: 1.15, duration: 4000, useNativeDriver: true }),
@@ -33,13 +38,22 @@ export default function CrisisModeScreen({ onExit }: Props) {
     );
     anim.start(); anim2.start();
     return () => { anim.stop(); anim2.stop(); };
-  }, []);
+  }, [reduceMotion]);
 
   useEffect(() => {
     if (!running) return;
-    const id = setInterval(() => setSeconds((s) => (s >= 300 ? 300 : s + 1)), 1000);
+    const id = setInterval(() => {
+      setSeconds((s) => {
+        if (s + 1 >= 300) {
+          clearInterval(id);
+          onExit();
+          return 300;
+        }
+        return s + 1;
+      });
+    }, 1000);
     return () => clearInterval(id);
-  }, [running]);
+  }, [running, onExit]);
 
   const remaining = 300 - seconds;
   const mm = String(Math.floor(remaining / 60)).padStart(1, '0');

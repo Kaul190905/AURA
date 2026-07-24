@@ -1,9 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useContext } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Star, Shield, User, Heart } from 'lucide-react-native';
+import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 
 interface Props {
@@ -11,17 +12,22 @@ interface Props {
 }
 
 export default function WelcomeScreen({ onNext }: Props) {
+  const { reduceMotion } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const breathe = useRef(new Animated.Value(0.85)).current;
 
   useEffect(() => {
+    if (reduceMotion) {
+      breathe.setValue(1);
+      return;
+    }
     Animated.loop(
       Animated.sequence([
         Animated.timing(breathe, { toValue: 1.15, duration: 4000, useNativeDriver: true }),
         Animated.timing(breathe, { toValue: 0.85, duration: 4000, useNativeDriver: true }),
       ])
     ).start();
-  }, []);
+  }, [reduceMotion]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}>

@@ -1,9 +1,10 @@
-import React, { useState, ReactNode } from 'react';
+import React, { useState, ReactNode, useContext } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager,
 } from 'react-native';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { ChevronDown } from 'lucide-react-native';
+import { AppContext } from '../AppContext';
 
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
@@ -24,22 +25,27 @@ interface AccItemProps {
 
 export function AccItem({ title, icon, badge, children, defaultOpen = false }: AccItemProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const { darkMode, userRole } = useContext(AppContext);
 
   const toggle = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setOpen((v) => !v);
   };
 
+  const isDark = darkMode && userRole === 'caregiver';
+  const dmCard = isDark ? { backgroundColor: '#1c1c1e' } : {};
+  const dmText = isDark ? { color: '#ffffff' } : {};
+
   return (
-    <View style={[styles.card, open && styles.cardOpen]}>
+    <View style={[styles.card, dmCard, open && styles.cardOpen, open && isDark && dmCard]}>
       <TouchableOpacity onPress={toggle} style={styles.header} activeOpacity={0.8}>
         {icon && (
-          <View style={styles.iconWrap}>
+          <View style={[styles.iconWrap, dmCard]}>
             {icon}
           </View>
         )}
         <View style={styles.labelWrap}>
-          <Text style={styles.title} numberOfLines={1}>{title}</Text>
+          <Text style={[styles.title, dmText]} numberOfLines={1}>{title}</Text>
         </View>
         {badge}
         <ChevronDown

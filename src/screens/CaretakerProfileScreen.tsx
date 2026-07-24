@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Users2, Shield, Trash2, ChevronRight, Bell, Moon, Wind, Phone, MessageCircle, QrCode, Watch, Battery, Smartphone, Zap, Globe, LogOut } from 'lucide-react-native';
+import { Users, Shield, Trash2, ChevronRight, Bell, Moon, Wind, Phone, MessageCircle, QrCode, Watch, Battery, Smartphone, Zap, Globe, LogOut } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 import { Accordion, AccItem } from '../components/Accordion';
@@ -11,28 +11,32 @@ import { colors, neuSm, radius, spacing, fonts } from '../theme';
 
 export default function CaretakerProfileScreen() {
   const {
-    reduceMotion, setReduceMotion, navigateTo
+    reduceMotion, setReduceMotion, navigateTo, highContrast, setHighContrast,
+    darkMode, setDarkMode
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
+
+  const containerStyle = darkMode ? { backgroundColor: '#000000' } : {};
+  const textStyle = darkMode ? { color: '#ffffff' } : {};
+  const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : {};
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Header title="Settings" subtitle="Caregiver Profile" hideBack />
+    <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
+      <Header title="Settings" subtitle="Caregiver Profile" />
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <Accordion>
           
           {/* Caregiver Profile */}
-          <AccItem id="profile" title="Caregiver Profile" defaultOpen icon={<Users2 size={18} color={colors.primary} />}>
+          <AccItem id="profile" title="Caregiver Profile" defaultOpen icon={<Users size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
-              <View style={styles.navRow}>
-                <Text style={styles.navRowTitle}>Relationship</Text>
+              <View style={[styles.navRow, cardStyle]}>
+                <Text style={[styles.navRowTitle, textStyle]}>Relationship</Text>
                 <Text style={styles.navRowValue}>Parent / Guardian</Text>
               </View>
-              <View style={styles.navRow}>
-                <Text style={styles.navRowTitle}>Connected User</Text>
+              <View style={[styles.navRow, cardStyle]}>
+                <Text style={[styles.navRowTitle, textStyle]}>Connected User</Text>
                 <Text style={styles.navRowValue}>Alex's Device</Text>
               </View>
             </View>
@@ -47,11 +51,13 @@ export default function CaretakerProfileScreen() {
                 label="Notification Preferences"
                 value={notifications}
                 onChange={setNotifications}
+                highContrast={highContrast}
+                darkMode={darkMode}
               />
-              <TouchableOpacity style={styles.navRowTouchable} activeOpacity={0.8}>
+              <TouchableOpacity style={[styles.navRowTouchable, cardStyle]} activeOpacity={0.8}>
                  <View style={styles.navRowLeft}>
                    <Globe size={16} color={colors.primary} />
-                   <Text style={[styles.navRowTitle, { marginLeft: 8 }]}>Language</Text>
+                   <Text style={[styles.navRowTitle, textStyle, { marginLeft: 8 }]}>Language</Text>
                  </View>
                  <Text style={styles.navRowValue}>English (US)</Text>
                  <ChevronRight size={16} color={colors.mutedForeground} />
@@ -67,12 +73,16 @@ export default function CaretakerProfileScreen() {
                 label="Dark Mode"
                 value={darkMode}
                 onChange={setDarkMode}
+                highContrast={highContrast}
+                darkMode={darkMode}
               />
               <ToggleRow
                 icon={<Wind size={16} color={colors.primary} />}
                 label="Reduce motion"
                 value={reduceMotion}
                 onChange={setReduceMotion}
+                highContrast={highContrast}
+                darkMode={darkMode}
               />
             </View>
           </AccItem>
@@ -84,9 +94,9 @@ export default function CaretakerProfileScreen() {
                 { name: 'Dr. Smith', role: 'Doctor', phone: '555-0102' },
                 { name: 'City Hospital', role: 'Hospital', phone: '911' }
               ].map((contact, i) => (
-                <View key={i} style={[styles.navRow, { justifyContent: 'space-between', paddingVertical: 12 }]}>
+                <View key={i} style={[styles.navRow, cardStyle, { justifyContent: 'space-between', paddingVertical: 12 }]}>
                   <View>
-                    <Text style={[styles.navRowTitle, fonts.bold]}>{contact.name}</Text>
+                    <Text style={[styles.navRowTitle, textStyle, fonts.bold]}>{contact.name}</Text>
                     <Text style={{ fontSize: 12, color: colors.mutedForeground }}>{contact.role}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -103,11 +113,11 @@ export default function CaretakerProfileScreen() {
           </AccItem>
 
           {/* Connected User */}
-          <AccItem id="connectedUser" title="Connected User" icon={<Users2 size={18} color={colors.primary} />}>
+          <AccItem id="connectedUser" title="Connected User" icon={<Users size={18} color={colors.primary} />}>
             <View style={{ gap: 12, marginTop: 8 }}>
-              <View style={[styles.navRow, { justifyContent: 'space-between', paddingVertical: 12 }]}>
+              <View style={[styles.navRow, cardStyle, { justifyContent: 'space-between', paddingVertical: 12 }]}>
                  <View>
-                   <Text style={[styles.navRowTitle, fonts.bold]}>Santosh</Text>
+                   <Text style={[styles.navRowTitle, textStyle, fonts.bold]}>Santosh</Text>
                    <Text style={{ fontSize: 12, color: colors.mutedForeground }}>Status: Connected</Text>
                    <Text style={{ fontSize: 12, color: colors.mutedForeground }}>Paired: Jul 12, 2026</Text>
                  </View>
@@ -115,7 +125,7 @@ export default function CaretakerProfileScreen() {
                    <Text style={{ fontSize: 10, color: colors.primary, ...fonts.bold }}>ACTIVE</Text>
                  </View>
               </View>
-              <TouchableOpacity style={[styles.navRowTouchable, { justifyContent: 'flex-start', gap: 8 }]} activeOpacity={0.8}>
+              <TouchableOpacity style={[styles.navRowTouchable, cardStyle, { justifyContent: 'flex-start', gap: 8 }]} activeOpacity={0.8}>
                 <Trash2 size={14} color={colors.riskHigh} />
                 <Text style={[styles.navRowTitle, { color: colors.riskHigh }]}>Remove User</Text>
               </TouchableOpacity>
@@ -125,17 +135,17 @@ export default function CaretakerProfileScreen() {
           {/* Device Information */}
           <AccItem id="device" title="Device Information" icon={<Watch size={18} color={colors.primary} />}>
             <View style={{ gap: 12, marginTop: 8 }}>
-              <View style={[styles.navRow, { paddingVertical: 12 }]}>
+              <View style={[styles.navRow, cardStyle, { paddingVertical: 12 }]}>
                 <Smartphone size={16} color={colors.mutedForeground} />
-                <Text style={styles.navRowTitle}>AURA Band Pro</Text>
+                <Text style={[styles.navRowTitle, textStyle]}>AURA Band Pro</Text>
               </View>
-              <View style={[styles.navRow, { paddingVertical: 12 }]}>
+              <View style={[styles.navRow, cardStyle, { paddingVertical: 12 }]}>
                 <Battery size={16} color={colors.mutedForeground} />
-                <Text style={styles.navRowTitle}>Battery: 84%</Text>
+                <Text style={[styles.navRowTitle, textStyle]}>Battery: 84%</Text>
               </View>
-              <View style={[styles.navRow, { paddingVertical: 12 }]}>
+              <View style={[styles.navRow, cardStyle, { paddingVertical: 12 }]}>
                 <Zap size={16} color={colors.mutedForeground} />
-                <Text style={styles.navRowTitle}>Firmware: v1.4.2</Text>
+                <Text style={[styles.navRowTitle, textStyle]}>Firmware: v1.4.2</Text>
               </View>
             </View>
           </AccItem>
@@ -143,8 +153,8 @@ export default function CaretakerProfileScreen() {
           {/* Privacy */}
           <AccItem id="privacy" title="Privacy" icon={<Shield size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
-              <TouchableOpacity style={styles.navRowTouchable} activeOpacity={0.8}>
-                <Text style={styles.navRowTitle}>Privacy Settings</Text>
+              <TouchableOpacity style={[styles.navRowTouchable, cardStyle]} activeOpacity={0.8}>
+                <Text style={[styles.navRowTitle, textStyle]}>Privacy Settings</Text>
                 <ChevronRight size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
               <View style={styles.privacyCard}>
@@ -167,16 +177,21 @@ export default function CaretakerProfileScreen() {
 }
 
 function ToggleRow({
-  icon, label, value, onChange,
-}: { icon: React.ReactNode; label: string; value: boolean; onChange: (v: boolean) => void }) {
+  icon, label, value, onChange, highContrast, darkMode
+}: { icon: React.ReactNode; label: string; value: boolean; onChange: (v: boolean) => void; highContrast?: boolean, darkMode?: boolean }) {
+  const hcBorder = highContrast ? { borderColor: '#000', borderWidth: 2 } : {};
+  const hcText = highContrast ? { color: '#000', fontWeight: 'bold' as const } : {};
+  const dmBg = darkMode ? { backgroundColor: '#222' } : {};
+  const dmText = darkMode ? { color: '#fff' } : {};
+  
   return (
-    <TouchableOpacity onPress={() => onChange(!value)} style={styles.toggleRow} activeOpacity={0.8}>
-      <View style={[styles.toggleIcon, value && { backgroundColor: colors.muted }]}>
+    <TouchableOpacity onPress={() => onChange(!value)} style={[styles.toggleRow, dmBg, hcBorder]} activeOpacity={0.8}>
+      <View style={[styles.toggleIcon, value && { backgroundColor: colors.muted }, hcBorder, dmBg]}>
         {icon}
       </View>
-      <Text style={styles.toggleLabel}>{label}</Text>
-      <View style={styles.toggleTrack}>
-        <View style={[styles.toggleThumb, value && styles.toggleThumbOn]} />
+      <Text style={[styles.toggleLabel, dmText, hcText]}>{label}</Text>
+      <View style={[styles.toggleTrack, highContrast && { backgroundColor: '#555' }]}>
+        <View style={[styles.toggleThumb, value && styles.toggleThumbOn, highContrast && { backgroundColor: '#000' }]} />
       </View>
     </TouchableOpacity>
   );

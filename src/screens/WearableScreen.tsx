@@ -11,7 +11,7 @@ import { Accordion, AccItem } from '../components/Accordion';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 
 export default function WearableScreen() {
-  const { bleConnected, setBleConnected, noise, setNoise, light, setLight, goCrisis } = useContext(AppContext);
+  const { bleConnected, setBleConnected, noise, setNoise, temperature, setTemperature, goCrisis } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [pairing, setPairing] = useState(false);
 
@@ -50,7 +50,7 @@ export default function WearableScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <Accordion>
           <AccItem id="sensors" title="Simulated sensors" defaultOpen icon={<Zap size={18} color={colors.primary} />}>
-            <Text style={styles.sensorHint}>Move the sliders to see your Home dashboard react in real time.</Text>
+            <Text style={styles.sensorHint}>Move the sliders to see your House dashboard react in real time.</Text>
             
             {/* Noise slider */}
             <View style={[styles.sliderCard, { marginTop: 12 }]}>
@@ -74,21 +74,21 @@ export default function WearableScreen() {
               />
             </View>
 
-            {/* Light slider */}
+            {/* Temperature slider */}
             <View style={[styles.sliderCard, { marginTop: 10 }]}>
               <View style={styles.sliderCardTop}>
                 <View style={[styles.sliderIcon, neuSm]}>
                   <Sun size={18} color={colors.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.sliderCardTitle}>Light</Text>
-                  <Text style={styles.sliderCardHint}>{light < 400 ? 'Soft' : light < 900 ? 'Bright' : 'Very bright'}</Text>
+                  <Text style={styles.sliderCardTitle}>Temperature</Text>
+                  <Text style={styles.sliderCardHint}>{temperature < 97 ? 'Cold' : temperature < 100 ? 'Normal' : 'Fever'}</Text>
                 </View>
-                <Text style={styles.sliderValue}>{light}<Text style={styles.sliderUnit}> lux</Text></Text>
+                <Text style={styles.sliderValue}>{temperature}<Text style={styles.sliderUnit}> °F</Text></Text>
               </View>
               <Slider
-                minimumValue={100} maximumValue={1500} step={10}
-                value={light} onValueChange={(v) => setLight(Math.round(v))}
+                minimumValue={30} maximumValue={110} step={1}
+                value={temperature} onValueChange={(v) => setTemperature(Math.round(v))}
                 minimumTrackTintColor={colors.primary}
                 maximumTrackTintColor={colors.border}
                 thumbTintColor={colors.primary}

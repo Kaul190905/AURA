@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Volume2, Sun, Hand, Users2, Waves, Wind, Star, Home, MessageCircle } from 'lucide-react-native';
+import { Volume2, Sun, Hand, Users, AudioWaveform, Wind, Star, House, MessageCircle } from 'lucide-react-native';
 
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
@@ -14,7 +14,7 @@ import { TriggerKey } from '../types';
 import { TRIGGERS, PRESETS, ENVIRONMENTS } from '../data';
 
 const TRIGGER_ICONS: Record<TriggerKey, React.ElementType> = {
-  sound: Volume2, light: Sun, touch: Hand, crowd: Users2, movement: Waves, smell: Wind,
+  sound: Volume2, temp: Sun, touch: Hand, crowd: Users, movement: AudioWaveform, smell: Wind,
 };
 
 interface Props { onDone: () => void; }
@@ -82,7 +82,7 @@ export default function ProfileSetupScreen({ onDone }: Props) {
           </AccItem>
 
           {/* Environments */}
-          <AccItem id="env" title="Where does this happen?" icon={<Home size={18} color={colors.primary} />}
+          <AccItem id="env" title="Where does this happen?" icon={<House size={18} color={colors.primary} />}
             badge={<Text style={styles.badge}>{environments.length}</Text>}>
             <View style={styles.chips}>
               {ENVIRONMENTS.map((e) => {
@@ -98,7 +98,7 @@ export default function ProfileSetupScreen({ onDone }: Props) {
           </AccItem>
 
           {/* Age group */}
-          <AccItem id="age" title="Age group" icon={<Users2 size={18} color={colors.primary} />}
+          <AccItem id="age" title="Age group" icon={<Users size={18} color={colors.primary} />}
             badge={<Text style={styles.badge}>{ageGroup}</Text>}>
             <View style={styles.chips}>
               {['Child', 'Teen', 'Adult'].map((a) => (

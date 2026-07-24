@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Users2, Zap, Eye, Shield, Trash2, ChevronRight, Wind, Phone, MessageCircle, QrCode, Watch, Battery, Smartphone, Navigation, LogOut } from 'lucide-react-native';
+import { Users, Zap, Eye, Shield, Trash2, ChevronRight, Wind, Phone, MessageCircle, QrCode, Watch, Battery, Smartphone, Navigation, LogOut } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 import { Accordion, AccItem } from '../components/Accordion';
@@ -31,7 +31,7 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <Accordion>
           {/* Profile */}
-          <AccItem id="profile" title="Profile" defaultOpen icon={<Users2 size={18} color={colors.primary} />}>
+          <AccItem id="profile" title="Profile" defaultOpen icon={<Users size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
               <TouchableOpacity onPress={() => navigateTo('profile')} style={styles.navRow} activeOpacity={0.8}>
                 <Text style={styles.navRowText}>Edit sensory profile</Text>
@@ -78,12 +78,14 @@ export default function SettingsScreen() {
                 label="High contrast"
                 value={highContrast}
                 onChange={setHighContrast}
+                highContrast={highContrast}
               />
               <ToggleRow
                 icon={<Wind size={16} color={colors.primary} />}
                 label="Reduce motion"
                 value={reduceMotion}
                 onChange={setReduceMotion}
+                highContrast={highContrast}
               />
             </View>
           </AccItem>
@@ -130,7 +132,7 @@ export default function SettingsScreen() {
           </AccItem>
 
           {/* Connected Caregiver */}
-          <AccItem id="caregiver" title="Connected Caregiver" icon={<Users2 size={18} color={colors.primary} />}>
+          <AccItem id="caregiver" title="Connected Caregiver" icon={<Users size={18} color={colors.primary} />}>
             <View style={{ gap: 12, marginTop: 8 }}>
               <View style={[styles.navRow, { justifyContent: 'space-between' }]}>
                  <View>
@@ -176,16 +178,18 @@ export default function SettingsScreen() {
 }
 
 function ToggleRow({
-  icon, label, value, onChange,
-}: { icon: React.ReactNode; label: string; value: boolean; onChange: (v: boolean) => void }) {
+  icon, label, value, onChange, highContrast
+}: { icon: React.ReactNode; label: string; value: boolean; onChange: (v: boolean) => void; highContrast?: boolean }) {
+  const hcBorder = highContrast ? { borderColor: '#000', borderWidth: 2 } : {};
+  const hcText = highContrast ? { color: '#000', fontWeight: 'bold' as const } : {};
   return (
-    <TouchableOpacity onPress={() => onChange(!value)} style={styles.toggleRow} activeOpacity={0.8}>
-      <View style={[styles.toggleIcon, value && { backgroundColor: colors.muted }]}>
+    <TouchableOpacity onPress={() => onChange(!value)} style={[styles.toggleRow, hcBorder]} activeOpacity={0.8}>
+      <View style={[styles.toggleIcon, value && { backgroundColor: colors.muted }, hcBorder]}>
         {icon}
       </View>
-      <Text style={styles.toggleLabel}>{label}</Text>
-      <View style={styles.toggleTrack}>
-        <View style={[styles.toggleThumb, value && styles.toggleThumbOn]} />
+      <Text style={[styles.toggleLabel, hcText]}>{label}</Text>
+      <View style={[styles.toggleTrack, highContrast && { backgroundColor: '#555' }]}>
+        <View style={[styles.toggleThumb, value && styles.toggleThumbOn, highContrast && { backgroundColor: '#000' }]} />
       </View>
     </TouchableOpacity>
   );

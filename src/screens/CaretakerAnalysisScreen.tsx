@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TrendingUp, Zap, Waves, BrainCircuit, Activity, Clock, Target, MapPin, Network, Star } from 'lucide-react-native';
+import { TrendingUp, Zap, AudioWaveform, BrainCircuit, Activity, Clock, Target, MapPin, Network, Star } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
 import { Accordion, AccItem } from '../components/Accordion';
@@ -11,9 +11,14 @@ import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { riskColor, timeAgo } from '../utils';
 
 export default function CaretakerAnalysisScreen() {
-  const { history, strategies } = useContext(AppContext);
+  const { history, strategies, darkMode } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [range, setRange] = useState<'7d' | '30d'>('7d');
+  
+  const containerStyle = darkMode ? { backgroundColor: '#000000' } : {};
+  const textStyle = darkMode ? { color: '#ffffff' } : {};
+  const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : {};
+  const subTextStyle = darkMode ? { color: '#aaaaaa' } : {};
   
   const cutoff = Date.now() - (range === '7d' ? 7 : 30) * 86400000;
   const filtered = history.filter((h) => h.time >= cutoff);
@@ -38,24 +43,24 @@ export default function CaretakerAnalysisScreen() {
   }, [filtered]);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
       
       {/* Top Bar Duplicate layout */}
       <View style={styles.topBar}>
         <View>
           <Text style={styles.topLabel}>CAREGIVER VIEW</Text>
-          <Text style={styles.greeting}>Analysis & Insights</Text>
+          <Text style={[styles.greeting, textStyle]}>Analysis & Insights</Text>
         </View>
-        <View style={[styles.sparkleBtn, neuSm]}>
+        <View style={[styles.sparkleBtn, cardStyle, neuSm]}>
           <BrainCircuit size={20} color={colors.primary} />
         </View>
       </View>
 
       {/* Range toggle - Exact Duplicate */}
-      <View style={styles.rangeWrap}>
+      <View style={[styles.rangeWrap, cardStyle]}>
         {(['7d', '30d'] as const).map((r) => (
           <TouchableOpacity key={r} onPress={() => setRange(r)}
-            style={[styles.rangeBtn, range === r && styles.rangeBtnActive]} activeOpacity={0.8}>
+            style={[styles.rangeBtn, range === r && styles.rangeBtnActive, range === r && containerStyle]} activeOpacity={0.8}>
             <Text style={[styles.rangeBtnText, range === r && { color: colors.primary }]}>
               Last {r === '7d' ? '7 days' : '30 days'}
             </Text>
@@ -111,8 +116,8 @@ export default function CaretakerAnalysisScreen() {
           
           <AccItem id="peak" title="Peak Overload Times" icon={<Activity size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
-              <View style={styles.factorItem}>
-                <Text style={styles.factorText}>Afternoons (2 PM - 4 PM) show highest activity.</Text>
+              <View style={[styles.factorItem, cardStyle]}>
+                <Text style={[styles.factorText, textStyle]}>Afternoons (2 PM - 4 PM) show highest activity.</Text>
               </View>
             </View>
           </AccItem>
@@ -120,8 +125,8 @@ export default function CaretakerAnalysisScreen() {
           <AccItem id="strat" title="Strategy Effectiveness" icon={<Target size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
               {strategies.slice(0, 3).map((s) => (
-                <View key={s.id} style={styles.effRow}>
-                  <Text style={styles.effTitle} numberOfLines={1}>{s.title}</Text>
+                <View key={s.id} style={[styles.effRow, cardStyle]}>
+                  <Text style={[styles.effTitle, textStyle]} numberOfLines={1}>{s.title}</Text>
                   <Text style={styles.effHelped}>
                     <Text style={{ color: colors.riskLow, ...fonts.semibold }}>{s.helped}</Text> helped
                   </Text>
@@ -132,32 +137,32 @@ export default function CaretakerAnalysisScreen() {
           
           <AccItem id="recovery" title="Recovery Duration" icon={<Clock size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
-              <View style={styles.factorItem}>
-                <Text style={styles.factorText}>Average recovery time: <Text style={fonts.semibold}>18 mins</Text></Text>
+              <View style={[styles.factorItem, cardStyle]}>
+                <Text style={[styles.factorText, textStyle]}>Average recovery time: <Text style={fonts.semibold}>18 mins</Text></Text>
               </View>
             </View>
           </AccItem>
 
           <AccItem id="events" title="Recent Event History"
-            icon={<Waves size={18} color={colors.primary} />}
+            icon={<AudioWaveform size={18} color={colors.primary} />}
             badge={<Text style={styles.badge}>{filtered.length}</Text>}>
             {filtered.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>No events in this range.</Text>
+              <View style={[styles.emptyCard, cardStyle]}>
+                <Text style={[styles.emptyText, subTextStyle]}>No events in this range.</Text>
               </View>
             ) : (
               <View style={{ gap: 8 }}>
                 {filtered.map((h) => {
                   const c = riskColor(h.score);
                   return (
-                    <View key={h.id} style={styles.eventRow}>
-                      <View style={[styles.eventDot, { borderColor: c }]} />
+                    <View key={h.id} style={[styles.eventRow, cardStyle]}>
+                      <View style={[styles.eventDot, containerStyle, { borderColor: c }]} />
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.eventTitle}>
-                          {h.trigger} · <Text style={styles.eventAction}>{h.action}</Text>
+                        <Text style={[styles.eventTitle, textStyle]}>
+                          {h.trigger} · <Text style={[styles.eventAction, subTextStyle]}>{h.action}</Text>
                         </Text>
-                        <Text style={styles.eventDate}>{new Date(h.time).toLocaleString()}</Text>
-                        {h.note && <Text style={styles.eventNote}>"{h.note}"</Text>}
+                        <Text style={[styles.eventDate, subTextStyle]}>{new Date(h.time).toLocaleString()}</Text>
+                        {h.note && <Text style={[styles.eventNote, textStyle]}>"{h.note}"</Text>}
                       </View>
                       <Text style={[styles.eventScore, { color: c }]}>{h.score}</Text>
                     </View>
@@ -195,12 +200,12 @@ export default function CaretakerAnalysisScreen() {
                 { name: 'Downtown Subway', risk: 'High', visits: 4 },
                 { name: 'Shopping Mall', risk: 'Medium', visits: 2 }
               ].map((loc, i) => (
-                <View key={i} style={[styles.eventRow, { justifyContent: 'space-between' }]}>
+                <View key={i} style={[styles.eventRow, cardStyle, { justifyContent: 'space-between' }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                     <MapPin size={18} color={colors.riskHigh} />
                     <View>
-                      <Text style={[styles.eventTrigger, fonts.bold]}>{loc.name}</Text>
-                      <Text style={styles.eventTime}>{loc.visits} visits this week</Text>
+                      <Text style={[styles.eventTitle, textStyle, fonts.bold]}>{loc.name}</Text>
+                      <Text style={[styles.eventDate, subTextStyle]}>{loc.visits} visits this week</Text>
                     </View>
                   </View>
                   <View style={styles.riskBadge}>
@@ -214,11 +219,11 @@ export default function CaretakerAnalysisScreen() {
           {/* Trigger Combination */}
           <AccItem id="triggerCombo" title="Trigger Combinations" icon={<Network size={18} color={colors.primary} />}>
             <View style={{ gap: 12, marginTop: 8 }}>
-              <View style={[styles.eventRow, { alignItems: 'flex-start' }]}>
+              <View style={[styles.eventRow, cardStyle, { alignItems: 'flex-start' }]}>
                 <Zap size={16} color={colors.primary} />
                 <View>
-                   <Text style={[styles.eventTrigger, fonts.bold]}>Noise + Crowds</Text>
-                   <Text style={styles.eventTime}>80% of overloads occur when these two triggers are combined.</Text>
+                   <Text style={[styles.eventTitle, textStyle, fonts.bold]}>Noise + Crowds</Text>
+                   <Text style={[styles.eventDate, subTextStyle]}>80% of overloads occur when these two triggers are combined.</Text>
                 </View>
               </View>
             </View>
@@ -226,8 +231,8 @@ export default function CaretakerAnalysisScreen() {
 
           {/* AI Recommendation */}
           <AccItem id="ai" title="Aura AI Insights" icon={<Star size={18} color={colors.primary} />} defaultOpen>
-            <View style={{ gap: 8, marginTop: 8, padding: 12, backgroundColor: `${colors.primary}10`, borderRadius: radius.lg }}>
-               <Text style={{ fontSize: 14, color: colors.foreground, ...fonts.medium }}>
+            <View style={{ gap: 8, marginTop: 8, padding: 12, backgroundColor: darkMode ? '#1a1a2e' : `${colors.primary}10`, borderRadius: radius.lg }}>
+               <Text style={{ fontSize: 14, color: darkMode ? '#e0e0ff' : colors.foreground, ...fonts.medium }}>
                  Based on the past 7 days, Santosh's risk level spikes mostly in the afternoon. Deep Breathing exercises have been the most effective recovery tool. We suggest prompting a 5-minute preemptive break around 2:00 PM.
                </Text>
             </View>
@@ -281,4 +286,15 @@ const styles = StyleSheet.create({
   },
   effTitle: { flex: 1, fontSize: 12, color: colors.foreground, ...fonts.medium, marginRight: 8 },
   effHelped: { fontSize: 10, color: colors.mutedForeground },
+  riskBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+    backgroundColor: `${colors.primary}20`,
+  },
+  riskBadgeText: {
+    fontSize: 10,
+    color: colors.primary,
+    ...fonts.semibold,
+  },
 });

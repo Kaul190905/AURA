@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Bell, Calendar, Clock, MoreVertical } from 'lucide-react-native';
+import { Plus, Bell, Calendar, Clock, EllipsisVertical } from 'lucide-react-native';
 import { Header } from '../components/Header';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 
@@ -46,7 +46,7 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
                 <Clock size={16} color={r.active ? colors.primary : colors.mutedForeground} />
                 <Text style={styles.cardTime}>{r.time}</Text>
               </View>
-              <TouchableOpacity><MoreVertical size={16} color={colors.mutedForeground} /></TouchableOpacity>
+              <TouchableOpacity><EllipsisVertical size={16} color={colors.mutedForeground} /></TouchableOpacity>
             </View>
             <Text style={styles.cardTitle}>{r.title}</Text>
             

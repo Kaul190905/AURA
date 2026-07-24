@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, FlatList,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Star, Trash2, Volume2, Sun, Hand, Users2, Waves, Wind } from 'lucide-react-native';
+import { Plus, Star, Trash2, Volume2, Sun, Hand, Users, AudioWaveform, Wind } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 import { Accordion, AccItem } from '../components/Accordion';
@@ -12,7 +12,7 @@ import { TRIGGERS } from '../data';
 import { TriggerKey, Strategy } from '../types';
 
 const TRIGGER_ICONS: Record<TriggerKey, React.ElementType> = {
-  sound: Volume2, light: Sun, touch: Hand, crowd: Users2, movement: Waves, smell: Wind,
+  sound: Volume2, temp: Sun, touch: Hand, crowd: Users, movement: AudioWaveform, smell: Wind,
 };
 
 export default function StrategyLibraryScreen() {

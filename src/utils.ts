@@ -3,7 +3,7 @@ import { TriggerKey, HistoryEvent } from './types';
 // ── Risk engine ───────────────────────────────────────────────────────────────
 export function computeRisk(
   noiseDb: number,
-  lightLux: number,
+  tempF: number,
   selfReport: number,
   profile: Partial<Record<TriggerKey, number>>,
 ) {
@@ -11,16 +11,17 @@ export function computeRisk(
 
   const soundSens = (profile.sound ?? 2) / 5;
   const noiseScore = Math.max(0, Math.min(5, (noiseDb - 50) / 10)) * (0.5 + soundSens);
-  if (noiseScore > 1.2) factors.push({ label: `Noise around ${Math.round(noiseDb)} dB`, weight: noiseScore });
-
-  const lightSens = (profile.light ?? 2) / 5;
-  const lightScore = Math.max(0, Math.min(5, (lightLux - 300) / 200)) * (0.5 + lightSens);
-  if (lightScore > 1) factors.push({ label: `Bright light (${Math.round(lightLux)} lux)`, weight: lightScore });
+  const tempSens = (profile.temp ?? 2) / 5;
+  const tempDev = Math.abs(tempF - 98.6);
+  const tempScore = Math.max(0, Math.min(5, tempDev / 1.5)) * (0.5 + tempSens);
 
   const selfScore = (selfReport - 1) * 1.2;
-  if (selfReport >= 3) factors.push({ label: `You said you feel ${selfReport}/5`, weight: selfScore });
 
-  const raw = noiseScore + lightScore + selfScore;
+  if (noiseScore > 1) factors.push({ label: `Loud noise (${Math.round(noiseDb)}dB)`, weight: noiseScore });
+  if (tempScore > 1) factors.push({ label: `Abnormal temp (${Math.round(tempF)}°F)`, weight: tempScore });
+  if (selfScore > 1) factors.push({ label: 'Self reported stress', weight: selfScore });
+
+  const raw = noiseScore + tempScore + selfScore;
   const score = Math.max(0, Math.min(10, Math.round(raw)));
   const level: 'low' | 'medium' | 'high' = score <= 2 ? 'low' : score <= 4 ? 'medium' : 'high';
   return { score, level, factors: factors.sort((a, b) => b.weight - a.weight).slice(0, 3) };

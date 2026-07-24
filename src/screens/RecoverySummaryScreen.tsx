@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppContext } from '../AppContext';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
-import { Activity, Clock, ThumbsUp, ThumbsDown, CheckCircle } from 'lucide-react-native';
+import { Activity, Clock, ThumbsUp, ThumbsDown, CircleCheck } from 'lucide-react-native';
 
 interface Props {
   onDone: () => void;
@@ -17,7 +17,7 @@ export default function RecoverySummaryScreen({ onDone }: Props) {
     logEvent({
       trigger: 'self',
       score: risk.score,
-      action: helpful ? 'suggestion' : 'none',
+      action: helpful ? 'ok' : 'dismissed',
       note: helpful ? 'Found recovery strategy helpful' : 'Did not find strategy helpful',
     });
     onDone();
@@ -27,7 +27,7 @@ export default function RecoverySummaryScreen({ onDone }: Props) {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <View style={styles.iconContainer}>
-          <CheckCircle size={32} color={colors.primary} />
+          <CircleCheck size={32} color={colors.primary} />
         </View>
         <Text style={styles.title}>Recovery Complete</Text>
         <Text style={styles.subtitle}>You've exited Reset Mode.</Text>

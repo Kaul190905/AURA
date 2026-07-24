@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Star, Heart, TrendingUp, Zap, Waves, Bell, Mic, CalendarDays, ChevronRight } from 'lucide-react-native';
+import { Star, Heart, TrendingUp, Zap, AudioWaveform, Bell, Mic, CalendarDays, ChevronRight } from 'lucide-react-native';
 import { LineChart } from 'react-native-gifted-charts';
 
 import { AppContext } from '../AppContext';
@@ -140,7 +140,7 @@ export default function HomeScreen() {
 
           {/* Recent events */}
           <AccItem id="recent" title="Recent events"
-            icon={<Waves size={18} color={colors.primary} />}
+            icon={<AudioWaveform size={18} color={colors.primary} />}
             badge={<Text style={styles.badge}>{history.length}</Text>}>
             {history.slice(0, 4).map((h) => {
               const c = riskColor(h.score);

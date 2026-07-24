@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Mic, Search, Filter, Play, Trash2, Edit2, BrainCircuit } from 'lucide-react-native';
+import { Mic, Search, ListFilter, Play, Trash2, Pen, BrainCircuit } from 'lucide-react-native';
 import { Header } from '../components/Header';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 
@@ -25,7 +25,7 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
            placeholderTextColor={colors.mutedForeground}
         />
         <TouchableOpacity style={styles.filterBtn}>
-           <Filter size={16} color={colors.primary} />
+           <ListFilter size={16} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -51,7 +51,7 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
               </View>
               <View style={styles.actions}>
                 <TouchableOpacity style={styles.iconBtn}><Play size={16} color={colors.primary} /></TouchableOpacity>
-                <TouchableOpacity style={styles.iconBtn}><Edit2 size={16} color={colors.mutedForeground} /></TouchableOpacity>
+                <TouchableOpacity style={styles.iconBtn}><Pen size={16} color={colors.mutedForeground} /></TouchableOpacity>
                 <TouchableOpacity style={styles.iconBtn}><Trash2 size={16} color={colors.riskHigh} /></TouchableOpacity>
               </View>
             </View>
