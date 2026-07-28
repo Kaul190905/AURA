@@ -1,0 +1,43 @@
+name: iOS Cloud Build
+
+on:
+  push:
+    branches: [ srinath-dev, main ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build iOS Application
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd Frontend
+          npm ci
+
+      - name: Install CocoaPods
+        run: |
+          cd Frontend/ios
+          pod install
+
+      - name: Build iOS Application
+        run: |
+          cd Frontend
+          npx react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle --assets-dest ios/
+
+      - name: Upload iOS Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-bundle
+          path: Frontend/ios/main.jsbundle
