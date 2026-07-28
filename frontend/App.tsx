@@ -9,7 +9,7 @@ import { Home, Library, TrendingUp, Bluetooth, Settings, Heart } from 'lucide-re
 
 import { colors } from './src/theme';
 import { TriggerKey, HistoryEvent, Strategy, Accommodation } from './src/types';
-import { DEFAULT_STRATEGIES, seedHistory } from './src/data';
+import { DEFAULT_STRATEGIES } from './src/data';
 import { computeRisk } from './src/utils';
 
 // ── API Services ───────────────────────────────────────────────────────────────
@@ -19,6 +19,8 @@ import { submitCheckin } from './src/api/wellnessService';
 import { logOverloadEvent, getOverloadEvents } from './src/api/overloadService';
 import { createAlert, submitAlertFeedback } from './src/api/alertService';
 import { getRecommendations } from './src/api/recommendationService';
+import { getStrategies } from './src/api/strategyService';
+import { getAccommodations } from './src/api/accommodationService';
 
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
@@ -167,11 +169,8 @@ export default function App() {
   const [selfReport, setSelfReport] = useState(2);
   const [bleConnected, setBleConnected] = useState(false);
   const [strategies, setStrategies] = useState<Strategy[]>(DEFAULT_STRATEGIES);
-  const [history, setHistory] = useState<HistoryEvent[]>(seedHistory());
-  const [accommodations, setAccommodations] = useState<Accommodation[]>([
-    { id: 'a1', time: Date.now() - 2 * 86400000, text: 'Allowed headphones during math class' },
-    { id: 'a2', time: Date.now() - 5 * 86400000, text: 'Moved seat away from the window' },
-  ]);
+  const [history, setHistory] = useState<HistoryEvent[]>([]);
+  const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
   const [highContrast, setHighContrast] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [sensitivity, setSensitivity] = useState(3);
@@ -262,6 +261,47 @@ export default function App() {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── On mount: hydrate strategies from backend ─────────────────────────────
+  useEffect(() => {
+    async function hydrateStrategies() {
+      const backendStrategies = await getStrategies(userId);
+      if (backendStrategies && backendStrategies.length > 0) {
+        // Map backend Strategy shape to frontend Strategy shape
+        setStrategies(
+          backendStrategies.map((s) => ({
+            id: s.id,
+            title: s.title,
+            trigger: s.trigger as TriggerKey,
+            helped: s.helped,
+            tried: s.tried,
+          }))
+        );
+      }
+      // If no strategies on backend yet, keep DEFAULT_STRATEGIES as placeholder
+    }
+    hydrateStrategies().catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── On mount: hydrate accommodations from backend ─────────────────────────
+  useEffect(() => {
+    async function hydrateAccommodations() {
+      const backendAccommodations = await getAccommodations(userId);
+      if (backendAccommodations && backendAccommodations.length > 0) {
+        setAccommodations(
+          backendAccommodations.map((a) => ({
+            id: a.id,
+            text: a.text,
+            time: new Date(a.time).getTime(),
+          }))
+        );
+      }
+    }
+    hydrateAccommodations().catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   // ── On mount: fetch initial recommendations ───────────────────────────────
   useEffect(() => {

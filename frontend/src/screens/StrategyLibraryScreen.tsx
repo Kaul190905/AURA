@@ -1,6 +1,6 @@
 import React, { useContext, useState, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, FlatList,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, Star, Trash2, Volume2, Sun, Hand, Users2, Waves, Wind } from 'lucide-react-native';
@@ -10,6 +10,8 @@ import { Accordion, AccItem } from '../components/Accordion';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { TRIGGERS } from '../data';
 import { TriggerKey, Strategy } from '../types';
+import { createStrategy, deleteStrategy as deleteStrategyApi, updateStrategy as updateStrategyApi } from '../api/strategyService';
+import { DEV_USER_ID } from '../api/config';
 
 const TRIGGER_ICONS: Record<TriggerKey, React.ElementType> = {
   sound: Volume2, light: Sun, touch: Hand, crowd: Users2, movement: Waves, smell: Wind,
@@ -30,16 +32,36 @@ export default function StrategyLibraryScreen() {
     return m;
   }, [strategies]);
 
-  const remove = (id: string) => setStrategies(strategies.filter((s) => s.id !== id));
+  const remove = async (id: string) => {
+    await deleteStrategyApi(id, DEV_USER_ID).catch(() => {});
+    setStrategies(strategies.filter((s) => s.id !== id));
+  };
 
-  const save = () => {
+  const save = async () => {
     if (!title.trim()) return;
-    setStrategies([{
-      id: Math.random().toString(36).slice(2),
-      title: title.trim(), note: note.trim() || undefined,
-      trigger, helped: 0, tried: 0, custom: true,
-    }, ...strategies]);
+    const created = await createStrategy(
+      { title: title.trim(), trigger, helped: 0, tried: 0 },
+      DEV_USER_ID,
+    );
+    const newStrategy: Strategy = created
+      ? { id: created.id, title: created.title, trigger: created.trigger as TriggerKey, helped: created.helped, tried: created.tried, custom: true }
+      : { id: Math.random().toString(36).slice(2), title: title.trim(), trigger, helped: 0, tried: 0, custom: true };
+    setStrategies([newStrategy, ...strategies]);
     setTitle(''); setNote(''); setAdding(false);
+  };
+
+  const markHelped = async (s: Strategy) => {
+    const updated = await updateStrategyApi(s.id, { helped: s.helped + 1, tried: s.tried + 1 }, DEV_USER_ID).catch(() => null);
+    setStrategies(strategies.map((st) =>
+      st.id === s.id ? { ...st, helped: st.helped + 1, tried: st.tried + 1 } : st
+    ));
+  };
+
+  const markTried = async (s: Strategy) => {
+    await updateStrategyApi(s.id, { tried: s.tried + 1 }, DEV_USER_ID).catch(() => null);
+    setStrategies(strategies.map((st) =>
+      st.id === s.id ? { ...st, tried: st.tried + 1 } : st
+    ));
   };
 
   return (
@@ -105,9 +127,17 @@ export default function StrategyLibraryScreen() {
                         <View style={{ flex: 1 }}>
                           <Text style={styles.strategyTitle}>{s.title}</Text>
                           {s.note && <Text style={styles.strategyNote}>{s.note}</Text>}
-                          <View style={styles.helpedBadge}>
-                            <Star size={10} color={colors.mutedForeground} />
-                            <Text style={styles.helpedText}>Helped {s.helped}/{Math.max(s.tried, 1)}</Text>
+                          <View style={styles.helpedRow}>
+                            <View style={styles.helpedBadge}>
+                              <Star size={10} color={colors.mutedForeground} />
+                              <Text style={styles.helpedText}>Helped {s.helped}/{Math.max(s.tried, 1)}</Text>
+                            </View>
+                            <TouchableOpacity style={styles.markBtn} onPress={() => markHelped(s)} activeOpacity={0.8}>
+                              <Text style={styles.markBtnText}>✓ Helped</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.markBtn, { backgroundColor: colors.muted }]} onPress={() => markTried(s)} activeOpacity={0.8}>
+                              <Text style={[styles.markBtnText, { color: colors.mutedForeground }]}>Tried</Text>
+                            </TouchableOpacity>
                           </View>
                         </View>
                         {s.custom && (
@@ -177,6 +207,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full, ...neuSm,
   },
   helpedText: { fontSize: 10, color: colors.mutedForeground, ...fonts.semibold },
+  helpedRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' },
+  markBtn: {
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full,
+    backgroundColor: colors.primary + '22',
+  },
+  markBtnText: { fontSize: 10, color: colors.primary, ...fonts.semibold },
   deleteBtn: {
     width: 32, height: 32, borderRadius: radius.full,
     backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...neuSm,
