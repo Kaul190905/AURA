@@ -1,13 +1,12 @@
 // ── AURA Backend Configuration ─────────────────────────────────────────────
-// Update RENDER_BASE_URL to your live Render deployment URL before going to
-// production.  The SUPABASE_* values match the backend's own .env so they
-// share the same project.
+// Backend is deployed on Render — reachable from any device, anywhere.
+// To run locally, swap API_BASE_URL to LOCAL_BACKEND_URL.
 
-import { Platform } from 'react-native';
+export const LOCAL_BACKEND_URL = 'http://192.168.137.1:8000'; // USB Tethering IP (dev only)
+export const RENDER_BACKEND_URL = 'https://aura-backend-yit7.onrender.com';
 
-export const LOCAL_BACKEND_URL = 'http://192.168.137.1:8000'; // Uses your PC's USB Tethering IP
-
-export const API_BASE_URL = `${LOCAL_BACKEND_URL}/api/v1`;
+// ✅ Always point to Render (production)
+export const API_BASE_URL = `${RENDER_BACKEND_URL}/api/v1`;
 
 // Supabase project credentials (same project used by the backend)
 export const SUPABASE_URL = 'https://juamgvxqcjrnfgzemoof.supabase.co';

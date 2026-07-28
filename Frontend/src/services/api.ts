@@ -176,7 +176,8 @@ export async function getSensorHistory(
   userId: string,
   limit = 100,
 ): Promise<SensorDataResponse[]> {
-  const res = await authFetch(`/sensor-data/?user_id=${userId}&limit=${limit}`);
+  // Backend route: GET /sensor-data/history?user_id=...&limit=...
+  const res = await authFetch(`/sensor-data/history?user_id=${userId}&limit=${limit}&sort_by=desc`);
   return res.json();
 }
 
@@ -216,8 +217,9 @@ export async function confirmAlert(
   alertId: string,
   feedback: AlertFeedback,
 ): Promise<AlertResponse> {
+  // Backend route: PATCH /alerts/{alert_id}/feedback
   const res = await authFetch(`/alerts/${alertId}/feedback`, {
-    method: 'POST',
+    method: 'PATCH',
     body: JSON.stringify(feedback),
   });
   return res.json();
