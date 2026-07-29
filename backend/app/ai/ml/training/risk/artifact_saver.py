@@ -173,11 +173,11 @@ def _save_report(
 
 | Feature | Description |
 |---|---|
-| `noise_heart_interaction` | `noise_db × heart_rate / 10 000` — compound sensory load |
-| `thermal_stress` | `|body_temp − ambient_temp|` — thermoregulation effort |
-| `spo2_deficit` | `max(0, 100 − blood_oxygen)` — SpO2 deviation from ideal |
+| `noise_heart_interaction` | `noise_db x heart_rate / 10 000` — compound sensory load |
+| `thermal_stress` | `|body_temp - ambient_temp|` — thermoregulation effort |
+| `spo2_deficit` | `max(0, 100 - blood_oxygen)` — SpO2 deviation from ideal |
 | `hr_age_ratio` | `heart_rate / (age + 1)` — age-normalised heart rate |
-| `humidity_comfort_delta` | `|humidity − 50|` — deviation from WHO comfort midpoint |
+| `humidity_comfort_delta` | `|humidity - 50|` — deviation from WHO comfort midpoint |
 
 Total feature count after one-hot encoding: **{len(feature_names)}**
 
@@ -185,17 +185,22 @@ Total feature count after one-hot encoding: **{len(feature_names)}**
 
 ## 3. Preprocessing
 
-- **Numeric columns**: Median imputation → Standard scaling
-- **Categorical columns**: Mode imputation → One-hot encoding (`handle_unknown="ignore"`)
+- **Numeric columns**: Median imputation -> Standard scaling
+- **Categorical columns**: Mode imputation -> One-hot encoding (`handle_unknown="ignore"`)
 - Preprocessor bundled **with** the model artifact for inference consistency
 
 ---
 
-## 4. Hyperparameter Tuning
+## 4. Hyperparameter Tuning (Two-Phase)
 
 | Property | Value |
 |---|---|
 | Search strategy | {tuning_meta['search_type']} |
+| Phase 1: CV rows (stratified subsample) | {tuning_meta.get('cv_subsample_size', 'N/A'):,} |
+| Phase 1: n_estimators (search) | {tuning_meta.get('search_n_estimators', 'N/A')} |
+| Phase 2: Full training rows (total train split) | {tuning_meta.get('full_train_size', 'N/A'):,} |
+| Phase 2: Refitted training rows (refit subset) | {tuning_meta.get('refit_size', 'N/A'):,} |
+| Phase 2: n_estimators (final model) | {tuning_meta.get('final_n_estimators', 'N/A')} |
 | CV folds | {tuning_meta['cv_folds']} |
 | Scoring metric | `{tuning_meta['scoring_metric']}` |
 | Candidates evaluated | {tuning_meta['n_candidates_evaluated']} |
@@ -203,7 +208,7 @@ Total feature count after one-hot encoding: **{len(feature_names)}**
 | Validation F1 (weighted) | {tuning_meta['val_f1_weighted']:.4f} |
 | Wall-clock time | {tuning_meta['wall_time_seconds']:.1f} s |
 
-### Best Hyperparameters
+### Best Hyperparameters (Final Model)
 
 ```json
 {json.dumps(tuning_meta['best_params'], indent=2)}

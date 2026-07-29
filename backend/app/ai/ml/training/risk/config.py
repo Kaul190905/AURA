@@ -112,16 +112,41 @@ RANDOM_STATE: int = 42
 
 # ---------------------------------------------------------------------------
 # Gradient Boosting hyper-parameter search space
+#
+# Strategy: Two-phase training.
+#
+# Phase 1 — CV SEARCH (fast):  Use n_estimators=50 with a small 20k-row
+#   stratified subsample. This quickly identifies the best max_depth,
+#   learning_rate, and subsample combination. GBC is sequential by design
+#   so n_estimators is the dominant cost driver.
+#
+# Phase 2 — FULL REFIT (quality): Refit the best params on 100% of the
+#   training data with FINAL_N_ESTIMATORS=300 for a production-quality model.
 # ---------------------------------------------------------------------------
-PARAM_GRID: Dict[str, List[Any]] = {
-    "n_estimators": [200, 400],
-    "max_depth": [3, 5],
-    "learning_rate": [0.05, 0.1],
-    "subsample": [0.8, 1.0],
-    "min_samples_split": [10, 20],
+
+# Search grid — kept deliberately compact so CV finishes in ~2 minutes
+SEARCH_PARAM_GRID: Dict[str, List[Any]] = {
+    "max_depth":      [3, 5],
+    "learning_rate":  [0.05, 0.1],
+    "subsample":      [0.8],
+    "min_samples_split": [20],
 }
 
+# Fixed for search phase (low = fast CV)
+SEARCH_N_ESTIMATORS: int = 50
+
+# Used for the full-data refit after best params are found
+FINAL_N_ESTIMATORS: int = 150
+
 CV_FOLDS: int = 3           # k-fold cross-validation during grid search
-N_ITER_RANDOM: int = 20     # RandomizedSearchCV iterations (used as fallback)
+N_ITER_RANDOM: int = 8      # RandomizedSearchCV iterations (used as fallback)
 SCORING_METRIC: str = "f1_weighted"
-N_JOBS: int = -1            # use all cores
+N_JOBS: int = -1            # parallelise the CV folds (not the GBC trees)
+
+# Max rows used during CV hyperparameter search (stratified subsample).
+CV_SUBSAMPLE_SIZE: int = 20_000
+
+# Max rows used for the final refitting (stratified subsample).
+# Refitting GBC on 672k rows is too slow on single CPU cores, so we train
+# the final model on 150k representative rows.
+REFIT_SUBSAMPLE_SIZE: int = 150_000
