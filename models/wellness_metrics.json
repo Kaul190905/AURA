@@ -1,0 +1,138 @@
+{
+  "saved_at": "2026-07-29T08:46:34.852067+00:00",
+  "tuning": {
+    "search_type": "GridSearchCV",
+    "search_n_estimators": 50,
+    "final_n_estimators": 150,
+    "cv_subsample_size": 20000,
+    "full_train_size": 672000,
+    "refit_size": 150000,
+    "best_search_params": {
+      "learning_rate": 0.1,
+      "max_depth": 5,
+      "min_samples_split": 20,
+      "subsample": 0.8
+    },
+    "best_params": {
+      "learning_rate": 0.1,
+      "max_depth": 5,
+      "min_samples_split": 20,
+      "subsample": 0.8,
+      "n_estimators": 150
+    },
+    "best_cv_score": -0.4044,
+    "cv_folds": 3,
+    "scoring_metric": "neg_mean_absolute_error",
+    "n_candidates_evaluated": 4,
+    "val_mae": 0.1679,
+    "wall_time_seconds": 548.98
+  },
+  "evaluation": {
+    "test_samples": 144000,
+    "mae": 0.1679,
+    "rmse": 0.2861,
+    "r2": 0.9998,
+    "feature_importance": [
+      {
+        "rank": 1,
+        "feature": "stress_index",
+        "importance": 0.771633
+      },
+      {
+        "rank": 2,
+        "feature": "heart_rate",
+        "importance": 0.13801
+      },
+      {
+        "rank": 3,
+        "feature": "noise_db",
+        "importance": 0.055408
+      },
+      {
+        "rank": 4,
+        "feature": "blood_oxygen",
+        "importance": 0.027308
+      },
+      {
+        "rank": 5,
+        "feature": "stress_feedback",
+        "importance": 0.007375
+      },
+      {
+        "rank": 6,
+        "feature": "location_type_Indoor - Fitness",
+        "importance": 0.000187
+      },
+      {
+        "rank": 7,
+        "feature": "avg_heart_rate",
+        "importance": 2.6e-05
+      },
+      {
+        "rank": 8,
+        "feature": "ambient_temperature",
+        "importance": 1.2e-05
+      },
+      {
+        "rank": 9,
+        "feature": "location_type_Indoor - Food Court",
+        "importance": 1e-05
+      },
+      {
+        "rank": 10,
+        "feature": "activity_Dancing",
+        "importance": 8e-06
+      },
+      {
+        "rank": 11,
+        "feature": "location_type_Outdoor - Street",
+        "importance": 5e-06
+      },
+      {
+        "rank": 12,
+        "feature": "avg_noise",
+        "importance": 5e-06
+      },
+      {
+        "rank": 13,
+        "feature": "location_type_Transit",
+        "importance": 4e-06
+      },
+      {
+        "rank": 14,
+        "feature": "location_type_Indoor/Outdoor - Event Venue",
+        "importance": 2e-06
+      },
+      {
+        "rank": 15,
+        "feature": "daily_avg_hr",
+        "importance": 1e-06
+      },
+      {
+        "rank": 16,
+        "feature": "humidity",
+        "importance": 1e-06
+      },
+      {
+        "rank": 17,
+        "feature": "recent_overload_frequency",
+        "importance": 1e-06
+      },
+      {
+        "rank": 18,
+        "feature": "body_temperature",
+        "importance": 1e-06
+      },
+      {
+        "rank": 19,
+        "feature": "daily_avg_noise",
+        "importance": 1e-06
+      },
+      {
+        "rank": 20,
+        "feature": "daily_avg_temp",
+        "importance": 0.0
+      }
+    ]
+  }
+}
