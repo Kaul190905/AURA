@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Optional
+import secrets
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "AURA"
@@ -12,8 +13,21 @@ class Settings(BaseSettings):
     SUPABASE_URL: str
     SUPABASE_KEY: str
 
-    # CORS setup
-    BACKEND_CORS_ORIGINS: List[str] = ["*"]
+    # CORS setup — restrict to known origins in production
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "https://aura-backend-yit7.onrender.com",
+        "http://localhost:8000",
+        "http://localhost:3000",
+    ]
+
+    # ── Security ────────────────────────────────────────────────────────────
+    # AES-256 encryption key for PII fields.
+    # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    # Then set ENCRYPTION_KEY in Render environment variables.
+    ENCRYPTION_KEY: Optional[str] = None
+
+    # Rate-limiting toggle (disable in unit tests)
+    RATE_LIMIT_ENABLED: bool = True
 
     # AI engines
     USE_ML_RISK_ENGINE: bool = False
