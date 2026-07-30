@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bluetooth, Zap, Volume2, Sun, Heart, Shield } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { Accordion, AccItem } from '../components/Accordion';
+
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { submitSensorData } from '../services/api';
 
@@ -62,75 +62,78 @@ export default function WearableScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-        <Accordion>
-          <AccItem id="sensors" title="Simulated sensors" defaultOpen icon={<Zap size={18} color={colors.primary} />}>
-            <Text style={styles.sensorHint}>Move the sliders to see your House dashboard react in real time.</Text>
-            
-            {/* Noise slider */}
-            <View style={[styles.sliderCard, { marginTop: 12 }]}>
-              <View style={styles.sliderCardTop}>
-                <View style={[styles.sliderIcon, neuSm]}>
-                  <Volume2 size={18} color={colors.primary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.sliderCardTitle}>Noise</Text>
-                  <Text style={styles.sliderCardHint}>{noise < 60 ? 'Quiet' : noise < 80 ? 'Busy' : 'Loud'}</Text>
-                </View>
-                <Text style={styles.sliderValue}>{noise}<Text style={styles.sliderUnit}> dB</Text></Text>
-              </View>
-              <Slider
-                minimumValue={40} maximumValue={100} step={1}
-                value={noise} onValueChange={(v) => setNoise(Math.round(v))}
-                minimumTrackTintColor={colors.primary}
-                maximumTrackTintColor={colors.border}
-                thumbTintColor={colors.primary}
-                style={{ marginTop: 10 }}
-              />
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Zap size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Simulated sensors</Text>
             </View>
-
-            {/* Temperature slider */}
-            <View style={[styles.sliderCard, { marginTop: 10 }]}>
-              <View style={styles.sliderCardTop}>
-                <View style={[styles.sliderIcon, neuSm]}>
-                  <Sun size={18} color={colors.primary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.sliderCardTitle}>Temperature</Text>
-                  <Text style={styles.sliderCardHint}>{temperature < 97 ? 'Cold' : temperature < 100 ? 'Normal' : 'Fever'}</Text>
-                </View>
-                <Text style={styles.sliderValue}>{temperature}<Text style={styles.sliderUnit}> °F</Text></Text>
+          </View>
+          <Text style={styles.sensorHint}>Move the sliders to see your House dashboard react in real time.</Text>
+          
+          {/* Noise slider */}
+          <View style={[styles.sliderCard, { marginTop: 12 }]}>
+            <View style={styles.sliderCardTop}>
+              <View style={[styles.sliderIcon, neuSm]}>
+                <Volume2 size={18} color={colors.primary} />
               </View>
-              <Slider
-                minimumValue={30} maximumValue={110} step={1}
-                value={temperature} onValueChange={(v) => setTemperature(Math.round(v))}
-                minimumTrackTintColor={colors.primary}
-                maximumTrackTintColor={colors.border}
-                thumbTintColor={colors.primary}
-                style={{ marginTop: 10 }}
-              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sliderCardTitle}>Noise</Text>
+                <Text style={styles.sliderCardHint}>{noise < 60 ? 'Quiet' : noise < 80 ? 'Busy' : 'Loud'}</Text>
+              </View>
+              <Text style={styles.sliderValue}>{noise}<Text style={styles.sliderUnit}> dB</Text></Text>
             </View>
-          </AccItem>
+            <Slider
+              minimumValue={40} maximumValue={100} step={1}
+              value={noise} onValueChange={(v) => setNoise(Math.round(v))}
+              minimumTrackTintColor={colors.primary}
+              maximumTrackTintColor={colors.border}
+              thumbTintColor={colors.primary}
+              style={{ marginTop: 10 }}
+            />
+          </View>
 
-          <AccItem id="btn" title="Simulate wearable button" icon={<Heart size={18} color={colors.primary} />}>
-            <TouchableOpacity onPress={goCrisis} style={styles.simulateBtn} activeOpacity={0.85}>
-              <Zap size={18} color="#fff" />
-              <Text style={styles.simulateBtnText}>Press band button</Text>
-            </TouchableOpacity>
-          </AccItem>
-
-          <AccItem id="battery" title="Device status" icon={<Shield size={18} color={colors.primary} />}>
-            <View style={styles.statsRow}>
-              <View style={[styles.statCard, neuSm]}>
-                <Text style={styles.statLabel}>BATTERY</Text>
-                <Text style={styles.statValue}>82%</Text>
+          {/* Temperature slider */}
+          <View style={[styles.sliderCard, { marginTop: 10 }]}>
+            <View style={styles.sliderCardTop}>
+              <View style={[styles.sliderIcon, neuSm]}>
+                <Sun size={18} color={colors.primary} />
               </View>
-              <View style={[styles.statCard, neuSm]}>
-                <Text style={styles.statLabel}>SIGNAL</Text>
-                <Text style={styles.statValue}>{bleConnected ? 'Strong' : '—'}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sliderCardTitle}>Temperature</Text>
+                <Text style={styles.sliderCardHint}>{temperature < 97 ? 'Cold' : temperature < 100 ? 'Normal' : 'Fever'}</Text>
               </View>
+              <Text style={styles.sliderValue}>{Math.round(((temperature - 32) * 5) / 9)}<Text style={styles.sliderUnit}> °C</Text></Text>
             </View>
-          </AccItem>
-        </Accordion>
+            <Slider
+              minimumValue={30} maximumValue={110} step={1}
+              value={temperature} onValueChange={(v) => setTemperature(Math.round(v))}
+              minimumTrackTintColor={colors.primary}
+              maximumTrackTintColor={colors.border}
+              thumbTintColor={colors.primary}
+              style={{ marginTop: 10 }}
+            />
+          </View>
+        </View>
+
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Shield size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Device status</Text>
+            </View>
+          </View>
+          <View style={styles.statsRow}>
+            <View style={[styles.statCard, neuSm]}>
+              <Text style={styles.statLabel}>BATTERY</Text>
+              <Text style={styles.statValue}>82%</Text>
+            </View>
+            <View style={[styles.statCard, neuSm]}>
+              <Text style={styles.statLabel}>SIGNAL</Text>
+              <Text style={styles.statValue}>{bleConnected ? 'Strong' : '—'}</Text>
+            </View>
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
@@ -138,6 +141,12 @@ export default function WearableScreen() {
 
 const getStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  sectionCard: {
+    backgroundColor: colors.background, borderRadius: radius.xl, padding: spacing.lg,
+    marginHorizontal: spacing.lg, marginBottom: spacing.md, ...neuSm,
+  },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  sectionTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold },
   connectCard: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     marginHorizontal: spacing.lg, marginBottom: spacing.md,
