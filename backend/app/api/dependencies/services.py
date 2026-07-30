@@ -23,6 +23,10 @@ from app.services.recommendation_service import RecommendationService
 from app.repositories.overload_event_repository import OverloadEventRepository
 from app.services.overload_event_service import OverloadEventService
 from app.services.prediction_service import PredictionService
+from app.repositories.strategy_repository import StrategyRepository
+from app.services.strategy_service import StrategyService
+from app.repositories.accommodation_repository import AccommodationRepository
+from app.services.accommodation_service import AccommodationService
 
 logger = logging.getLogger(__name__)
 
@@ -235,3 +239,24 @@ def get_prediction_service(
 ) -> PredictionService:
     """Dependency to provide a PredictionService instance."""
     return PredictionService(sensor_repo, risk_engine, prediction_engine)
+
+def get_strategy_repository(db: AsyncSession = Depends(get_db)) -> StrategyRepository:
+    """Dependency to provide a StrategyRepository instance."""
+    return StrategyRepository(db)
+
+def get_strategy_service(
+    strategy_repo: StrategyRepository = Depends(get_strategy_repository)
+) -> StrategyService:
+    """Dependency to provide a StrategyService instance."""
+    return StrategyService(strategy_repo)
+
+def get_accommodation_repository(db: AsyncSession = Depends(get_db)) -> AccommodationRepository:
+    """Dependency to provide an AccommodationRepository instance."""
+    return AccommodationRepository(db)
+
+def get_accommodation_service(
+    accommodation_repo: AccommodationRepository = Depends(get_accommodation_repository)
+) -> AccommodationService:
+    """Dependency to provide an AccommodationService instance."""
+    return AccommodationService(accommodation_repo)
+

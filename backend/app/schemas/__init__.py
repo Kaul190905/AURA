@@ -4,6 +4,8 @@ from .alert import AlertBase, AlertCreate, AlertUpdate, AlertResponse
 from .recommendation import RecommendationBase, RecommendationCreate, RecommendationUpdate, RecommendationResponse
 from .overload_event import OverloadEventBase, OverloadEventCreate, OverloadEventUpdate, OverloadEventResponse
 from .user_preference import UserPreferenceBase, UserPreferenceCreate, UserPreferenceUpdate, UserPreferenceResponse
+from .strategy import StrategyBase, StrategyCreate, StrategyUpdate, StrategyResponse
+from .accommodation import AccommodationBase, AccommodationCreate, AccommodationUpdate, AccommodationResponse
 
 __all__ = [
     "UserBase", "UserCreate", "UserUpdate", "UserResponse",
@@ -11,5 +13,7 @@ __all__ = [
     "AlertBase", "AlertCreate", "AlertUpdate", "AlertResponse",
     "RecommendationBase", "RecommendationCreate", "RecommendationUpdate", "RecommendationResponse",
     "OverloadEventBase", "OverloadEventCreate", "OverloadEventUpdate", "OverloadEventResponse",
-    "UserPreferenceBase", "UserPreferenceCreate", "UserPreferenceUpdate", "UserPreferenceResponse"
+    "UserPreferenceBase", "UserPreferenceCreate", "UserPreferenceUpdate", "UserPreferenceResponse",
+    "StrategyBase", "StrategyCreate", "StrategyUpdate", "StrategyResponse",
+    "AccommodationBase", "AccommodationCreate", "AccommodationUpdate", "AccommodationResponse"
 ]

@@ -8,6 +8,8 @@ from app.api.v1.routes.wellness import router as wellness_router
 from app.api.v1.routes.recommendations import router as recommendations_router
 from app.api.v1.routes.prediction import router as prediction_router
 from app.api.v1.routes.overload_events import router as overload_events_router
+from app.api.v1.routes.strategies import router as strategies_router
+from app.api.v1.routes.accommodations import router as accommodations_router
 
 api_router = APIRouter()
 
@@ -21,3 +23,5 @@ api_router.include_router(wellness_router, prefix="/wellness", tags=["Wellness"]
 api_router.include_router(recommendations_router, prefix="/recommendations", tags=["Recommendations"])
 api_router.include_router(prediction_router, prefix="/prediction", tags=["Prediction"])
 api_router.include_router(overload_events_router, prefix="/overload-events", tags=["Overload Events"])
+api_router.include_router(strategies_router, prefix="/strategies", tags=["Strategies"])
+api_router.include_router(accommodations_router, prefix="/accommodations", tags=["Accommodations"])
