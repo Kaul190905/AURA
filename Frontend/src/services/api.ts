@@ -176,7 +176,7 @@ export async function getSensorHistory(
   userId: string,
   limit = 100,
 ): Promise<SensorDataResponse[]> {
-  const res = await authFetch(`/sensor-data/?user_id=${userId}&limit=${limit}`);
+  const res = await authFetch(`/sensor-data/history?user_id=${userId}&limit=${limit}&sort_by=desc`);
   return res.json();
 }
 
