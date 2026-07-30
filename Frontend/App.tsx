@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, StyleSheet, TouchableOpacity, Text, Modal } from 'react-native';
-import { House, Library, TrendingUp, Bluetooth, Settings, Heart, User, Sparkles } from 'lucide-react-native';
+import { House, Library, TrendingUp, Bluetooth, Settings, Heart, User } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { colors, fonts, applyColorVisionMode } from './src/theme';
@@ -29,7 +29,6 @@ import WearableScreen from './src/screens/WearableScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import RecoverySummaryScreen from './src/screens/RecoverySummaryScreen';
 import { NotificationModal } from './src/components/NotificationModal';
-import { AuraAIPanel } from './src/components/AuraAIPanel';
 import SpeechDiaryScreen from './src/screens/SpeechDiaryScreen';
 import PlansScreen from './src/screens/PlansScreen';
 import CaretakerGateScreen from './src/screens/CaretakerGateScreen';
@@ -125,8 +124,7 @@ export default function App() {
   const [isCrisisMode, setIsCrisisMode] = useState(false);
   const [crisisRiskBefore, setCrisisRiskBefore] = useState<number | null>(null);
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
-  const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
-  
+  const [caregiver, setCaregiver] = useState({ name: '', relationship: '', phone: '' });
   const [notifications, setNotifications] = useState<AppNotification[]>([
     { id: '1', title: 'High Noise Detected', description: 'Environment exceeded 85dB.', time: Date.now() - 3600000, read: false, type: 'alert' },
     { id: '2', title: 'Risk Level Increased', description: 'Sensory overload risk is High.', time: Date.now() - 7200000, read: true, type: 'alert' },
@@ -134,10 +132,8 @@ export default function App() {
     { id: '4', title: 'Wearable Battery Low', description: 'Device is at 15%.', time: Date.now() - 172800000, read: true, type: 'system' }
   ]);
 
-  const [profile, setProfile] = useState<Partial<Record<TriggerKey, number>>>({ sound: 4, crowd: 3, temp: 2 });
-  const [environments, setEnvironments] = useState<string[]>(['Classroom', 'Bus']);
-  const [ageGroup, setAgeGroup] = useState('Teen');
-  const [commStyle, setCommStyle] = useState<'text' | 'emoji' | 'visual'>('text');
+  const [profile, setProfile] = useState<Partial<Record<TriggerKey, number>>>({ sound: 4, temp: 2 });
+  const [dob, setDob] = useState('');
   const [noise, setNoise] = useState(55);
   const [temperature, setTemperature] = useState(98);
   const [selfReport, setSelfReport] = useState(2);
@@ -174,6 +170,9 @@ export default function App() {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserId(session?.user.id ?? null);
       setAccessToken(session?.access_token ?? null);
+      if (!session) {
+        setAppScreen('welcome');
+      }
     });
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -183,32 +182,6 @@ export default function App() {
     if (!entries.length) return 'sound';
     return entries.sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0][0];
   }, [profile]);
-
-  // refreshRecommendations – pulls AI strategies from backend and merges them
-  const refreshRecommendations = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const result = await getRecommendations(userId);
-      if (result.recommendations?.length) {
-        const apiStrategies: Strategy[] = result.recommendations.map((r, i) => ({
-          id: `api-${i}`,
-          title: r.title,
-          note: r.description,
-          trigger: primaryTrigger,
-          helped: 0,
-          tried: 0,
-        }));
-        setStrategies(prev => {
-          const custom = prev.filter(s => s.custom);
-          return [...apiStrategies, ...custom];
-        });
-      }
-    } catch (e) {
-      // Silently fall back to local strategies
-      console.warn('[AURA] Could not fetch recommendations:', e);
-    }
-  }, [userId, primaryTrigger]);
-
 
   // ── Periodic sensor data push ───────────────────────────────────────────────
   useEffect(() => {
@@ -338,9 +311,9 @@ export default function App() {
       crisisRiskBefore, setCrisisRiskBefore,
       notifications, setNotifications,
       isNotificationCenterOpen, setIsNotificationCenterOpen,
-      isAIPanelOpen, setIsAIPanelOpen,
-      profile, setProfile, environments, setEnvironments, ageGroup, setAgeGroup,
-      commStyle, setCommStyle, noise, setNoise, temperature, setTemperature, selfReport, setSelfReport,
+      caregiver, setCaregiver,
+      profile, setProfile, dob, setDob,
+      noise, setNoise, temperature, setTemperature, selfReport, setSelfReport,
       bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
       accommodations, setAccommodations, highContrast, setHighContrast,
       reduceMotion, setReduceMotion, darkMode, setDarkMode, colorVisionMode, setColorVisionMode: handleSetColorVisionMode, sensitivity, setSensitivity,
@@ -349,7 +322,6 @@ export default function App() {
       // Backend / Auth
       userId, setUserId,
       accessToken, setAccessToken,
-      refreshRecommendations,
     };
 
 
@@ -365,40 +337,34 @@ export default function App() {
             setUserRole(role);
             setAppScreen(role === 'caregiver' ? 'caretaker-home' : 'profile');
           }} />}
-          {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('home')} />}
+          {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('home')} onBack={() => setAppScreen('settings')} />}
 
-          {appScreen === 'recovery' && <RecoverySummaryScreen onDone={() => setAppScreen('home')} />}
-          {appScreen === 'speech' && <SpeechDiaryScreen onBack={() => setAppScreen('home')} />}
-          {appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
-          {appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setUserRole('caregiver'); setAppScreen('caretaker-home'); }} />}
-          {appScreen === 'caretaker-home' && (
+          {userId && appScreen === 'recovery' && <RecoverySummaryScreen onDone={() => setAppScreen('home')} />}
+          {userId && appScreen === 'speech' && <SpeechDiaryScreen onBack={() => setAppScreen('home')} />}
+          {userId && appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
+          {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setUserRole('caregiver'); setAppScreen('caretaker-home'); }} />}
+          {userId && appScreen === 'caretaker-home' && (
             <View style={{ flex: 1 }}>
               <CaretakerTabNavigator />
             </View>
           )}
-          {appScreen === 'home' && (
+          {userId && appScreen === 'home' && (
             <View style={{ flex: 1 }}>
               <TabNavigator goCrisis={goCrisis} />
               <TouchableOpacity
                 onPress={goCrisis}
-                style={styles.overloadBtn}
+                style={[styles.overloadBtn, {
+                  backgroundColor: risk.score <= 2 ? '#4CAF82' : risk.score <= 4 ? '#E0A83A' : risk.score <= 6 ? '#E08A3A' : '#E06B3A',
+                }]}
                 activeOpacity={0.85}
               >
-                <Heart color="#fff" size={18} />
-                <Text style={styles.overloadBtnText}>I'm Overloaded</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                onPress={() => setIsAIPanelOpen(true)}
-                style={styles.aiFab}
-                activeOpacity={0.85}
-              >
-                <Sparkles color={colors.primary} size={24} />
+                <Text style={styles.overloadBtnText}>
+                  {risk.score <= 2 ? 'Calm' : risk.score <= 4 ? 'Stable' : risk.score <= 6 ? 'Elevated Response' : 'High Stress'}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
           <NotificationModal />
-          <AuraAIPanel visible={isAIPanelOpen} onClose={() => setIsAIPanelOpen(false)} />
         </NavigationContainer>
 
         <Modal visible={alertOpen} transparent animationType="slide" onRequestClose={() => setAlertOpen(false)}>
@@ -467,14 +433,6 @@ const styles = StyleSheet.create({
   },
   overloadBtnText: {
     color: '#fff', ...fonts.bold, fontSize: 16,
-  },
-  aiFab: {
-    position: 'absolute', bottom: 100, right: 20,
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: colors.background,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.15, shadowRadius: 8, elevation: 6,
   },
   popupOverlay: {
     flex: 1,
