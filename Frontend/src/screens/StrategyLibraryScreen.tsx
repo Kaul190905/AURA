@@ -3,20 +3,35 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, FlatList,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+<<<<<<< HEAD
 import { Plus, Star, Trash2, Ear, Sun, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
+=======
+import { Plus, Star, Trash2, Volume2, Sun, Hand, Users, AudioWaveform, Wind } from 'lucide-react-native';
+import { AppContext } from '../AppContext';
+import { Header } from '../components/Header';
+import { Accordion, AccItem } from '../components/Accordion';
+>>>>>>> origin/srinath-dev
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { TRIGGERS } from '../data';
 import { TriggerKey, Strategy } from '../types';
 
 const TRIGGER_ICONS: Record<TriggerKey, React.ElementType> = {
+<<<<<<< HEAD
   sound: Ear, temp: Sun,
+=======
+  sound: Volume2, temp: Sun, touch: Hand, crowd: Users, movement: AudioWaveform, smell: Wind,
+>>>>>>> origin/srinath-dev
 };
 
 export default function StrategyLibraryScreen() {
   const styles = getStyles();
+<<<<<<< HEAD
   const { strategies, setStrategies, caregiver, setCaregiver } = useContext(AppContext);
+=======
+  const { strategies, setStrategies } = useContext(AppContext);
+>>>>>>> origin/srinath-dev
   const insets = useSafeAreaInsets();
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState('');
@@ -88,6 +103,7 @@ export default function StrategyLibraryScreen() {
       )}
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+<<<<<<< HEAD
         <View style={[styles.caregiverCard, { marginHorizontal: spacing.lg, marginBottom: spacing.md }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <User size={20} color={colors.primary} />
@@ -118,10 +134,14 @@ export default function StrategyLibraryScreen() {
             />
           </View>
         </View>
+=======
+        <Accordion>
+>>>>>>> origin/srinath-dev
           {TRIGGERS.map((t) => {
             const list = grouped.get(t.key) ?? [];
             const Icon = TRIGGER_ICONS[t.key];
             return (
+<<<<<<< HEAD
               <View key={t.key} style={[styles.caregiverCard, { marginHorizontal: spacing.lg, marginBottom: spacing.md }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -130,6 +150,11 @@ export default function StrategyLibraryScreen() {
                   </View>
                   <Text style={styles.badge}>{list.length}</Text>
                 </View>
+=======
+              <AccItem key={t.key} id={t.key} title={t.label}
+                icon={<Icon size={18} color={colors.primary} />}
+                badge={<Text style={styles.badge}>{list.length}</Text>}>
+>>>>>>> origin/srinath-dev
                 {list.length === 0 ? (
                   <Text style={styles.emptyText}>No strategies yet.</Text>
                 ) : (
@@ -153,9 +178,16 @@ export default function StrategyLibraryScreen() {
                     ))}
                   </View>
                 )}
+<<<<<<< HEAD
               </View>
             );
           })}
+=======
+              </AccItem>
+            );
+          })}
+        </Accordion>
+>>>>>>> origin/srinath-dev
       </ScrollView>
     </View>
   );
@@ -173,11 +205,14 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.muted, borderRadius: radius.xl, padding: spacing.lg,
   },
   addCardTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold, marginBottom: 10 },
+<<<<<<< HEAD
   caregiverCard: {
     backgroundColor: colors.background, borderRadius: radius.xl, padding: spacing.lg,
     ...neuSm,
   },
   caregiverTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold },
+=======
+>>>>>>> origin/srinath-dev
   input: {
     backgroundColor: colors.background, borderRadius: radius.lg,
     paddingHorizontal: 14, paddingVertical: 12, fontSize: 13, color: colors.foreground,

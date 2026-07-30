@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import 'react-native-url-polyfill/auto';
+=======
+>>>>>>> origin/srinath-dev
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';

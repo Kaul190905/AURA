@@ -3,7 +3,11 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+<<<<<<< HEAD
 import { TrendingUp, Zap, AudioWaveform, MapPin } from 'lucide-react-native';
+=======
+import { TrendingUp, Zap, AudioWaveform, Clock, MapPin, Network, Star } from 'lucide-react-native';
+>>>>>>> origin/srinath-dev
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
@@ -188,6 +192,30 @@ export default function HistoryInsightsScreen() {
             )}
           </AccItem>
 
+<<<<<<< HEAD
+=======
+          {/* Recovery Duration Trend */}
+          <AccItem id="recovery" title="Recovery Duration Trend" icon={<Clock size={18} color={colors.primary} />}>
+            <View style={{ marginTop: 8, alignItems: 'center' }}>
+              <LineChart
+                data={[{value: 12}, {value: 9}, {value: 14}, {value: 8}, {value: 6}, {value: 7}, {value: 8}]}
+                height={120}
+                width={280}
+                color={colors.primary}
+                thickness={2}
+                hideYAxisText
+                curved
+                areaChart
+                startFillColor={colors.primary}
+                endFillColor={colors.background}
+                startOpacity={0.25}
+                endOpacity={0}
+                maxValue={20}
+              />
+            </View>
+          </AccItem>
+
+>>>>>>> origin/srinath-dev
           {/* Most Dangerous Locations */}
           <AccItem id="locations" title="High-Risk Locations" icon={<MapPin size={18} color={colors.primary} />}>
             <View style={{ gap: 12, marginTop: 8 }}>
@@ -210,6 +238,33 @@ export default function HistoryInsightsScreen() {
               ))}
             </View>
           </AccItem>
+<<<<<<< HEAD
+=======
+
+          {/* Trigger Combination */}
+          <AccItem id="triggerCombo" title="Trigger Combinations" icon={<Network size={18} color={colors.primary} />}>
+            <View style={{ gap: 12, marginTop: 8 }}>
+              <View style={[styles.eventRow, { alignItems: 'flex-start' }]}>
+                <Zap size={16} color={colors.primary} />
+                <View>
+                   <Text style={[styles.eventTitle, fonts.bold]}>Noise + Crowds</Text>
+                   <Text style={styles.eventDate}>80% of your overloads occur when these two triggers are combined.</Text>
+                </View>
+              </View>
+            </View>
+          </AccItem>
+
+          {/* AI Recommendation */}
+          <AccItem id="ai" title="Aura AI Insights" icon={<Star size={18} color={colors.primary} />} defaultOpen>
+            <View style={{ gap: 8, marginTop: 8, padding: 12, backgroundColor: `${colors.primary}10`, borderRadius: radius.lg }}>
+               <Text style={{ fontSize: 14, color: colors.foreground, ...fonts.medium }}>
+                 Based on the past {range === '7d' ? '7 days' : '30 days'}, your risk level spikes mostly in the afternoon.
+                 Deep Breathing exercises have been the most effective recovery tool for you.
+                 We suggest taking a 5-minute preemptive break around 2:00 PM.
+               </Text>
+            </View>
+          </AccItem>
+>>>>>>> origin/srinath-dev
         </Accordion>
       </ScrollView>
     </View>

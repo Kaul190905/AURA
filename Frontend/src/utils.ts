@@ -18,7 +18,11 @@ export function computeRisk(
   const selfScore = (selfReport - 1) * 1.2;
 
   if (noiseScore > 1) factors.push({ label: `Loud noise (${Math.round(noiseDb)}dB)`, weight: noiseScore });
+<<<<<<< HEAD
   if (tempScore > 1) factors.push({ label: `Abnormal temp (${Math.round(((tempF - 32) * 5) / 9)}°C)`, weight: tempScore });
+=======
+  if (tempScore > 1) factors.push({ label: `Abnormal temp (${Math.round(tempF)}°F)`, weight: tempScore });
+>>>>>>> origin/srinath-dev
   if (selfScore > 1) factors.push({ label: 'Self reported stress', weight: selfScore });
 
   const raw = noiseScore + tempScore + selfScore;

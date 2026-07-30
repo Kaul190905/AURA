@@ -27,6 +27,7 @@ export type AppState = {
   setNotifications: (n: AppNotification[]) => void;
   isNotificationCenterOpen: boolean;
   setIsNotificationCenterOpen: (val: boolean) => void;
+<<<<<<< HEAD
   caregiver: { name: string; relationship: string; phone: string };
   setCaregiver: (c: { name: string; relationship: string; phone: string }) => void;
   profile: Partial<Record<TriggerKey, number>>;
@@ -34,6 +35,18 @@ export type AppState = {
 
   dob: string;
   setDob: (d: string) => void;
+=======
+  isAIPanelOpen: boolean;
+  setIsAIPanelOpen: (val: boolean) => void;
+  profile: Partial<Record<TriggerKey, number>>;
+  setProfile: (p: Partial<Record<TriggerKey, number>>) => void;
+  environments: string[];
+  setEnvironments: (e: string[]) => void;
+  ageGroup: string;
+  setAgeGroup: (a: string) => void;
+  commStyle: 'text' | 'emoji' | 'visual';
+  setCommStyle: (c: 'text' | 'emoji' | 'visual') => void;
+>>>>>>> origin/srinath-dev
   noise: number;
   setNoise: (n: number) => void;
   temperature: number;
@@ -70,6 +83,11 @@ export type AppState = {
   /** Current Supabase JWT — null until signed in */
   accessToken: string | null;
   setAccessToken: (token: string | null) => void;
+<<<<<<< HEAD
+=======
+  /** Call to re-fetch AI recommendations from the backend */
+  refreshRecommendations: () => void;
+>>>>>>> origin/srinath-dev
 };
 
 export const AppContext = React.createContext<AppState>({} as AppState);

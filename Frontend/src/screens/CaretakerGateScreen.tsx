@@ -72,7 +72,10 @@ const getStyles = () => StyleSheet.create({
     borderRadius: radius.lg,
     paddingHorizontal: spacing.xl,
     paddingVertical: 14,
+<<<<<<< HEAD
     paddingLeft: spacing.xl + 16,
+=======
+>>>>>>> origin/srinath-dev
     fontSize: 24,
     letterSpacing: 16,
     textAlign: 'center',
