@@ -8,21 +8,14 @@ import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 import { Accordion, AccItem } from '../components/Accordion';
 import { colors, neuSm, neuInset, radius, spacing, fonts } from '../theme';
-<<<<<<< HEAD
 import { supabase } from '../services/supabaseClient';
-=======
->>>>>>> origin/srinath-dev
 
 export default function CaretakerProfileScreen() {
   const styles = getStyles();
   const {
     reduceMotion, setReduceMotion, navigateTo, highContrast, setHighContrast,
-<<<<<<< HEAD
     darkMode, setDarkMode, colorVisionMode, setColorVisionMode,
     setUserId, setAccessToken,
-=======
-    darkMode, setDarkMode, colorVisionMode, setColorVisionMode
->>>>>>> origin/srinath-dev
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   
@@ -233,11 +226,7 @@ export default function CaretakerProfileScreen() {
                   Your data stays on this device. Nothing is uploaded unless you share it with a caretaker.
                 </Text>
               </View>
-<<<<<<< HEAD
               <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('welcome'); await supabase.auth.signOut(); }} style={styles.deleteBtn} activeOpacity={0.8}>
-=======
-              <TouchableOpacity onPress={() => navigateTo('welcome')} style={styles.deleteBtn} activeOpacity={0.8}>
->>>>>>> origin/srinath-dev
                 <LogOut size={14} color={colors.riskHigh} />
                 <Text style={styles.deleteBtnText}>Logout</Text>
               </TouchableOpacity>

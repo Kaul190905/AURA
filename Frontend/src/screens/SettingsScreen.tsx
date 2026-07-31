@@ -4,36 +4,21 @@ import {
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-<<<<<<< HEAD
 import { Users, Zap, Eye, Shield, Trash2, ChevronRight, Watch, Battery, Smartphone, LogOut, Check, Palette } from 'lucide-react-native';
-=======
-import { Users, Zap, Eye, Shield, Trash2, ChevronRight, Wind, Phone, MessageCircle, QrCode, Watch, Battery, Smartphone, Navigation, LogOut, Check, Palette } from 'lucide-react-native';
->>>>>>> origin/srinath-dev
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 import { Accordion, AccItem } from '../components/Accordion';
 import { colors, neuSm, neuInset, radius, spacing, fonts } from '../theme';
-<<<<<<< HEAD
 import { supabase } from '../services/supabaseClient';
-=======
->>>>>>> origin/srinath-dev
 
 export default function SettingsScreen() {
   const styles = getStyles();
   const {
-<<<<<<< HEAD
-=======
-    highContrast, setHighContrast,
-    reduceMotion, setReduceMotion,
->>>>>>> origin/srinath-dev
     colorVisionMode, setColorVisionMode,
     sensitivity, setSensitivity,
     navigateTo,
     history,
-<<<<<<< HEAD
     setUserId, setAccessToken,
-=======
->>>>>>> origin/srinath-dev
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
@@ -58,18 +43,13 @@ export default function SettingsScreen() {
                 <Text style={styles.navRowText}>Open caretaker view</Text>
                 <ChevronRight size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
-<<<<<<< HEAD
               <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('welcome'); await supabase.auth.signOut(); }} style={styles.navRow} activeOpacity={0.8}>
-=======
-              <TouchableOpacity onPress={() => navigateTo('welcome')} style={styles.navRow} activeOpacity={0.8}>
->>>>>>> origin/srinath-dev
                 <Text style={styles.navRowText}>Logout</Text>
                 <LogOut size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
           </AccItem>
 
-<<<<<<< HEAD
           {/* Vibration */}
           <AccItem id="vibration" title="Vibration"
             icon={<Zap size={18} color={colors.primary} />}>
@@ -96,52 +76,12 @@ export default function SettingsScreen() {
                   {sensitivity === 2 && <Check size={16} color={colors.primary} />}
                 </TouchableOpacity>
               </View>
-=======
-          {/* Alerts */}
-          <AccItem id="alerts" title="Alerts"
-            icon={<Zap size={18} color={colors.primary} />}
-            badge={<Text style={styles.badge}>{sensitivity}/5</Text>}>
-            <View style={{ marginTop: 8 }}>
-              <View style={styles.sliderHeader}>
-                <Text style={styles.sliderTitle}>Alert sensitivity</Text>
-                <Text style={styles.sliderVal}>{sensitivity}/5</Text>
-              </View>
-              <Slider
-                minimumValue={1} maximumValue={5} step={1}
-                value={sensitivity}
-                onValueChange={(v) => setSensitivity(Math.round(v))}
-                minimumTrackTintColor={colors.primary}
-                maximumTrackTintColor={colors.border}
-                thumbTintColor={colors.primary}
-                style={{ marginTop: 8 }}
-              />
-              <Text style={styles.sliderHint}>Higher = check in with you sooner.</Text>
->>>>>>> origin/srinath-dev
             </View>
           </AccItem>
 
           {/* Accessibility */}
           <AccItem id="a11y" title="Accessibility" icon={<Eye size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
-<<<<<<< HEAD
-=======
-              <ToggleRow
-                icon={<Eye size={16} color={colors.primary} />}
-                label="High contrast"
-                value={highContrast}
-                onChange={setHighContrast}
-                highContrast={highContrast}
-              />
-              <ToggleRow
-                icon={<Wind size={16} color={colors.primary} />}
-                label="Reduce motion"
-                value={reduceMotion}
-                onChange={setReduceMotion}
-                highContrast={highContrast}
-              />
-              
-              <View style={styles.divider} />
->>>>>>> origin/srinath-dev
               
               <View style={styles.colorVisionSection}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -195,13 +135,7 @@ export default function SettingsScreen() {
                     </View>
                   </View>
 
-<<<<<<< HEAD
 
-=======
-                  <TouchableOpacity style={[styles.previewButton, { backgroundColor: colors.primary }]} activeOpacity={1}>
-                    <Text style={[styles.previewButtonText, { color: colors.white }]}>Action Button</Text>
-                  </TouchableOpacity>
->>>>>>> origin/srinath-dev
                 </View>
               </View>
             </View>
@@ -223,57 +157,7 @@ export default function SettingsScreen() {
             </View>
           </AccItem>
 
-<<<<<<< HEAD
 
-=======
-          {/* Emergency Contacts */}
-          <AccItem id="emergency" title="Emergency Contacts" icon={<Phone size={18} color={colors.primary} />}>
-            <View style={{ gap: 12, marginTop: 8 }}>
-              {[
-                { name: 'Mom', role: 'Parent', phone: '555-0101' },
-                { name: 'Dr. Smith', role: 'Doctor', phone: '555-0102' }
-              ].map((contact, i) => (
-                <View key={i} style={[styles.navRow, { justifyContent: 'space-between' }]}>
-                  <View>
-                    <Text style={[styles.navRowText, fonts.bold]}>{contact.name}</Text>
-                    <Text style={{ fontSize: 12, color: colors.mutedForeground }}>{contact.role}</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', gap: 12 }}>
-                    <TouchableOpacity style={[styles.deleteBtn, { backgroundColor: `${colors.primary}20` }]}>
-                      <Phone size={16} color={colors.primary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.deleteBtn, { backgroundColor: `${colors.primary}20` }]}>
-                      <MessageCircle size={16} color={colors.primary} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </AccItem>
-
-          {/* Connected Caregiver */}
-          <AccItem id="caregiver" title="Connected Caregiver" icon={<Users size={18} color={colors.primary} />}>
-            <View style={{ gap: 12, marginTop: 8 }}>
-              <View style={[styles.navRow, { justifyContent: 'space-between' }]}>
-                 <View>
-                   <Text style={[styles.navRowText, fonts.bold]}>Jane Doe</Text>
-                   <Text style={{ fontSize: 12, color: colors.mutedForeground }}>Status: Connected</Text>
-                 </View>
-                 <View style={{ padding: 4, backgroundColor: `${colors.primary}20`, borderRadius: 4 }}>
-                   <Text style={{ fontSize: 10, color: colors.primary, ...fonts.bold }}>ACTIVE</Text>
-                 </View>
-              </View>
-              <TouchableOpacity style={styles.navRow} activeOpacity={0.8}>
-                <QrCode size={16} color={colors.mutedForeground} />
-                <Text style={styles.navRowText}>Generate Invite Code</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.navRow, { justifyContent: 'flex-start', gap: 8 }]} activeOpacity={0.8}>
-                <Trash2 size={14} color={colors.riskHigh} />
-                <Text style={[styles.navRowText, { color: colors.riskHigh }]}>Remove Caregiver</Text>
-              </TouchableOpacity>
-            </View>
-          </AccItem>
->>>>>>> origin/srinath-dev
 
           {/* Device Information */}
           <AccItem id="device" title="Device Information" icon={<Watch size={18} color={colors.primary} />}>
@@ -298,28 +182,7 @@ export default function SettingsScreen() {
   );
 }
 
-<<<<<<< HEAD
 
-=======
-function ToggleRow({
-  icon, label, value, onChange, highContrast
-}: { icon: React.ReactNode; label: string; value: boolean; onChange: (v: boolean) => void; highContrast?: boolean, darkMode?: boolean }) {
-  const styles = getStyles();
-  const hcBorder = highContrast ? { borderColor: '#000', borderWidth: 2 } : {};
-  const hcText = highContrast ? { color: '#000', fontWeight: 'bold' as const } : {};
-  return (
-    <TouchableOpacity onPress={() => onChange(!value)} style={[styles.toggleRow, hcBorder]} activeOpacity={0.8}>
-      <View style={[styles.toggleIcon, value && { backgroundColor: colors.muted }, hcBorder]}>
-        {icon}
-      </View>
-      <Text style={[styles.toggleLabel, hcText]}>{label}</Text>
-      <View style={[styles.toggleTrack, highContrast && { backgroundColor: '#555' }]}>
-        <View style={[styles.toggleThumb, value && styles.toggleThumbOn, highContrast && { backgroundColor: '#000' }]} />
-      </View>
-    </TouchableOpacity>
-  );
-}
->>>>>>> origin/srinath-dev
 
 const getStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },

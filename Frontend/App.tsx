@@ -159,19 +159,38 @@ export default function App() {
 
   // Restore Supabase session on app boot
   useEffect(() => {
+    const handleAuth = async (user: any) => {
+      const storedRole = user?.user_metadata?.role;
+      const roleSelected = user?.user_metadata?.roleSelected;
+      
+      if (roleSelected && storedRole === 'user') {
+        setUserRole('user');
+        setAppScreen('home');
+      } else if (roleSelected && storedRole === 'caregiver') {
+        setUserRole('caregiver');
+        setAppScreen('caretaker-home');
+      } else {
+        setAppScreen('welcome');
+      }
+    };
+
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         setUserId(data.session.user.id);
         setAccessToken(data.session.access_token);
+        handleAuth(data.session.user);
       }
       setSessionLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUserId(session?.user.id ?? null);
       setAccessToken(session?.access_token ?? null);
       if (!session) {
         setAppScreen('welcome');
+        setUserRole(null);
+      } else if (_event === 'SIGNED_IN' && session.user) {
+        await handleAuth(session.user);
       }
     });
     return () => listener.subscription.unsubscribe();
@@ -331,9 +350,10 @@ export default function App() {
         <NavigationContainer key={colorVisionMode}>
           {/* Route to Login if not authenticated, Welcome once signed in */}
           {!sessionLoading && !userId && (
-            <LoginScreen onSuccess={() => setAppScreen('welcome')} />
+            <LoginScreen onSuccess={() => {}} />
           )}
-          {!sessionLoading && userId && appScreen === 'welcome' && <WelcomeScreen onNext={(role) => {
+          {!sessionLoading && userId && appScreen === 'welcome' && <WelcomeScreen onNext={async (role) => {
+            await supabase.auth.updateUser({ data: { role, roleSelected: true } });
             setUserRole(role);
             setAppScreen(role === 'caregiver' ? 'caretaker-home' : 'profile');
           }} />}

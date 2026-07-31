@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 import 'react-native-url-polyfill/auto';
-=======
->>>>>>> origin/srinath-dev
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
@@ -33,6 +30,14 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
+}
+
+export async function signInWithGoogle() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+  });
+  if (error) throw error;
+  return data;
 }
 
 /** Returns the current JWT access token, or null if not signed in. */

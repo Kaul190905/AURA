@@ -1,9 +1,5 @@
 // ── Shared Types ──────────────────────────────────────────────────────────────
-<<<<<<< HEAD
 export type TriggerKey = 'sound' | 'temp';
-=======
-export type TriggerKey = 'sound' | 'temp' | 'touch' | 'crowd' | 'movement' | 'smell';
->>>>>>> origin/srinath-dev
 
 export type Screen =
   | 'welcome' | 'profile' | 'home' | 'alert' | 'crisis' | 'library'
