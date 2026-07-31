@@ -1,0 +1,138 @@
+{
+  "saved_at": "2026-07-29T08:11:29.312173+00:00",
+  "tuning": {
+    "search_type": "GridSearchCV",
+    "search_n_estimators": 50,
+    "final_n_estimators": 150,
+    "cv_subsample_size": 20000,
+    "full_train_size": 671063,
+    "refit_size": 150000,
+    "best_search_params": {
+      "learning_rate": 0.1,
+      "max_depth": 5,
+      "min_samples_split": 20,
+      "subsample": 0.8
+    },
+    "best_params": {
+      "learning_rate": 0.1,
+      "max_depth": 5,
+      "min_samples_split": 20,
+      "subsample": 0.8,
+      "n_estimators": 150
+    },
+    "best_cv_score": -1.6639,
+    "cv_folds": 3,
+    "scoring_metric": "neg_mean_absolute_error",
+    "n_candidates_evaluated": 4,
+    "val_mae": 1.2115,
+    "wall_time_seconds": 483.87
+  },
+  "evaluation": {
+    "test_samples": 143800,
+    "mae": 1.2078,
+    "rmse": 3.3669,
+    "r2": 0.9765,
+    "feature_importance": [
+      {
+        "rank": 1,
+        "feature": "rolling_std",
+        "importance": 0.319219
+      },
+      {
+        "rank": 2,
+        "feature": "slope",
+        "importance": 0.134276
+      },
+      {
+        "rank": 3,
+        "feature": "location_type_Indoor - Food Court",
+        "importance": 0.12975
+      },
+      {
+        "rank": 4,
+        "feature": "location_type_Indoor - Religious",
+        "importance": 0.090798
+      },
+      {
+        "rank": 5,
+        "feature": "rolling_mean",
+        "importance": 0.085115
+      },
+      {
+        "rank": 6,
+        "feature": "moving_avg_long",
+        "importance": 0.073778
+      },
+      {
+        "rank": 7,
+        "feature": "moving_avg_short",
+        "importance": 0.062801
+      },
+      {
+        "rank": 8,
+        "feature": "location_type_Outdoor - Street",
+        "importance": 0.046534
+      },
+      {
+        "rank": 9,
+        "feature": "noise_db",
+        "importance": 0.017946
+      },
+      {
+        "rank": 10,
+        "feature": "previous_risk",
+        "importance": 0.008375
+      },
+      {
+        "rank": 11,
+        "feature": "ambient_temperature",
+        "importance": 0.008051
+      },
+      {
+        "rank": 12,
+        "feature": "location_type_Indoor - Fitness",
+        "importance": 0.007918
+      },
+      {
+        "rank": 13,
+        "feature": "location_type_Outdoor - Recreational",
+        "importance": 0.006351
+      },
+      {
+        "rank": 14,
+        "feature": "location_type_Transit",
+        "importance": 0.002394
+      },
+      {
+        "rank": 15,
+        "feature": "location_type_Indoor - Medical",
+        "importance": 0.00179
+      },
+      {
+        "rank": 16,
+        "feature": "heart_rate",
+        "importance": 0.00106
+      },
+      {
+        "rank": 17,
+        "feature": "day_of_week_Saturday",
+        "importance": 0.000892
+      },
+      {
+        "rank": 18,
+        "feature": "humidity",
+        "importance": 0.000619
+      },
+      {
+        "rank": 19,
+        "feature": "location_type_Indoor - Workplace",
+        "importance": 0.000577
+      },
+      {
+        "rank": 20,
+        "feature": "gender_Female",
+        "importance": 0.000339
+      }
+    ]
+  }
+}
