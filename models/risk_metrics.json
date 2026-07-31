@@ -1,0 +1,165 @@
+{
+  "saved_at": "2026-07-29T06:39:00.733574+00:00",
+  "tuning": {
+    "search_type": "GridSearchCV",
+    "search_n_estimators": 50,
+    "final_n_estimators": 150,
+    "cv_subsample_size": 20000,
+    "full_train_size": 672000,
+    "refit_size": 150000,
+    "best_search_params": {
+      "learning_rate": 0.1,
+      "max_depth": 5,
+      "min_samples_split": 20,
+      "subsample": 0.8
+    },
+    "best_params": {
+      "learning_rate": 0.1,
+      "max_depth": 5,
+      "min_samples_split": 20,
+      "subsample": 0.8,
+      "n_estimators": 150
+    },
+    "best_cv_score": 0.8936,
+    "cv_folds": 3,
+    "scoring_metric": "f1_weighted",
+    "n_candidates_evaluated": 4,
+    "val_f1_weighted": 0.9831,
+    "wall_time_seconds": 527.82
+  },
+  "evaluation": {
+    "test_samples": 144000,
+    "accuracy": 0.9836,
+    "precision_macro": 0.9839,
+    "precision_weighted": 0.9836,
+    "recall_macro": 0.9809,
+    "recall_weighted": 0.9836,
+    "f1_macro": 0.9824,
+    "f1_weighted": 0.9835,
+    "roc_auc_weighted": 0.9992,
+    "confusion_matrix": [
+      [
+        55848,
+        296,
+        190
+      ],
+      [
+        456,
+        54217,
+        269
+      ],
+      [
+        618,
+        539,
+        31567
+      ]
+    ],
+    "confusion_matrix_labels": [
+      "LOW",
+      "MEDIUM",
+      "HIGH"
+    ],
+    "feature_importance": [
+      {
+        "rank": 1,
+        "feature": "age",
+        "importance": 0.304229
+      },
+      {
+        "rank": 2,
+        "feature": "stress_feedback",
+        "importance": 0.165378
+      },
+      {
+        "rank": 3,
+        "feature": "noise_db",
+        "importance": 0.075125
+      },
+      {
+        "rank": 4,
+        "feature": "body_temperature",
+        "importance": 0.052977
+      },
+      {
+        "rank": 5,
+        "feature": "gender_Female",
+        "importance": 0.034685
+      },
+      {
+        "rank": 6,
+        "feature": "hr_age_ratio",
+        "importance": 0.02632
+      },
+      {
+        "rank": 7,
+        "feature": "time_of_day_Morning",
+        "importance": 0.026302
+      },
+      {
+        "rank": 8,
+        "feature": "time_of_day_Afternoon",
+        "importance": 0.025452
+      },
+      {
+        "rank": 9,
+        "feature": "day_of_week_Saturday",
+        "importance": 0.023165
+      },
+      {
+        "rank": 10,
+        "feature": "blood_oxygen",
+        "importance": 0.022709
+      },
+      {
+        "rank": 11,
+        "feature": "day_of_week_Thursday",
+        "importance": 0.021438
+      },
+      {
+        "rank": 12,
+        "feature": "gender_Male",
+        "importance": 0.021245
+      },
+      {
+        "rank": 13,
+        "feature": "day_of_week_Sunday",
+        "importance": 0.020094
+      },
+      {
+        "rank": 14,
+        "feature": "day_of_week_Monday",
+        "importance": 0.019843
+      },
+      {
+        "rank": 15,
+        "feature": "day_of_week_Tuesday",
+        "importance": 0.018539
+      },
+      {
+        "rank": 16,
+        "feature": "time_of_day_Night",
+        "importance": 0.018345
+      },
+      {
+        "rank": 17,
+        "feature": "gender_Non-binary",
+        "importance": 0.016165
+      },
+      {
+        "rank": 18,
+        "feature": "spo2_deficit",
+        "importance": 0.01522
+      },
+      {
+        "rank": 19,
+        "feature": "heart_rate",
+        "importance": 0.014686
+      },
+      {
+        "rank": 20,
+        "feature": "day_of_week_Wednesday",
+        "importance": 0.013491
+      }
+    ]
+  }
+}

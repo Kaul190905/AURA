@@ -243,13 +243,13 @@ export default function CaretakerAnalysisScreen() {
             <View style={{ gap: 12, marginTop: 8 }}>
               {patternsLoading ? (
                  <Text style={[styles.eventDate, subTextStyle]}>Loading AI Patterns...</Text>
-              ) : patterns && patterns.common_triggers.length > 0 ? (
-                patterns.common_triggers.map((trigger, i) => (
+              ) : patterns && patterns.patterns && patterns.patterns.length > 0 ? (
+                patterns.patterns.map((p, i) => (
                   <View key={i} style={[styles.eventRow, cardStyle, { alignItems: 'flex-start' }]}>
                     <Zap size={16} color={colors.primary} />
                     <View>
-                       <Text style={[styles.eventTitle, textStyle, fonts.bold]}>{trigger} Combinations</Text>
-                       <Text style={[styles.eventDate, subTextStyle]}>Detected as a frequent factor in recent overloads.</Text>
+                       <Text style={[styles.eventTitle, textStyle, fonts.bold]}>{p.label}</Text>
+                       <Text style={[styles.eventDate, subTextStyle]}>{p.description}</Text>
                     </View>
                   </View>
                 ))
