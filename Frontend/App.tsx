@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { View, StyleSheet, TouchableOpacity, Text, Modal } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Modal, Linking } from 'react-native';
 import { House, Library, TrendingUp, Bluetooth, Settings, Heart, User } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -157,21 +157,65 @@ export default function App() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
 
+  // Handle Deep Links for Google OAuth Redirect
+  useEffect(() => {
+    const handleDeepLink = ({ url }: { url: string }) => {
+      if (!url) return;
+      // Supabase returns tokens as hash fragments (#access_token=...), replace with ? so searchParams can parse them
+      const parsedUrl = new URL(url.replace('#', '?'));
+      const accessToken = parsedUrl.searchParams.get('access_token');
+      const refreshToken = parsedUrl.searchParams.get('refresh_token');
+      if (accessToken && refreshToken) {
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+      }
+    };
+
+    const linkSubscription = Linking.addEventListener('url', handleDeepLink);
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+    return () => {
+      linkSubscription.remove();
+    };
+  }, []);
+
   // Restore Supabase session on app boot
   useEffect(() => {
+    const handleAuth = async (user: any) => {
+      const storedRole = user?.user_metadata?.role;
+      const roleSelected = user?.user_metadata?.roleSelected;
+      
+      if (roleSelected && storedRole === 'user') {
+        setUserRole('user');
+        setAppScreen('home');
+      } else if (roleSelected && storedRole === 'caregiver') {
+        setUserRole('caregiver');
+        setAppScreen('caretaker-home');
+      } else {
+        setAppScreen('welcome');
+      }
+    };
+
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         setUserId(data.session.user.id);
         setAccessToken(data.session.access_token);
+        handleAuth(data.session.user);
       }
       setSessionLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUserId(session?.user.id ?? null);
       setAccessToken(session?.access_token ?? null);
       if (!session) {
         setAppScreen('welcome');
+        setUserRole(null);
+      } else if (_event === 'SIGNED_IN' && session.user) {
+        await handleAuth(session.user);
       }
     });
     return () => listener.subscription.unsubscribe();
@@ -331,9 +375,10 @@ export default function App() {
         <NavigationContainer key={colorVisionMode}>
           {/* Route to Login if not authenticated, Welcome once signed in */}
           {!sessionLoading && !userId && (
-            <LoginScreen onSuccess={() => setAppScreen('welcome')} />
+            <LoginScreen onSuccess={() => {}} />
           )}
-          {!sessionLoading && userId && appScreen === 'welcome' && <WelcomeScreen onNext={(role) => {
+          {!sessionLoading && userId && appScreen === 'welcome' && <WelcomeScreen onNext={async (role) => {
+            await supabase.auth.updateUser({ data: { role, roleSelected: true } });
             setUserRole(role);
             setAppScreen(role === 'caregiver' ? 'caretaker-home' : 'profile');
           }} />}

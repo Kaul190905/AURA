@@ -7,6 +7,7 @@ from app.schemas.sensor_data import SensorDataCreate, SensorDataResponse, Sensor
 from app.services.sensor_data_service import SensorDataService
 from app.api.dependencies.services import get_sensor_data_service
 from app.core.security import get_current_user
+from app.core.biometric_firewall import inspect_telemetry_payload
 
 router = APIRouter()
 
@@ -24,6 +25,10 @@ async def submit_sensor_data(
     import uuid
     # Temporarily using the provided dev_user_id or a generated dummy UUID since authentication is disabled for development
     user_id_to_use = dev_user_id if dev_user_id else uuid.uuid4()
+    
+    # ── AI Biometric Spoofing & Anomaly Inspection Firewall ───────────────
+    inspect_telemetry_payload(user_id_to_use, data_in)
+
     return await sensor_data_service.create_sensor_data(user_id_to_use, data_in)
 
 @router.get("/history", response_model=List[SensorDataResponse], summary="Get Sensor Data History")

@@ -93,6 +93,7 @@ export interface BehavioralPatternResponse {
     label: string;
     description: string;
     confidence: number;
+    common_triggers?: string[];
   }[];
   analyzed_at: string;
 }
@@ -176,7 +177,7 @@ export async function getSensorHistory(
   userId: string,
   limit = 100,
 ): Promise<SensorDataResponse[]> {
-  const res = await authFetch(`/sensor-data/history?user_id=${userId}&limit=${limit}&sort_by=desc`);
+  const res = await authFetch(`/sensor-data/?user_id=${userId}&limit=${limit}`);
   return res.json();
 }
 

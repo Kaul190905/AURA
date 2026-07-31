@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+    "android:release": "react-native run-android --mode=release",
+    "android:local": "react-native run-android --no-packager",
+    "deploy:usb": "node scripts/deploy-usb.js",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
