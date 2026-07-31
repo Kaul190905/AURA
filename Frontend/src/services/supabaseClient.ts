@@ -35,6 +35,9 @@ export async function signOut() {
 export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
+    options: {
+      redirectTo: 'aura://login-callback',
+    },
   });
   if (error) throw error;
   return data;
