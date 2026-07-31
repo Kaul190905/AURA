@@ -14,7 +14,7 @@ import { getAlerts, AlertResponse } from '../services/api';
 
 export default function CaretakerDashboardScreen() {
   const styles = getStyles();
-  const { risk, history, isCrisisMode, notifications, setIsNotificationCenterOpen, bleConnected, darkMode, setIsAIPanelOpen, userId } = useContext(AppContext);
+  const { risk, history, isCrisisMode, notifications, setIsNotificationCenterOpen, bleConnected, darkMode, userId } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
   // Fetch real alerts from backend
@@ -76,13 +76,6 @@ export default function CaretakerDashboardScreen() {
             <Bell size={20} color={colors.primary} />
             {unreadCount > 0 && <View style={styles.unreadBadge} />}
           </TouchableOpacity>
-            <TouchableOpacity 
-              activeOpacity={0.7} 
-              style={[styles.sparkleBtn, cardStyle, neuSm]}
-              onPress={() => setIsAIPanelOpen(true)}
-            >
-              <Star size={20} color={colors.primary} />
-            </TouchableOpacity>
         </View>
       </View>
 

@@ -72,6 +72,7 @@ const getStyles = () => StyleSheet.create({
     borderRadius: radius.lg,
     paddingHorizontal: spacing.xl,
     paddingVertical: 14,
+    paddingLeft: spacing.xl + 16,
     fontSize: 24,
     letterSpacing: 16,
     textAlign: 'center',
