@@ -20,13 +20,9 @@ class Settings(BaseSettings):
         "http://localhost:3000",
     ]
 
-    # ── Security ────────────────────────────────────────────────────────────
-    # AES-256 encryption key for PII fields.
-    # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-    # Then set ENCRYPTION_KEY in Render environment variables.
+    # Security & Rate Limiting
     ENCRYPTION_KEY: Optional[str] = None
-
-    # Rate-limiting toggle (disable in unit tests)
+    REDIS_URL: Optional[str] = None
     RATE_LIMIT_ENABLED: bool = True
 
     # AI engines
