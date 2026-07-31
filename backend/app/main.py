@@ -1,8 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.settings import settings
 from app.core.exceptions import AURAException, aura_exception_handler
 from app.core.logging import setup_logging
+from app.core.sanitization import SecuritySanitizationMiddleware
+from app.core.rate_limiter import rate_limit_dependency
 from app.api.v1.routes import api_router
 
 # Setup logging
@@ -15,7 +17,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Set up CORS middleware
+# ── 1. Security Sanitization Middleware (XSS / SQLi / oversized body) ─────────
+app.add_middleware(SecuritySanitizationMiddleware)
+
+# ── 2. CORS Middleware ──────────────────────────────────────────────────────────
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
@@ -25,12 +30,16 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Exception handlers
+# ── 3. Exception handlers ───────────────────────────────────────────────────────
 app.add_exception_handler(AURAException, aura_exception_handler)
 
-# Include routers
-app.include_router(api_router, prefix=settings.API_V1_STR)
+# ── 4. API Routes (with rate-limiting applied to all routes) ────────────────────
+app.include_router(
+    api_router,
+    prefix=settings.API_V1_STR,
+    dependencies=[Depends(rate_limit_dependency)],
+)
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    return {"status": "ok"}
+    return {"status": "ok", "version": "1.0.0"}
