@@ -86,7 +86,7 @@ if __name__ == "__main__":
     # Default execution for testing purposes.
     # Note: Replace with a valid user_id from your database
     TEST_USER_ID = "7737ba79-0d30-46e1-b6eb-4f41615bf10c"
-    API_ENDPOINT = "http://localhost:8000/api/v1/sensor-data/"
+    API_ENDPOINT = "https://aura-backend-av7z.onrender.com"
     
     simulator = ESP32Simulator(
         api_url=API_ENDPOINT,

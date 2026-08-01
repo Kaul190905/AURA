@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, User } from 'lucide-react-native';
-import { signIn, signUp } from '../services/supabaseClient';
+import { signIn, signUp, signInWithGoogle } from '../services/supabaseClient';
 import { colors, fonts, radius, spacing } from '../theme';
 
 interface Props {
@@ -66,6 +66,19 @@ export default function LoginScreen({ onSuccess }: Props) {
       }
     } catch (err: any) {
       setError(err?.message ?? 'Authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+      onSuccess();
+    } catch (err: any) {
+      setError(err?.message ?? 'Google Sign-In failed.');
     } finally {
       setLoading(false);
     }
@@ -221,6 +234,21 @@ export default function LoginScreen({ onSuccess }: Props) {
                   <ChevronRight size={18} color="#fff" />
                 </>
               )}
+            </TouchableOpacity>
+
+            <View style={styles.dividerRow}>
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.divider} />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.googleBtn, loading && styles.btnDisabled]}
+              onPress={handleGoogleSignIn}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.googleBtnText}>Continue with Google</Text>
             </TouchableOpacity>
           </View>
 
@@ -399,6 +427,42 @@ const styles = StyleSheet.create({
   },
   btnText: {
     color: '#fff',
+    fontSize: 16,
+    ...fonts.bold,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.sm,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    marginHorizontal: spacing.md,
+    fontSize: 13,
+    color: colors.mutedForeground,
+    ...fonts.medium,
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: radius.lg,
+    height: 52,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 2,
+    shadowColor: '#A3B1C6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  googleBtnText: {
+    color: colors.foreground,
     fontSize: 16,
     ...fonts.bold,
   },
