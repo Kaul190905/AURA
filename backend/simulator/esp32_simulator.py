@@ -3,7 +3,6 @@ import random
 import logging
 import httpx
 from datetime import datetime, timezone
-import uuid
 import sys
 
 # Configure basic logging

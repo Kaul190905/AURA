@@ -6,7 +6,6 @@ from uuid import UUID
 from app.schemas.sensor_data import SensorDataCreate, SensorDataResponse, SensorDataAnalysisResponse
 from app.services.sensor_data_service import SensorDataService
 from app.api.dependencies.services import get_sensor_data_service
-from app.core.security import get_current_user
 
 router = APIRouter()
 
