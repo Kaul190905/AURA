@@ -5,7 +5,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Star, Mail, Lock, Eye, EyeOff, ChevronRight } from 'lucide-react-native';
+import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, User } from 'lucide-react-native';
 import { signIn, signUp } from '../services/supabaseClient';
 import { colors, fonts, radius, spacing } from '../theme';
 
@@ -18,6 +18,7 @@ type Mode = 'signin' | 'signup';
 export default function LoginScreen({ onSuccess }: Props) {
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<Mode>('signin');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -125,6 +126,24 @@ export default function LoginScreen({ onSuccess }: Props) {
                   Create Account
                 </Text>
               </TouchableOpacity>
+            </View>
+
+            {/* Username field */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Username</Text>
+              <View style={styles.inputRow}>
+                <User size={18} color={colors.mutedForeground} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder="Username"
+                  placeholderTextColor={colors.mutedForeground}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                />
+              </View>
             </View>
 
             {/* Email field */}

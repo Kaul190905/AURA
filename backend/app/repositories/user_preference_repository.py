@@ -7,7 +7,6 @@ import logging
 
 from app.domain.models.user_preference import UserPreference
 from app.schemas.user_preference import UserPreferenceUpdate
-from app.core.exceptions import NotFoundException
 
 logger = logging.getLogger(__name__)
 

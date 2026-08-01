@@ -20,9 +20,6 @@ import pandas as pd
 from .config import (
     CSV_PATTERN,
     DATA_DIR,
-    DROP_COLS,
-    NUMERIC_COLS,
-    CATEGORICAL_COLS,
     RANDOM_STATE,
     SPD_LEVEL_COL,
     TARGET_COL,

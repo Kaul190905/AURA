@@ -43,7 +43,7 @@ def _sanitize_string(value: str) -> str:
     """Strip HTML tags and detect SQLi patterns from a string field."""
     cleaned = _HTML_RE.sub("", value)
     if _SQLI_RE.search(cleaned):
-        raise ValueError(f"Blocked: potential injection in field value")
+        raise ValueError("Blocked: potential injection in field value")
     return cleaned
 
 

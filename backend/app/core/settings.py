@@ -1,6 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Optional
-import secrets
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "AURA"
