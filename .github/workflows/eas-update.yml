@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - sakthi-dev
+      - merge-backend
     paths:
       - 'Frontend/**'
 
