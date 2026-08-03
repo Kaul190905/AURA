@@ -1,9 +1,10 @@
 import React, { useContext, useMemo, useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator,
+import {
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Switch
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Star, Heart, Activity, MapPin, Watch, ShieldAlert, Phone, Navigation, MessageCircle, Bell } from 'lucide-react-native';
+import { Star, Heart, Activity, MapPin, Watch, ShieldAlert, Phone, Navigation, MessageCircle, Bell, ArrowLeft, Users } from 'lucide-react-native';
 import { LineChart } from 'react-native-gifted-charts';
 
 import { AppContext } from '../AppContext';
@@ -14,7 +15,11 @@ import { getAlerts, AlertResponse } from '../services/api';
 
 export default function CaretakerDashboardScreen() {
   const styles = getStyles();
-  const { risk, history, isCrisisMode, notifications, setIsNotificationCenterOpen, bleConnected, darkMode, userId } = useContext(AppContext);
+  const { 
+    risk, history, isCrisisMode, notifications, setIsNotificationCenterOpen, 
+    bleConnected, darkMode, userId,
+    teacherMode, setTeacherMode, selectedStudent, setSelectedStudent, mockStudents
+  } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
   // Fetch real alerts from backend
@@ -56,18 +61,36 @@ export default function CaretakerDashboardScreen() {
     <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
       {/* Top bar */}
       <View style={styles.topBar}>
-        <View>
+        <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={styles.topLabel}>CAREGIVER VIEW</Text>
-            {!bleConnected && (
+            <Text style={styles.topLabel}>{teacherMode ? 'TEACHER VIEW' : 'CAREGIVER VIEW'}</Text>
+            {!bleConnected && !teacherMode && (
                <View style={{ backgroundColor: colors.muted, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
                  <Text style={{ fontSize: 8, color: colors.mutedForeground, ...fonts.bold }}>OFFLINE</Text>
                </View>
             )}
           </View>
-          <Text style={[styles.greeting, textStyle]}>Caregiver Dashboard</Text>
+          <Text style={[styles.greeting, textStyle]}>
+            {teacherMode && selectedStudent 
+              ? mockStudents.find(s => s.id === selectedStudent)?.name || 'Student Details'
+              : teacherMode 
+                ? 'Student Roster' 
+                : 'Caregiver Dashboard'}
+          </Text>
         </View>
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+          {/* Teacher Mode Toggle */}
+          <TouchableOpacity 
+            style={[styles.sparkleBtn, cardStyle, neuSm, teacherMode && { backgroundColor: colors.primary }]}
+            onPress={() => {
+              setTeacherMode(!teacherMode);
+              if (teacherMode) setSelectedStudent(null);
+            }}
+            activeOpacity={0.8}
+          >
+            <Users size={20} color={teacherMode ? '#fff' : colors.primary} />
+          </TouchableOpacity>
+
           <TouchableOpacity 
             style={[styles.sparkleBtn, cardStyle, neuSm]}
             onPress={() => setIsNotificationCenterOpen(true)}
@@ -76,8 +99,49 @@ export default function CaretakerDashboardScreen() {
             <Bell size={20} color={colors.primary} />
             {unreadCount > 0 && <View style={styles.unreadBadge} />}
           </TouchableOpacity>
+          </TouchableOpacity>
         </View>
       </View>
+
+      {/* Teacher Roster View */}
+      {teacherMode && !selectedStudent ? (
+        <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140 }}>
+          {mockStudents.map(student => {
+            const isHighRisk = student.risk >= 5;
+            const rColor = riskColor(student.risk);
+            return (
+              <TouchableOpacity 
+                key={student.id} 
+                style={[styles.rosterCard, cardStyle, neuSm, { borderLeftWidth: 4, borderLeftColor: rColor }]} 
+                onPress={() => setSelectedStudent(student.id)}
+                activeOpacity={0.8}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.studentName, textStyle]}>{student.name}</Text>
+                  <Text style={styles.studentLocation}><MapPin size={12} color={colors.mutedForeground} /> {student.location}</Text>
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                  <View style={[styles.rosterRiskRing, { borderColor: rColor }]}>
+                    <Text style={[styles.rosterRiskScore, { color: rColor }]}>{student.risk}</Text>
+                  </View>
+                  <Text style={[styles.rosterRiskLabel, { color: rColor }]}>{student.isCrisis ? 'CRISIS' : (isHighRisk ? 'ELEVATED' : 'SAFE')}</Text>
+                </View>
+              </TouchableOpacity>
+            )
+          })}
+        </ScrollView>
+      ) : (
+        <>
+          {teacherMode && selectedStudent && (
+            <TouchableOpacity 
+              style={[styles.backBtn, cardStyle]} 
+              onPress={() => setSelectedStudent(null)}
+              activeOpacity={0.8}
+            >
+              <ArrowLeft size={16} color={colors.primary} />
+              <Text style={[styles.backBtnText, textStyle]}>Back to Roster</Text>
+            </TouchableOpacity>
+          )}
 
       {/* Risk card - Exact duplicate styling from User House */}
       <View style={[styles.riskCard, cardStyle, neuSm]}>
@@ -231,7 +295,10 @@ export default function CaretakerDashboardScreen() {
           </AccItem>
           
         </Accordion>
+        </Accordion>
       </ScrollView>
+      </>
+      )}
     </View>
   );
 }
@@ -242,6 +309,28 @@ const getStyles = () => StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.xl, paddingBottom: spacing.md,
   },
+  backBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginHorizontal: spacing.lg, marginBottom: spacing.md,
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderRadius: radius.md, alignSelf: 'flex-start',
+    backgroundColor: colors.muted,
+  },
+  backBtnText: { fontSize: 13, ...fonts.medium, color: colors.foreground },
+  rosterCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: spacing.lg, marginBottom: spacing.md,
+    borderRadius: radius.lg, backgroundColor: colors.background,
+  },
+  studentName: { fontSize: 18, ...fonts.bold, marginBottom: 4 },
+  studentLocation: { fontSize: 12, color: colors.mutedForeground, ...fonts.medium },
+  rosterRiskRing: {
+    width: 44, height: 44, borderRadius: 22,
+    borderWidth: 3, alignItems: 'center', justifyContent: 'center',
+    marginBottom: 4,
+  },
+  rosterRiskScore: { fontSize: 16, ...fonts.bold },
+  rosterRiskLabel: { fontSize: 9, ...fonts.bold, letterSpacing: 1 },
   topLabel: { fontSize: 10, letterSpacing: 2, color: colors.mutedForeground, ...fonts.medium },
   greeting: { fontSize: 20, color: colors.foreground, ...fonts.bold },
   sparkleBtn: {
