@@ -30,6 +30,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import RecoverySummaryScreen from './src/screens/RecoverySummaryScreen';
 import { NotificationModal } from './src/components/NotificationModal';
 import SpeechDiaryScreen from './src/screens/SpeechDiaryScreen';
+import UserProfileScreen from './src/screens/UserProfileScreen';
 import PlansScreen from './src/screens/PlansScreen';
 import CaretakerGateScreen from './src/screens/CaretakerGateScreen';
 import CaretakerDashboardScreen from './src/screens/CaretakerDashboardScreen';
@@ -43,9 +44,10 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 // ── Tab Navigator (main app) ──────────────────────────────────────────────────
-function TabNavigator({ goCrisis }: { goCrisis: () => void }) {
+function TabNavigator({ goCrisis, initialRouteName = 'House' }: { goCrisis: () => void, initialRouteName?: string }) {
   return (
     <Tab.Navigator
+      initialRouteName={initialRouteName}
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
@@ -124,7 +126,7 @@ export default function App() {
   const [isCrisisMode, setIsCrisisMode] = useState(false);
   const [crisisRiskBefore, setCrisisRiskBefore] = useState<number | null>(null);
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
-  const [caregiver, setCaregiver] = useState({ name: '', relationship: '', phone: '' });
+  const [caregiver, setCaregiver] = useState({ name: '', relationship: '', phone: '', email: '' });
   const [notifications, setNotifications] = useState<AppNotification[]>([
     { id: '1', title: 'High Noise Detected', description: 'Environment exceeded 85dB.', time: Date.now() - 3600000, read: false, type: 'alert' },
     { id: '2', title: 'Risk Level Increased', description: 'Sensory overload risk is High.', time: Date.now() - 7200000, read: true, type: 'alert' },
@@ -151,6 +153,7 @@ export default function App() {
   const [sensitivity, setSensitivity] = useState(3);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertShownForScore, setAlertShownForScore] = useState<number | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
   // ── Auth / Backend state ────────────────────────────────────────────────────
   const [userId, setUserId] = useState<string | null>(null);
@@ -259,7 +262,19 @@ export default function App() {
         applyColorVisionMode(val);
       }
     });
+    AsyncStorage.getItem('profilePhoto').then(val => {
+      if (val) setProfilePhoto(val);
+    });
   }, []);
+
+  const handleSetProfilePhoto = (uri: string | null) => {
+    setProfilePhoto(uri);
+    if (uri) {
+      AsyncStorage.setItem('profilePhoto', uri);
+    } else {
+      AsyncStorage.removeItem('profilePhoto');
+    }
+  };
 
   const handleSetColorVisionMode = (mode: 'default' | 'protanopia' | 'deuteranopia' | 'tritanopia') => {
     setColorVisionMode(mode);
@@ -363,7 +378,7 @@ export default function App() {
       reduceMotion, setReduceMotion, darkMode, setDarkMode, colorVisionMode, setColorVisionMode: handleSetColorVisionMode, sensitivity, setSensitivity,
       risk, primaryTrigger, suggestions, goCrisis,
       navigateTo: setAppScreen,
-      // Backend / Auth
+      profilePhoto, setProfilePhoto: handleSetProfilePhoto,
       userId, setUserId,
       accessToken, setAccessToken,
     };
@@ -382,20 +397,21 @@ export default function App() {
             setUserRole(role);
             setAppScreen(role === 'caregiver' ? 'caretaker-home' : 'profile');
           }} />}
-          {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('home')} onBack={() => setAppScreen('settings')} />}
+          {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('settings')} onBack={() => setAppScreen('settings')} />}
 
           {userId && appScreen === 'recovery' && <RecoverySummaryScreen onDone={() => setAppScreen('home')} />}
           {userId && appScreen === 'speech' && <SpeechDiaryScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
+          {userId && appScreen === 'user_profile' && <UserProfileScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setUserRole('caregiver'); setAppScreen('caretaker-home'); }} />}
           {userId && appScreen === 'caretaker-home' && (
             <View style={{ flex: 1 }}>
               <CaretakerTabNavigator />
             </View>
           )}
-          {userId && appScreen === 'home' && (
+          {userId && (appScreen === 'home' || appScreen === 'settings') && (
             <View style={{ flex: 1 }}>
-              <TabNavigator goCrisis={goCrisis} />
+              <TabNavigator goCrisis={goCrisis} initialRouteName={appScreen === 'settings' ? 'Settings' : 'House'} />
               <TouchableOpacity
                 onPress={goCrisis}
                 style={[styles.overloadBtn, {

@@ -15,6 +15,8 @@ if TYPE_CHECKING:
     from app.domain.models.wellness_checkin import WellnessCheckin
     from app.domain.models.strategy import Strategy
     from app.domain.models.accommodation import Accommodation
+    from app.domain.models.speech_diary import SpeechDiaryEntry
+    from app.domain.models.routine import Routine
 
 class User(Base):
     __tablename__ = "users"
@@ -35,3 +37,5 @@ class User(Base):
     wellness_checkins: Mapped[List["WellnessCheckin"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     strategies: Mapped[List["Strategy"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     accommodations: Mapped[List["Accommodation"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    speech_diary_entries: Mapped[List["SpeechDiaryEntry"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    routines: Mapped[List["Routine"]] = relationship(back_populates="user", cascade="all, delete-orphan")
