@@ -42,16 +42,7 @@ export async function signOut() {
   if (error) throw error;
 }
 
-export async function signInWithGoogle() {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: 'aura://login-callback',
-    },
-  });
-  if (error) throw error;
-  return data;
-}
+
 
 /** Returns the current JWT access token, or null if not signed in. */
 export async function getAccessToken(): Promise<string | null> {
