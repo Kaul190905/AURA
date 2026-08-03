@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Modal
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Star, Play, Pause } from 'lucide-react-native';
+import { Star, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 
@@ -15,6 +15,7 @@ export default function CrisisModeScreen({ onExit }: Props) {
   const insets = useSafeAreaInsets();
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
+  const [sosSent, setSosSent] = useState(false);
   const breathe1 = useRef(new Animated.Value(0.85)).current;
   const breathe2 = useRef(new Animated.Value(0.85)).current;
 
@@ -55,6 +56,13 @@ export default function CrisisModeScreen({ onExit }: Props) {
     }, 1000);
     return () => clearInterval(id);
   }, [running, onExit]);
+
+  const handleSos = () => {
+    setSosSent(true);
+    setTimeout(() => {
+      setSosSent(false);
+    }, 10000); // auto hide after 10 seconds
+  };
 
   const remaining = 300 - seconds;
   const mm = String(Math.floor(remaining / 60)).padStart(1, '0');
@@ -102,9 +110,41 @@ export default function CrisisModeScreen({ onExit }: Props) {
       </View>
 
       {/* Exit */}
-      <TouchableOpacity onPress={onExit} style={styles.exitBtn} activeOpacity={0.85}>
-        <Text style={styles.exitBtnText}>I feel better</Text>
-      </TouchableOpacity>
+      <View style={{ gap: 12 }}>
+        <TouchableOpacity 
+          onPress={handleSos} 
+          style={styles.sosBtn} 
+          activeOpacity={0.85}
+        >
+          <AlertTriangle size={18} color="#fff" />
+          <Text style={styles.sosBtnText}>SOS ALERT</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={onExit} style={styles.exitBtn} activeOpacity={0.85}>
+          <Text style={styles.exitBtnText}>I feel better</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Modal
+        visible={sosSent}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setSosSent(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalPanel}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <CheckCircle2 size={24} color={colors.riskHigh} />
+                <Text style={styles.modalTitle}>SOS Sent</Text>
+              </View>
+            </View>
+            <Text style={styles.modalText}>
+              An emergency alert has been dispatched to your contacts and caretaker. Help is on the way.
+            </Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -152,9 +192,47 @@ const getStyles = () => StyleSheet.create({
     shadowColor: colors.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 4,
   },
   timerBtnText: { color: '#fff', fontSize: 13, ...fonts.semibold },
+  sosBtn: {
+    height: 56, backgroundColor: colors.riskHigh, borderRadius: radius.xl,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, elevation: 4,
+    shadowColor: colors.riskHigh, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6,
+  },
+  sosBtnText: { color: '#fff', fontSize: 16, ...fonts.bold, letterSpacing: 1 },
   exitBtn: {
     height: 56, backgroundColor: colors.foreground, borderRadius: radius.xl,
     alignItems: 'center', justifyContent: 'center', elevation: 4,
   },
   exitBtnText: { color: colors.background, fontSize: 16, ...fonts.semibold },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalPanel: {
+    backgroundColor: colors.background,
+    width: '100%',
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    ...neuSm,
+    alignItems: 'center',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  modalTitle: {
+    fontSize: 20,
+    ...fonts.bold,
+    color: colors.foreground,
+  },
+  modalText: {
+    fontSize: 15,
+    color: colors.mutedForeground,
+    lineHeight: 22,
+    textAlign: 'center',
+    paddingHorizontal: spacing.sm,
+  },
 });

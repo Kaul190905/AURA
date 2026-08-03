@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { AppContext, AppNotification } from '../AppContext';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
-import { X, Bell, Zap, BrainCircuit, Activity } from 'lucide-react-native';
+import { X, Bell, Zap, BrainCircuit, Activity, Trash2, Check } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function NotificationModal() {
@@ -13,6 +13,21 @@ export function NotificationModal() {
   const markAllAsRead = () => {
     setNotifications(notifications.map(n => ({ ...n, read: true })));
   };
+
+  const markAsRead = (id: string) => {
+    setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications(notifications.filter(n => n.id !== id));
+  };
+
+  const sortedNotifications = [...notifications].sort((a, b) => {
+    if (a.read === b.read) return new Date(b.time).getTime() - new Date(a.time).getTime();
+    return a.read ? 1 : -1;
+  });
+
+
 
   const getIcon = (type: AppNotification['type']) => {
     if (type === 'alert') return <Activity size={18} color={colors.riskHigh} />;
@@ -44,19 +59,24 @@ export function NotificationModal() {
           </TouchableOpacity>
 
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            {notifications.map(n => (
-              <View key={n.id} style={[styles.notifCard, neuSm, !n.read && styles.unreadCard]}>
-                <View style={[styles.iconContainer, !n.read && styles.unreadIconBg]}>
-                  {getIcon(n.type)}
-                </View>
-                <View style={styles.notifBody}>
-                  <Text style={[styles.notifTitle, !n.read && fonts.bold]}>{n.title}</Text>
-                  <Text style={styles.notifDesc}>{n.description}</Text>
-                  <Text style={styles.notifTime}>{new Date(n.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-                </View>
-                {!n.read && <View style={styles.unreadDot} />}
-              </View>
-            ))}
+              {sortedNotifications.map(n => (
+                  <View key={n.id} style={[styles.notifCard, neuSm, !n.read && styles.unreadCard, { marginBottom: spacing.md }]}>
+                    <View style={[styles.iconContainer, !n.read && styles.unreadIconBg]}>
+                      {getIcon(n.type)}
+                    </View>
+                    <View style={styles.notifBody}>
+                      <Text style={[styles.notifTitle, !n.read && fonts.bold]}>{n.title}</Text>
+                      <Text style={styles.notifDesc}>{n.description}</Text>
+                      <Text style={styles.notifTime}>{new Date(n.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                    </View>
+                    <View style={{ alignItems: 'center', gap: 12 }}>
+                      {!n.read && <View style={styles.unreadDot} />}
+                      <TouchableOpacity onPress={() => deleteNotification(n.id)} hitSlop={10} style={styles.deleteBtn}>
+                        <Trash2 size={18} color={colors.riskHigh} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+              ))}
             {notifications.length === 0 && (
               <Text style={styles.emptyText}>No notifications yet.</Text>
             )}
@@ -159,4 +179,9 @@ const getStyles = () => StyleSheet.create({
     color: colors.mutedForeground,
     marginTop: spacing.xl,
   },
+  deleteBtn: {
+    padding: 4,
+    backgroundColor: `${colors.riskHigh}15`,
+    borderRadius: 8,
+  }
 });

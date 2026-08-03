@@ -19,8 +19,14 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 // ── Auth helpers ───────────────────────────────────────────────────────────────
-export async function signUp(email: string, password: string) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+export async function signUp(email: string, password: string, username: string) {
+  const { data, error } = await supabase.auth.signUp({ 
+    email, 
+    password,
+    options: {
+      data: { name: username }
+    }
+  });
   if (error) throw error;
   return data;
 }
@@ -34,6 +40,17 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
+}
+
+export async function signInWithGoogle() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: 'aura://login-callback',
+    },
+  });
+  if (error) throw error;
+  return data;
 }
 
 /** Returns the current JWT access token, or null if not signed in. */

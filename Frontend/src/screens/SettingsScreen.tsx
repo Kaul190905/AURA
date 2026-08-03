@@ -1,10 +1,10 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Users, Zap, Eye, Shield, Trash2, ChevronRight, Watch, Battery, Smartphone, LogOut, Check, Palette } from 'lucide-react-native';
+import { Users, Zap, Eye, Shield, Trash2, ChevronRight, Watch, Battery, Smartphone, LogOut, Check, Palette, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 import { Accordion, AccItem } from '../components/Accordion';
@@ -22,6 +22,25 @@ export default function SettingsScreen() {
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
+  const [newName, setNewName] = useState('');
+  const [updatingName, setUpdatingName] = useState(false);
+  const [nameSuccess, setNameSuccess] = useState(false);
+
+  const handleUpdateName = async () => {
+    if (!newName.trim()) return;
+    setUpdatingName(true);
+    setNameSuccess(false);
+    try {
+      await supabase.auth.updateUser({ data: { name: newName.trim() } });
+      setNameSuccess(true);
+      setNewName('');
+      setTimeout(() => setNameSuccess(false), 3000);
+    } catch (e) {
+      console.error(e);
+    }
+    setUpdatingName(false);
+  };
+
   const resetData = () => {
     // Reset history by navigating to profile
     navigateTo('profile');
@@ -35,14 +54,37 @@ export default function SettingsScreen() {
           {/* Profile */}
           <AccItem id="profile" title="Profile" defaultOpen icon={<Users size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
+              <View style={[styles.navRow, { paddingVertical: 12 }]}>
+                <TextInput
+                  style={{ flex: 1, color: colors.foreground, ...fonts.medium, padding: 0 }}
+                  placeholder="Change Username"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={newName}
+                  onChangeText={setNewName}
+                  returnKeyType="done"
+                  onSubmitEditing={handleUpdateName}
+                />
+                {updatingName ? (
+                   <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <TouchableOpacity onPress={handleUpdateName} hitSlop={10}>
+                    {nameSuccess ? <Check size={18} color={colors.riskLow} /> : <Text style={{ color: colors.primary, ...fonts.bold }}>Save</Text>}
+                  </TouchableOpacity>
+                )}
+              </View>
+              <TouchableOpacity onPress={() => navigateTo('user_profile')} style={styles.navRow} activeOpacity={0.8}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <User size={16} color={colors.primary} />
+                  <Text style={styles.navRowText}>View profile page</Text>
+                </View>
+                <ChevronRight size={16} color={colors.mutedForeground} />
+              </TouchableOpacity>
+
               <TouchableOpacity onPress={() => navigateTo('profile')} style={styles.navRow} activeOpacity={0.8}>
                 <Text style={styles.navRowText}>Edit sensory profile</Text>
                 <ChevronRight size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigateTo('caretaker-gate')} style={styles.navRow} activeOpacity={0.8}>
-                <Text style={styles.navRowText}>Open caretaker view</Text>
-                <ChevronRight size={16} color={colors.mutedForeground} />
-              </TouchableOpacity>
+
               <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('welcome'); await supabase.auth.signOut(); }} style={styles.navRow} activeOpacity={0.8}>
                 <Text style={styles.navRowText}>Logout</Text>
                 <LogOut size={16} color={colors.mutedForeground} />
@@ -50,34 +92,6 @@ export default function SettingsScreen() {
             </View>
           </AccItem>
 
-          {/* Vibration */}
-          <AccItem id="vibration" title="Vibration"
-            icon={<Zap size={18} color={colors.primary} />}>
-            <View style={{ marginTop: 8 }}>
-              <View style={styles.radioGroup}>
-                <TouchableOpacity
-                  style={[styles.radioItem, sensitivity === 1 && styles.radioItemActive, sensitivity === 1 && { backgroundColor: colors.muted }]}
-                  onPress={() => setSensitivity(1)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.radioLabel, sensitivity === 1 && { color: colors.primary, ...fonts.bold }]}>
-                    Short Vibration
-                  </Text>
-                  {sensitivity === 1 && <Check size={16} color={colors.primary} />}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.radioItem, sensitivity === 2 && styles.radioItemActive, sensitivity === 2 && { backgroundColor: colors.muted }]}
-                  onPress={() => setSensitivity(2)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.radioLabel, sensitivity === 2 && { color: colors.primary, ...fonts.bold }]}>
-                    Long Vibration
-                  </Text>
-                  {sensitivity === 2 && <Check size={16} color={colors.primary} />}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </AccItem>
 
           {/* Accessibility */}
           <AccItem id="a11y" title="Accessibility" icon={<Eye size={18} color={colors.primary} />}>
@@ -173,6 +187,35 @@ export default function SettingsScreen() {
               <View style={styles.navRow}>
                 <Zap size={16} color={colors.mutedForeground} />
                 <Text style={styles.navRowText}>Firmware: v1.4.2</Text>
+              </View>
+              
+              <View style={styles.colorVisionSection}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <Zap size={16} color={colors.primary} />
+                  <Text style={styles.colorVisionTitle}>Vibration Pattern</Text>
+                </View>
+                <View style={styles.radioGroup}>
+                  <TouchableOpacity
+                    style={[styles.radioItem, sensitivity === 1 && styles.radioItemActive, sensitivity === 1 && { backgroundColor: colors.muted }]}
+                    onPress={() => setSensitivity(1)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.radioLabel, sensitivity === 1 && { color: colors.primary, ...fonts.bold }]}>
+                      Short Vibration
+                    </Text>
+                    {sensitivity === 1 && <Check size={16} color={colors.primary} />}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.radioItem, sensitivity === 2 && styles.radioItemActive, sensitivity === 2 && { backgroundColor: colors.muted }]}
+                    onPress={() => setSensitivity(2)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.radioLabel, sensitivity === 2 && { color: colors.primary, ...fonts.bold }]}>
+                      Long Vibration
+                    </Text>
+                    {sensitivity === 2 && <Check size={16} color={colors.primary} />}
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </AccItem>
