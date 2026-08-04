@@ -188,6 +188,10 @@ export default function SettingsScreen() {
                 <Zap size={16} color={colors.mutedForeground} />
                 <Text style={styles.navRowText}>Firmware: v1.4.2</Text>
               </View>
+              <View style={styles.navRow}>
+                <Smartphone size={16} color={colors.mutedForeground} />
+                <Text style={styles.navRowText}>App Version: v{require('../../package.json').version}</Text>
+              </View>
               
               <View style={styles.colorVisionSection}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
