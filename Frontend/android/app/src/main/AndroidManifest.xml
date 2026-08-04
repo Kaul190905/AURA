@@ -20,5 +20,6 @@
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="https://u.expo.dev/f1408090-c293-44ac-a9e7-8c15e6e12fe4"/>
     <meta-data android:name="expo.modules.updates.EXPO_RUNTIME_VERSION" android:value="@string/expo_runtime_version"/>
+    <meta-data android:name="expo.modules.updates.EXPO_UPDATES_REQUEST_HEADERS" android:value="{&quot;expo-channel-name&quot;:&quot;merge-backend&quot;}"/>
   </application>
 </manifest>
