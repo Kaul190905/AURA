@@ -419,7 +419,8 @@ export default function App() {
             if (!state) return;
             const currentRoute = state.routes[state.index];
             if (currentRoute.state && currentRoute.state.routes) {
-              const nestedRoute = currentRoute.state.routes[currentRoute.state.index];
+              const idx = currentRoute.state.index ?? 0;
+              const nestedRoute = currentRoute.state.routes[idx];
               if (nestedRoute) setCurrentTab(nestedRoute.name);
             } else {
               setCurrentTab(currentRoute.name);

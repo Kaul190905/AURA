@@ -18,8 +18,8 @@ type Mode = 'signin' | 'signup';
 export default function LoginScreen({ onSuccess }: Props) {
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<Mode>('signin');
-  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -82,8 +82,10 @@ export default function LoginScreen({ onSuccess }: Props) {
     try {
       await signInWithGoogle();
       // For web/redirect-based OAuth, the app will reload on redirect and trigger onAuthStateChange
+      onSuccess();
     } catch (err: any) {
       setError(err?.message ?? 'Google Sign-In failed.');
+    } finally {
       setLoading(false);
     }
   };

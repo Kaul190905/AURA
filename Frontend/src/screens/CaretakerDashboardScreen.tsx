@@ -429,7 +429,6 @@ export default function CaretakerDashboardScreen() {
           </AccItem>
           
         </Accordion>
-        </Accordion>
       </ScrollView>
       </>
       )}

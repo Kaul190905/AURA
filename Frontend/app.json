@@ -12,6 +12,10 @@
   "updates": {
     "url": "https://u.expo.dev/f1408090-c293-44ac-a9e7-8c15e6e12fe4"
   },
-  "android": {},
-  "ios": {}
+  "android": {
+    "package": "com.aura.mobile"
+  },
+  "ios": {
+    "bundleIdentifier": "com.aura.mobile"
+  }
 }

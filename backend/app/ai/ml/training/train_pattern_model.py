@@ -6,14 +6,12 @@ Uses KMeans clustering to discover behavioral clusters in telemetry data.
 
 from __future__ import annotations
 
-import json
 import logging
-import os
 import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
 import joblib
 import numpy as np
