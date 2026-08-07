@@ -24,6 +24,8 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
   const [currentRecordingPath, setCurrentRecordingPath] = useState('');
   const [playingId, setPlayingId] = useState<string | null>(null);
 
+  const [editingEntry, setEditingEntry] = useState<{ id: string, title: string, text: string } | null>(null);
+
   useEffect(() => {
     return () => {
       audioRecorderPlayer.stopPlayer();
@@ -100,6 +102,12 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
     setEntries(prev => [newEntry, ...prev]);
     setIsNaming(false);
     setRecordTime('00:00');
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingEntry) return;
+    setEntries(prev => prev.map(e => e.id === editingEntry.id ? { ...e, title: editingEntry.title, text: editingEntry.text } : e));
+    setEditingEntry(null);
   };
 
   const handlePlayPause = async (e: any) => {
@@ -183,7 +191,9 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
                       {playingId === e.id ? <Square size={16} color={colors.primary} /> : <Play size={16} color={colors.primary} />}
                     </TouchableOpacity>
                   ) : null}
-                  <TouchableOpacity style={styles.iconBtn}><Pen size={16} color={colors.mutedForeground} /></TouchableOpacity>
+                  <TouchableOpacity style={styles.iconBtn} onPress={() => setEditingEntry({ id: e.id, title: e.title, text: e.text })}>
+                    <Pen size={16} color={colors.mutedForeground} />
+                  </TouchableOpacity>
                   <TouchableOpacity style={styles.iconBtn} onPress={() => handleDelete(e.id)}><Trash2 size={16} color={colors.riskHigh} /></TouchableOpacity>
                 </View>
               </View>
@@ -239,6 +249,39 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
           </View>
         </View>
       </Modal>
+
+      {/* Edit Entry Modal */}
+      <Modal visible={!!editingEntry} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.namingCard, neuSm]}>
+            <Text style={styles.namingTitle}>Edit Entry</Text>
+            <TextInput
+              style={[styles.namingInput, { marginBottom: 12 }]}
+              placeholder="Entry Title"
+              placeholderTextColor={colors.mutedForeground}
+              value={editingEntry?.title || ''}
+              onChangeText={(t) => setEditingEntry(prev => prev ? { ...prev, title: t } : null)}
+            />
+            <TextInput
+              style={[styles.namingInput, { height: 80, textAlignVertical: 'top' }]}
+              placeholder="Entry Text"
+              placeholderTextColor={colors.mutedForeground}
+              multiline
+              value={editingEntry?.text || ''}
+              onChangeText={(t) => setEditingEntry(prev => prev ? { ...prev, text: t } : null)}
+            />
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: spacing.lg }}>
+              <TouchableOpacity style={[styles.stopBtn, { backgroundColor: colors.muted, flex: 1, alignItems: 'center' }]} onPress={() => setEditingEntry(null)}>
+                <Text style={[styles.stopBtnText, { color: colors.foreground }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.stopBtn, { flex: 1, alignItems: 'center' }]} onPress={handleSaveEdit}>
+                <Text style={styles.stopBtnText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }

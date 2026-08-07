@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, FlatList,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus, Star, Trash2, Ear, Sun, User } from 'lucide-react-native';
+import { Plus, Star, Trash2, Ear, Sun, User, Pen } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
@@ -22,6 +22,12 @@ export default function StrategyLibraryScreen() {
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [trigger, setTrigger] = useState<TriggerKey>('sound');
+  const [editingCaregiver, setEditingCaregiver] = useState(false);
+  const [tempCaregiver, setTempCaregiver] = useState(caregiver);
+  const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
+  const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
+  const [ratingStrategy, setRatingStrategy] = useState<Strategy | null>(null);
+  const [ratingValue, setRatingValue] = useState('');
 
   const grouped = useMemo(() => {
     const m = new Map<TriggerKey, Strategy[]>();
@@ -40,6 +46,26 @@ export default function StrategyLibraryScreen() {
       trigger, helped: 0, tried: 0, custom: true,
     }, ...strategies]);
     setTitle(''); setNote(''); setAdding(false);
+  };
+
+  const handleEditSave = () => {
+    if (!editingStrategy || !editingStrategy.title.trim()) return;
+    setStrategies(strategies.map(s => s.id === editingStrategy.id ? editingStrategy : s));
+    setEditingStrategy(null);
+  };
+
+  const handleRatingSave = () => {
+    if (!ratingStrategy) return;
+    const val = parseInt(ratingValue, 10);
+    if (isNaN(val) || val < 1 || val > 10) return; // Require 1-10
+
+    setStrategies(strategies.map(s => {
+      if (s.id === ratingStrategy.id) {
+        return { ...s, helped: val };
+      }
+      return s;
+    }));
+    setRatingStrategy(null);
   };
 
   return (
@@ -89,35 +115,70 @@ export default function StrategyLibraryScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <View style={[styles.caregiverCard, { marginHorizontal: spacing.lg, marginBottom: spacing.md }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <User size={20} color={colors.primary} />
-            <Text style={styles.caregiverTitle}>Caregiver Information</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <User size={20} color={colors.primary} />
+              <Text style={styles.caregiverTitle}>Caregiver Information</Text>
+            </View>
+            {!editingCaregiver && (
+              <TouchableOpacity onPress={() => { setTempCaregiver(caregiver); setEditingCaregiver(true); }}>
+                <Text style={{ color: colors.primary, ...fonts.medium }}>
+                  {caregiver?.name ? 'Edit' : 'Add'}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
-          <View style={{ gap: 12 }}>
-            <TextInput
-              style={styles.input}
-              placeholder="Caregiver Name"
-              placeholderTextColor={colors.mutedForeground}
-              value={caregiver?.name}
-              onChangeText={(t) => setCaregiver({ ...caregiver, name: t })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Relationship (e.g., Parent, Spouse)"
-              placeholderTextColor={colors.mutedForeground}
-              value={caregiver?.relationship}
-              onChangeText={(t) => setCaregiver({ ...caregiver, relationship: t })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Phone Number"
-              placeholderTextColor={colors.mutedForeground}
-              value={caregiver?.phone}
-              onChangeText={(t) => setCaregiver({ ...caregiver, phone: t })}
-              keyboardType="phone-pad"
-            />
-          </View>
+
+          {editingCaregiver ? (
+            <View style={{ gap: 12 }}>
+              <TextInput
+                style={styles.input}
+                placeholder="Caregiver Name"
+                placeholderTextColor={colors.mutedForeground}
+                value={tempCaregiver?.name}
+                onChangeText={(t) => setTempCaregiver({ ...tempCaregiver, name: t })}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Relationship (e.g., Parent, Spouse)"
+                placeholderTextColor={colors.mutedForeground}
+                value={tempCaregiver?.relationship}
+                onChangeText={(t) => setTempCaregiver({ ...tempCaregiver, relationship: t })}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Phone Number"
+                placeholderTextColor={colors.mutedForeground}
+                value={tempCaregiver?.phone}
+                onChangeText={(t) => setTempCaregiver({ ...tempCaregiver, phone: t })}
+                keyboardType="phone-pad"
+              />
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+                <TouchableOpacity 
+                  onPress={() => { setCaregiver(tempCaregiver); setEditingCaregiver(false); }} 
+                  style={styles.saveBtn}
+                >
+                  <Text style={styles.saveBtnText}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => setEditingCaregiver(false)} 
+                  style={styles.cancelBtn}
+                >
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : caregiver?.name ? (
+            <View style={{ gap: 4 }}>
+              <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>{caregiver.name}</Text>
+              <Text style={{ fontSize: 13, color: colors.mutedForeground }}>{caregiver.relationship}</Text>
+              <Text style={{ fontSize: 13, color: colors.primary, marginTop: 4 }}>{caregiver.phone}</Text>
+            </View>
+          ) : (
+            <Text style={{ fontSize: 13, color: colors.mutedForeground }}>No caregiver added yet.</Text>
+          )}
         </View>
+
           {TRIGGERS.map((t) => {
             const list = grouped.get(t.key) ?? [];
             const Icon = TRIGGER_ICONS[t.key];
@@ -128,28 +189,44 @@ export default function StrategyLibraryScreen() {
                     <Icon size={18} color={colors.primary} />
                     <Text style={styles.caregiverTitle}>{t.label}</Text>
                   </View>
-                  <Text style={styles.badge}>{list.length}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <Text style={styles.badge}>{list.length}</Text>
+                  </View>
                 </View>
                 {list.length === 0 ? (
                   <Text style={styles.emptyText}>No strategies yet.</Text>
                 ) : (
                   <View style={{ gap: 8 }}>
                     {list.map((s) => (
-                      <View key={s.id} style={styles.strategyCard}>
+                      <TouchableOpacity 
+                        key={s.id} 
+                        style={styles.strategyCard} 
+                        activeOpacity={0.8}
+                        onPress={() => setSelectedStrategyId(selectedStrategyId === s.id ? null : s.id)}
+                      >
                         <View style={{ flex: 1 }}>
                           <Text style={styles.strategyTitle}>{s.title}</Text>
                           {s.note && <Text style={styles.strategyNote}>{s.note}</Text>}
-                          <View style={styles.helpedBadge}>
+                          <TouchableOpacity 
+                            style={styles.helpedBadge}
+                            onPress={() => { setRatingStrategy(s); setRatingValue(''); }}
+                            activeOpacity={0.8}
+                          >
                             <Star size={10} color={colors.mutedForeground} />
-                            <Text style={styles.helpedText}>Helped {s.helped}/{Math.max(s.tried, 1)}</Text>
-                          </View>
-                        </View>
-                        {s.custom && (
-                          <TouchableOpacity onPress={() => remove(s.id)} style={styles.deleteBtn} activeOpacity={0.8}>
-                            <Trash2 size={14} color={colors.mutedForeground} />
+                            <Text style={styles.helpedText}>Helped {s.helped}/10</Text>
                           </TouchableOpacity>
+                        </View>
+                        {selectedStrategyId === s.id && (
+                          <View style={{ flexDirection: 'row', gap: 6 }}>
+                            <TouchableOpacity onPress={() => setEditingStrategy(s)} style={styles.deleteBtn} activeOpacity={0.8}>
+                              <Pen size={14} color={colors.mutedForeground} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => remove(s.id)} style={styles.deleteBtn} activeOpacity={0.8}>
+                              <Trash2 size={14} color={colors.riskHigh} />
+                            </TouchableOpacity>
+                          </View>
                         )}
-                      </View>
+                      </TouchableOpacity>
                     ))}
                   </View>
                 )}
@@ -157,6 +234,75 @@ export default function StrategyLibraryScreen() {
             );
           })}
       </ScrollView>
+
+      {/* Edit Strategy Overlay (Reusing Add UI Style) */}
+      {editingStrategy && (
+        <View style={styles.editOverlay}>
+          <View style={[styles.addCard, { marginHorizontal: spacing.lg, marginBottom: spacing.md }]}>
+            <Text style={styles.addCardTitle}>Edit Strategy</Text>
+            <TextInput
+              value={editingStrategy.title} onChangeText={(t) => setEditingStrategy({ ...editingStrategy, title: t })}
+              placeholder="e.g. Squeeze a stress ball"
+              placeholderTextColor={colors.mutedForeground}
+              style={styles.input}
+            />
+            <TextInput
+              value={editingStrategy.note || ''} onChangeText={(t) => setEditingStrategy({ ...editingStrategy, note: t })}
+              placeholder="Optional note"
+              placeholderTextColor={colors.mutedForeground}
+              style={[styles.input, { marginTop: 8 }]}
+            />
+            <View style={styles.triggerChips}>
+              {TRIGGERS.map((t) => (
+                <TouchableOpacity key={t.key} onPress={() => setEditingStrategy({ ...editingStrategy, trigger: t.key })}
+                  style={[styles.tChip, editingStrategy.trigger === t.key && styles.tChipActive]} activeOpacity={0.8}>
+                  <Text style={[styles.tChipText, editingStrategy.trigger === t.key && { color: colors.primary }]}>{t.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.addActions}>
+              <TouchableOpacity onPress={handleEditSave} style={styles.saveBtn} activeOpacity={0.85}>
+                <Text style={styles.saveBtnText}>Save</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setEditingStrategy(null)} style={styles.cancelBtn} activeOpacity={0.85}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Rating Overlay */}
+      {ratingStrategy && (
+        <View style={styles.editOverlay}>
+          <View style={[styles.addCard, { marginHorizontal: spacing.lg, marginBottom: spacing.md }]}>
+            <Text style={styles.addCardTitle}>How much did this help?</Text>
+            <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 12 }}>Rate from 1 to 10</Text>
+            <TextInput
+              value={ratingValue} 
+              onChangeText={(t) => {
+                const num = parseInt(t, 10);
+                if (t === '' || (!isNaN(num) && num >= 1 && num <= 10)) {
+                  setRatingValue(t);
+                }
+              }}
+              placeholder="e.g. 8"
+              keyboardType="number-pad"
+              placeholderTextColor={colors.mutedForeground}
+              style={styles.input}
+            />
+            <View style={styles.addActions}>
+              <TouchableOpacity onPress={handleRatingSave} style={styles.saveBtn} activeOpacity={0.85}>
+                <Text style={styles.saveBtnText}>Save Rating</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setRatingStrategy(null)} style={styles.cancelBtn} activeOpacity={0.85}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
     </View>
   );
 }
@@ -218,5 +364,10 @@ const getStyles = () => StyleSheet.create({
   deleteBtn: {
     width: 32, height: 32, borderRadius: radius.full,
     backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...neuSm,
+  },
+  editOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center', zIndex: 100,
   },
 });

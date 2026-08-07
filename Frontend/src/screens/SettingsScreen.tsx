@@ -188,6 +188,10 @@ export default function SettingsScreen() {
                 <Zap size={16} color={colors.mutedForeground} />
                 <Text style={styles.navRowText}>Firmware: v1.4.2</Text>
               </View>
+              <View style={styles.navRow}>
+                <Smartphone size={16} color={colors.mutedForeground} />
+                <Text style={styles.navRowText}>App Version: v{require('../../package.json').version}</Text>
+              </View>
               
               <View style={styles.colorVisionSection}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -308,3 +312,7 @@ const getStyles = () => StyleSheet.create({
   },
   previewButtonText: { fontSize: 13, ...fonts.bold },
 });
+/ /   T r i g g e r   G i t H u b   A c t i o n  
+ / /   R e t r y   t r i g g e r  
+ / /   R e t r y   a g a i n  
+ 
