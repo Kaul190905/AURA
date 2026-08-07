@@ -12,7 +12,7 @@ export type AppNotification = {
 };
 
 export type AppScreen =
-  | 'welcome' | 'profile' | 'home' | 'crisis'
+  | 'login' | 'welcome' | 'profile' | 'home' | 'crisis'
   | 'recovery' | 'settings' | 'speech' | 'plans'
   | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
   | 'user_profile';

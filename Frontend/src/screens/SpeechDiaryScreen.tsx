@@ -12,7 +12,8 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
   const styles = getStyles();
   const insets = useSafeAreaInsets();
 
-  const [entries, setEntries] = useState([
+  type SpeechEntry = { id: string; title: string; time: string; emotion: string; text: string; duration: string; uri?: string; };
+  const [entries, setEntries] = useState<SpeechEntry[]>([
     { id: '1', title: 'Lunchtime stress', time: 'Today, 2:30 PM', emotion: 'Anxious', text: 'The cafeteria was too loud today...', duration: '0:45' },
     { id: '2', title: 'Morning commute', time: 'Yesterday, 9:15 AM', emotion: 'Calm', text: 'Morning bus ride was peaceful.', duration: '1:12' }
   ]);

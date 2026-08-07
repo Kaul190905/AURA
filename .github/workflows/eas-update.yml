@@ -39,8 +39,4 @@ jobs:
         run: npm ci
 
       - name: Publish update
-<<<<<<< HEAD
         run: eas update --auto --non-interactive
-=======
-        run: eas update --branch default --message "Automated OTA Update" --non-interactive
->>>>>>> e57eb6f99f7e6cc4b678336e7a7b5298340c9d3e
