@@ -1,7 +1,9 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal,
 } from 'react-native';
+import Svg, { Circle, Path, Rect, Defs, LinearGradient, Stop, G } from 'react-native-svg';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, Zap, Bell, Mic, CalendarDays, ChevronRight, X, Activity, Thermometer, Volume2 } from 'lucide-react-native';
@@ -34,13 +36,20 @@ export default function HomeScreen() {
 
   const [userName, setUserName] = useState<string>('User');
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user?.email) {
-        setUserName(data.user.email.split('@')[0]);
-      }
-    });
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      supabase.auth.getUser().then(({ data }) => {
+        if (data?.user) {
+          const metadataName = data.user.user_metadata?.name;
+          if (metadataName) {
+            setUserName(metadataName);
+          } else if (data.user.email) {
+            setUserName(data.user.email.split('@')[0]);
+          }
+        }
+      });
+    }, [])
+  );
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const riskC = riskColor(risk.score);
@@ -64,7 +73,7 @@ export default function HomeScreen() {
                </View>
             )}
           </View>
-          <Text style={styles.greeting}>{userName}</Text>
+          <Text style={styles.greeting}>Hi, {userName}!</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <TouchableOpacity
@@ -78,31 +87,110 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Risk card — tappable */}
-      <TouchableOpacity
-        style={[styles.riskCard, neuSm]}
-        activeOpacity={0.8}
-        onPress={() => setSensorModalOpen(true)}
-      >
-        {/* Ring */}
-        <View style={styles.ringOuter}>
-          <View style={[styles.ringInner, { borderColor: riskC }]}>
-            <Text style={[styles.riskScore, { color: riskC }]}>{risk.score}</Text>
-            <Text style={styles.riskLevelLabel}>{riskLabel(risk.level)}</Text>
+      <ScrollView contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
+        {/* Live Details Dashboard */}
+        <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}>
+        <Text style={[styles.sectionTitle, { marginBottom: 16, marginLeft: 4 }]}>Live Details</Text>
+        
+        {/* Top Card: Concentric Rings */}
+        <View style={styles.dashboardCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            
+            {/* Rings */}
+            <View style={{ width: 140, height: 140 }}>
+              <Svg width="140" height="140" viewBox="0 0 160 160">
+                <G rotation="-90" originX="80" originY="80">
+                  {/* Outer - BPM */}
+                  <Circle cx="80" cy="80" r="65" stroke="#00C48C" strokeWidth="12" fill="none" strokeOpacity="0.2" />
+                  <Circle cx="80" cy="80" r="65" stroke="#00C48C" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 65}`} strokeDashoffset={`${2 * Math.PI * 65 * (1 - 0.75)}`} strokeLinecap="round" />
+                  
+                  {/* Middle - Temp */}
+                  <Circle cx="80" cy="80" r="47" stroke="#FF9F43" strokeWidth="12" fill="none" strokeOpacity="0.2" />
+                  <Circle cx="80" cy="80" r="47" stroke="#FF9F43" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 47}`} strokeDashoffset={`${2 * Math.PI * 47 * (1 - 0.65)}`} strokeLinecap="round" />
+                  
+                  {/* Inner - Noise */}
+                  <Circle cx="80" cy="80" r="29" stroke="#5F88FF" strokeWidth="12" fill="none" strokeOpacity="0.2" />
+                  <Circle cx="80" cy="80" r="29" stroke="#5F88FF" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 29}`} strokeDashoffset={`${2 * Math.PI * 29 * (1 - 0.45)}`} strokeLinecap="round" />
+                </G>
+              </Svg>
+            </View>
+
+            {/* Legend */}
+            <View style={{ flex: 1, marginLeft: 20, justifyContent: 'center' }}>
+              <View style={{ marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#00C48C' }} />
+                  <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>BPM</Text>
+                </View>
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>72 bpm</Text>
+              </View>
+
+              <View style={{ marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#FF9F43' }} />
+                  <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Temp</Text>
+                </View>
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{tempCelsius.toFixed(1)}°C</Text>
+              </View>
+
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#5F88FF' }} />
+                  <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Noise</Text>
+                </View>
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{Math.round(noise)} dB</Text>
+              </View>
+            </View>
           </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.riskSubLabel}>Current level</Text>
-          <Text style={styles.riskLevelText}>{statusLabel(risk.score)}</Text>
-          {risk.factors[0] && (
-            <Text style={styles.riskFactor} numberOfLines={2}>{risk.factors[0].label}</Text>
-          )}
-          <Text style={styles.tapHint}>Tap for live metrics →</Text>
+
+        <View style={{ flexDirection: 'row', gap: 16, marginTop: 16 }}>
+          {/* Bottom Left: Heart Rate Line Chart */}
+          <View style={[styles.dashboardCard, { flex: 1, padding: 16, height: 160 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Heart size={16} color="#FF4D4F" />
+              <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Heart rate</Text>
+            </View>
+            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>72 <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>bpm</Text></Text>
+            
+            <View style={{ flex: 1, justifyContent: 'flex-end', marginTop: 6 }}>
+              <Svg height="80" width="100%" viewBox="0 0 100 50" preserveAspectRatio="none">
+                <Defs>
+                  <LinearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <Stop offset="0%" stopColor="#FF4D4F" stopOpacity="0.2" />
+                    <Stop offset="100%" stopColor="#FF4D4F" stopOpacity="0" />
+                  </LinearGradient>
+                </Defs>
+                <Path d="M0,40 C10,40 15,35 20,20 C25,5 28,5 32,30 C38,40 42,40 48,40 C52,40 55,33 58,20 C62,10 68,10 72,30 C75,40 80,40 85,40 L100,40 L100,50 L0,50 Z" fill="url(#grad)" />
+                <Path d="M0,40 C10,40 15,35 20,20 C25,5 28,5 32,30 C38,40 42,40 48,40 C52,40 55,33 58,20 C62,10 68,10 72,30 C75,40 80,40 85,40 L100,40" fill="none" stroke="#FF4D4F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </View>
+          </View>
+
+          {/* Bottom Right: Noise Level Bar Chart */}
+          <View style={[styles.dashboardCard, { flex: 1, padding: 16, height: 160 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Volume2 size={16} color="#00C48C" />
+              <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Noise level</Text>
+            </View>
+            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{Math.round(noise)} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>dB</Text></Text>
+            
+            <View style={{ flex: 1, justifyContent: 'flex-end', marginTop: 6 }}>
+              <Svg height="80" width="100%" viewBox="0 0 100 50" preserveAspectRatio="none">
+                <Rect x="5" y="25" width="8" height="25" rx="4" fill="#A7F3D0" />
+                <Rect x="20" y="15" width="8" height="35" rx="4" fill="#00C48C" />
+                <Rect x="35" y="30" width="8" height="20" rx="4" fill="#A7F3D0" />
+                <Rect x="50" y="5" width="8" height="45" rx="4" fill="#00C48C" />
+                <Rect x="65" y="20" width="8" height="30" rx="4" fill="#00C48C" />
+                <Rect x="80" y="10" width="8" height="40" rx="4" fill="#00C48C" />
+                <Rect x="95" y="25" width="8" height="25" rx="4" fill="#A7F3D0" />
+              </Svg>
+            </View>
+          </View>
         </View>
-      </TouchableOpacity>
+      </View>
 
       {/* Accordion sections */}
-      <ScrollView contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
         {/* Check in */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
@@ -243,6 +331,10 @@ export default function HomeScreen() {
 
 const getStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  dashboardCard: {
+    backgroundColor: colors.background, borderRadius: 20, padding: 20,
+    ...neuSm,
+  },
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.xl, paddingBottom: spacing.md,

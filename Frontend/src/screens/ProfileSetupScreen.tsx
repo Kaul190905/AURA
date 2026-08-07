@@ -1,10 +1,10 @@
 import React, { useContext, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ear, Sun, Star, Calendar, User } from 'lucide-react-native';
+import { Ear, Sun, Star, Calendar, User, Activity, X } from 'lucide-react-native';
 
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
@@ -24,19 +24,48 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
   const { profile, setProfile, dob, setDob, caregiver, setCaregiver } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showErrorModal, setShowErrorModal] = useState(false);
+
   const toggleTrigger = (k: TriggerKey) => {
     const next = { ...profile };
     if (k in next) delete next[k]; else next[k] = 3;
     setProfile(next);
   };
-  const calculateAge = (dobString: string) => {
-    if (!dobString) return '';
-    const birthDate = new Date(dobString);
-    if (isNaN(birthDate.getTime())) return '';
-    const ageDifMs = Date.now() - birthDate.getTime();
-    const ageDate = new Date(ageDifMs);
-    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-    return `${age} years old`;
+  const calculateAge = (yobString: string) => {
+    if (!yobString || yobString.length !== 4) return '';
+    const yob = parseInt(yobString, 10);
+    if (isNaN(yob)) return '';
+    const currentYear = new Date().getFullYear();
+    return `${currentYear - yob} years old`;
+  };
+
+  const handleContinue = () => {
+    let newErrors: Record<string, string> = {};
+    if (!dob || dob.length !== 4 || isNaN(parseInt(dob, 10))) {
+      newErrors.dob = "Year of Birth is required (e.g., 1995)";
+    }
+    if (!caregiver?.name) newErrors.name = "Caregiver Name is required";
+    
+    if (!caregiver?.phone) {
+      newErrors.phone = "Caregiver Phone is required";
+    } else if (!/^\d{10}$/.test(caregiver.phone.replace(/\D/g, ''))) {
+      newErrors.phone = "Phone number must be 10 digits";
+    }
+
+    if (!caregiver?.email) {
+      newErrors.email = "Caregiver Email is required";
+    } else if (!/^[a-zA-Z0-9._%+-]+@(gmail\.com|edu\.in)$/i.test(caregiver.email)) {
+      newErrors.email = "Must be a @gmail.com or @edu.in address";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setShowErrorModal(true);
+      return;
+    }
+    setErrors({});
+    onDone();
   };
 
   return (
@@ -104,20 +133,21 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Calendar size={18} color={colors.primary} />
-              <Text style={styles.sectionTitle}>Date of Birth</Text>
+              <Text style={styles.sectionTitle}>Year of Birth</Text>
             </View>
             <Text style={styles.badge}>{calculateAge(dob)}</Text>
           </View>
           <View style={{ padding: 12 }}>
             <TextInput
-              style={styles.input}
-              placeholder="YYYY-MM-DD"
+              style={[styles.input, errors.dob && styles.inputError]}
+              placeholder="YYYY"
               placeholderTextColor={colors.mutedForeground}
               value={dob}
-              onChangeText={setDob}
+              onChangeText={(t) => { setDob(t); setErrors(prev => ({ ...prev, dob: '' })); }}
               keyboardType="numeric"
             />
-            {dob ? <Text style={styles.ageText}>Calculated Age: {calculateAge(dob)}</Text> : null}
+            {errors.dob ? <Text style={styles.errorText}>{errors.dob}</Text> : null}
+            {dob && !errors.dob ? <Text style={styles.ageText}>Calculated Age: {calculateAge(dob)}</Text> : null}
           </View>
         </View>
 
@@ -130,38 +160,85 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
             </View>
           </View>
           <View style={{ padding: 12, gap: 12 }}>
-            <TextInput
-              style={styles.input}
-              placeholder="Caregiver Name"
-              placeholderTextColor={colors.mutedForeground}
-              value={caregiver?.name}
-              onChangeText={(t) => setCaregiver({ ...caregiver, name: t })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Relationship (e.g., Parent, Spouse)"
-              placeholderTextColor={colors.mutedForeground}
-              value={caregiver?.relationship}
-              onChangeText={(t) => setCaregiver({ ...caregiver, relationship: t })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Phone Number"
-              placeholderTextColor={colors.mutedForeground}
-              value={caregiver?.phone}
-              onChangeText={(t) => setCaregiver({ ...caregiver, phone: t })}
-              keyboardType="phone-pad"
-            />
+            <View>
+              <TextInput
+                style={[styles.input, errors.name && styles.inputError]}
+                placeholder="Caregiver Name *"
+                placeholderTextColor={colors.mutedForeground}
+                value={caregiver?.name}
+                onChangeText={(t) => { setCaregiver({ ...caregiver, name: t }); setErrors(prev => ({ ...prev, name: '' })); }}
+              />
+              {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
+            </View>
+            <View>
+              <TextInput
+                style={styles.input}
+                placeholder="Relationship (e.g., Parent, Spouse)"
+                placeholderTextColor={colors.mutedForeground}
+                value={caregiver?.relationship}
+                onChangeText={(t) => setCaregiver({ ...caregiver, relationship: t })}
+              />
+            </View>
+            <View>
+              <TextInput
+                style={[styles.input, errors.phone && styles.inputError]}
+                placeholder="Phone Number *"
+                placeholderTextColor={colors.mutedForeground}
+                value={caregiver?.phone}
+                onChangeText={(t) => { setCaregiver({ ...caregiver, phone: t }); setErrors(prev => ({ ...prev, phone: '' })); }}
+                keyboardType="phone-pad"
+              />
+              {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
+            </View>
+            <View>
+              <TextInput
+                style={[styles.input, errors.email && styles.inputError]}
+                placeholder="Caregiver Email ID *"
+                placeholderTextColor={colors.mutedForeground}
+                value={caregiver?.email}
+                onChangeText={(t) => { setCaregiver({ ...caregiver, email: t }); setErrors(prev => ({ ...prev, email: '' })); }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+            </View>
           </View>
         </View>
         <View style={{ height: 100 }} />
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        <TouchableOpacity onPress={onDone} style={styles.continueBtn} activeOpacity={0.85}>
+        <TouchableOpacity onPress={handleContinue} style={styles.continueBtn} activeOpacity={0.85}>
           <Text style={styles.continueBtnText}>Continue</Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={showErrorModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalPanel}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Activity size={20} color={colors.riskHigh} />
+                <Text style={styles.modalTitle}>Invalid or Missing Input</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowErrorModal(false)} style={styles.closeBtn}>
+                <X size={20} color={colors.foreground} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalText}>
+              Please correctly fill out all highlighted fields below before continuing.
+            </Text>
+            <TouchableOpacity onPress={() => setShowErrorModal(false)} style={styles.modalPrimaryBtn}>
+              <Text style={styles.modalPrimaryBtnText}>Okay</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -205,12 +282,72 @@ const getStyles = () => StyleSheet.create({
     padding: 12,
     fontSize: 14,
     color: colors.foreground,
+    borderWidth: 1,
+    borderColor: 'transparent',
     ...neuSm,
+  },
+  inputError: {
+    borderColor: '#ff4444',
+    borderWidth: 1,
+  },
+  errorText: {
+    color: '#ff4444',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
+    ...fonts.medium,
   },
   ageText: {
     marginTop: 8,
     fontSize: 13,
     color: colors.primary,
     ...fonts.medium,
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalPanel: {
+    backgroundColor: colors.background,
+    width: '100%',
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    ...neuSm,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  modalTitle: {
+    fontSize: 18,
+    ...fonts.bold,
+    color: colors.foreground,
+  },
+  closeBtn: {
+    padding: 4,
+    backgroundColor: `${colors.muted}`,
+    borderRadius: 8,
+  },
+  modalText: {
+    fontSize: 14,
+    color: colors.mutedForeground,
+    lineHeight: 20,
+    marginBottom: spacing.xl,
+  },
+  modalPrimaryBtn: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+  },
+  modalPrimaryBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    ...fonts.semibold,
   },
 });

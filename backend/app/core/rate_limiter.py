@@ -24,7 +24,6 @@ from collections import OrderedDict
 from typing import Tuple
 
 from fastapi import Request
-from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 

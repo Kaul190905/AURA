@@ -12,9 +12,10 @@ export type AppNotification = {
 };
 
 export type AppScreen =
-  | 'welcome' | 'profile' | 'home' | 'crisis'
+  | 'login' | 'welcome' | 'profile' | 'home' | 'crisis'
   | 'recovery' | 'settings' | 'speech' | 'plans'
-  | 'caretaker-gate' | 'caretaker' | 'caretaker-home';
+  | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
+  | 'user_profile';
 
 export type AppState = {
   userRole: 'user' | 'caregiver' | null;
@@ -27,8 +28,8 @@ export type AppState = {
   setNotifications: (n: AppNotification[]) => void;
   isNotificationCenterOpen: boolean;
   setIsNotificationCenterOpen: (val: boolean) => void;
-  caregiver: { name: string; relationship: string; phone: string };
-  setCaregiver: (c: { name: string; relationship: string; phone: string }) => void;
+  caregiver: { name: string; relationship: string; phone: string; email: string };
+  setCaregiver: (c: { name: string; relationship: string; phone: string; email: string }) => void;
   profile: Partial<Record<TriggerKey, number>>;
   setProfile: (p: Partial<Record<TriggerKey, number>>) => void;
 
@@ -63,6 +64,8 @@ export type AppState = {
   suggestions: Strategy[];
   goCrisis: () => void;
   navigateTo: (s: AppScreen) => void;
+  profilePhoto: string | null;
+  setProfilePhoto: (v: string | null) => void;
   // ── Backend / Auth ───────────────────────────────────────────────────────
   /** Supabase user UUID — null until signed in */
   userId: string | null;
@@ -70,6 +73,12 @@ export type AppState = {
   /** Current Supabase JWT — null until signed in */
   accessToken: string | null;
   setAccessToken: (token: string | null) => void;
+  // ── Teacher Mode ────────────────────────────────────────────────────────
+  teacherMode: boolean;
+  setTeacherMode: (val: boolean) => void;
+  selectedStudent: string | null;
+  setSelectedStudent: (id: string | null) => void;
+  mockStudents: Array<{ id: string; name: string; location: string; risk: number; isCrisis: boolean; rollNumber?: string; className?: string; recentActivity?: string; lastUpdated?: string }>;
 };
 
 export const AppContext = React.createContext<AppState>({} as AppState);

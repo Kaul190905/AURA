@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime
-from typing import Optional, List, Any, Dict
+from typing import Optional, List
 from sqlalchemy import select, desc, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.domain.models.sensor_data import SensorData
-from app.schemas.sensor_data import SensorDataCreate, SensorDataUpdate
+from app.schemas.sensor_data import SensorDataCreate
 
 class SensorDataRepository:
     """Repository for managing SensorData persistence operations."""

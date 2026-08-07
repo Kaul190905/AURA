@@ -1,5 +1,4 @@
 import asyncio
-import sys
 from sqlalchemy import select
 from app.db.database import AsyncSessionLocal
 from app.domain.models.user import User

@@ -5,13 +5,7 @@ from app.ai.exceptions import AIValidationError
 from app.ai.validators import SensorDataValidator
 from app.ai.preprocessing import SensorPreprocessor
 from app.ai.feature_engineering import FeatureEngineer
-from app.ai.feature_store import FeatureStore
 from app.ai.engines.risk_engine import RiskEngine
-from app.ai.engines.prediction_engine import PredictionEngine
-from app.ai.engines.wellness_engine import WellnessEngine
-from app.ai.engines.pattern_engine import PatternEngine
-from app.ai.engines.decision_engine import DecisionEngine
-from app.ai.engines.recommendation_engine import RecommendationEngine
 from app.ai.services.ai_service import AIService
 
 @pytest.fixture

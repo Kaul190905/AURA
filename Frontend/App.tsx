@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, StyleSheet, TouchableOpacity, Text, Modal, Linking } from 'react-native';
-import { House, Library, TrendingUp, Bluetooth, Settings, Heart, User } from 'lucide-react-native';
+import { House, Library, TrendingUp, Bluetooth, Settings, Heart, User, AlertTriangle, CheckCircle2 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { colors, fonts, applyColorVisionMode } from './src/theme';
@@ -30,6 +30,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import RecoverySummaryScreen from './src/screens/RecoverySummaryScreen';
 import { NotificationModal } from './src/components/NotificationModal';
 import SpeechDiaryScreen from './src/screens/SpeechDiaryScreen';
+import UserProfileScreen from './src/screens/UserProfileScreen';
 import PlansScreen from './src/screens/PlansScreen';
 import CaretakerGateScreen from './src/screens/CaretakerGateScreen';
 import CaretakerDashboardScreen from './src/screens/CaretakerDashboardScreen';
@@ -43,9 +44,10 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 // ── Tab Navigator (main app) ──────────────────────────────────────────────────
-function TabNavigator({ goCrisis }: { goCrisis: () => void }) {
+function TabNavigator({ goCrisis, initialRouteName = 'House' }: { goCrisis: () => void, initialRouteName?: string }) {
   return (
     <Tab.Navigator
+      initialRouteName={initialRouteName}
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
@@ -124,7 +126,7 @@ export default function App() {
   const [isCrisisMode, setIsCrisisMode] = useState(false);
   const [crisisRiskBefore, setCrisisRiskBefore] = useState<number | null>(null);
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
-  const [caregiver, setCaregiver] = useState({ name: '', relationship: '', phone: '' });
+  const [caregiver, setCaregiver] = useState({ name: '', relationship: '', phone: '', email: '' });
   const [notifications, setNotifications] = useState<AppNotification[]>([
     { id: '1', title: 'High Noise Detected', description: 'Environment exceeded 85dB.', time: Date.now() - 3600000, read: false, type: 'alert' },
     { id: '2', title: 'Risk Level Increased', description: 'Sensory overload risk is High.', time: Date.now() - 7200000, read: true, type: 'alert' },
@@ -151,11 +153,27 @@ export default function App() {
   const [sensitivity, setSensitivity] = useState(3);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertShownForScore, setAlertShownForScore] = useState<number | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+
+  const [sosConfirmOpen, setSosConfirmOpen] = useState(false);
+  const [sosSent, setSosSent] = useState(false);
+  const [currentTab, setCurrentTab] = useState('House');
 
   // ── Auth / Backend state ────────────────────────────────────────────────────
   const [userId, setUserId] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
+
+  // ── Teacher Mode state ────────────────────────────────────────────────────
+  const [teacherMode, setTeacherMode] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
+  const mockStudents = useMemo(() => [
+    { id: 's1', name: 'Aarav Kumar', location: 'Library', risk: 2, isCrisis: false, rollNumber: 'R101', className: '10A', recentActivity: 'Started deep breathing', lastUpdated: '2 mins ago' },
+    { id: 's2', name: 'Nisha Patel', location: 'Cafeteria', risk: 6, isCrisis: false, rollNumber: 'R102', className: '9B', recentActivity: 'Noise level increased', lastUpdated: 'Just now' },
+    { id: 's3', name: 'Rahul Sharma', location: 'Classroom B', risk: 9, isCrisis: true, rollNumber: 'R103', className: '11C', recentActivity: 'Manually activated Reset Mode', lastUpdated: '1 min ago' },
+    { id: 's4', name: 'Meera Iyer', location: 'Gym', risk: 3, isCrisis: false, rollNumber: 'R104', className: '8A', recentActivity: 'Battery at 15%', lastUpdated: '10 mins ago' },
+    { id: 's5', name: 'Arjun Singh', location: 'Playground', risk: 8, isCrisis: false, rollNumber: 'R105', className: '10B', recentActivity: 'Elevated heart rate', lastUpdated: 'Just now' },
+  ], []);
 
   // Handle Deep Links for Google OAuth Redirect
   useEffect(() => {
@@ -259,7 +277,19 @@ export default function App() {
         applyColorVisionMode(val);
       }
     });
+    AsyncStorage.getItem('profilePhoto').then(val => {
+      if (val) setProfilePhoto(val);
+    });
   }, []);
+
+  const handleSetProfilePhoto = (uri: string | null) => {
+    setProfilePhoto(uri);
+    if (uri) {
+      AsyncStorage.setItem('profilePhoto', uri);
+    } else {
+      AsyncStorage.removeItem('profilePhoto');
+    }
+  };
 
   const handleSetColorVisionMode = (mode: 'default' | 'protanopia' | 'deuteranopia' | 'tritanopia') => {
     setColorVisionMode(mode);
@@ -349,6 +379,14 @@ export default function App() {
     }
   }, [temperature, dangerousTempAlerted]);
 
+  const handleSos = () => {
+    setSosConfirmOpen(false);
+    setSosSent(true);
+    setTimeout(() => {
+      setSosSent(false);
+    }, 10000);
+  };
+
     const appState: AppState = {
       userRole, setUserRole,
       isCrisisMode, setIsCrisisMode,
@@ -363,16 +401,32 @@ export default function App() {
       reduceMotion, setReduceMotion, darkMode, setDarkMode, colorVisionMode, setColorVisionMode: handleSetColorVisionMode, sensitivity, setSensitivity,
       risk, primaryTrigger, suggestions, goCrisis,
       navigateTo: setAppScreen,
-      // Backend / Auth
+      profilePhoto, setProfilePhoto: handleSetProfilePhoto,
       userId, setUserId,
       accessToken, setAccessToken,
+      teacherMode, setTeacherMode,
+      selectedStudent, setSelectedStudent,
+      mockStudents,
     };
 
 
   return (
     <AppContext.Provider value={appState}>
       <SafeAreaProvider>
-        <NavigationContainer key={colorVisionMode}>
+        <NavigationContainer 
+          key={colorVisionMode}
+          onStateChange={(state) => {
+            if (!state) return;
+            const currentRoute = state.routes[state.index];
+            if (currentRoute.state && currentRoute.state.routes) {
+              const idx = currentRoute.state.index ?? 0;
+              const nestedRoute = currentRoute.state.routes[idx];
+              if (nestedRoute) setCurrentTab(nestedRoute.name);
+            } else {
+              setCurrentTab(currentRoute.name);
+            }
+          }}
+        >
           {/* Route to Login if not authenticated, Welcome once signed in */}
           {!sessionLoading && !userId && (
             <LoginScreen onSuccess={() => {}} />
@@ -382,35 +436,85 @@ export default function App() {
             setUserRole(role);
             setAppScreen(role === 'caregiver' ? 'caretaker-home' : 'profile');
           }} />}
-          {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('home')} onBack={() => setAppScreen('settings')} />}
+          {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('settings')} onBack={() => setAppScreen('settings')} />}
 
           {userId && appScreen === 'recovery' && <RecoverySummaryScreen onDone={() => setAppScreen('home')} />}
           {userId && appScreen === 'speech' && <SpeechDiaryScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
+          {userId && appScreen === 'user_profile' && <UserProfileScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setUserRole('caregiver'); setAppScreen('caretaker-home'); }} />}
           {userId && appScreen === 'caretaker-home' && (
             <View style={{ flex: 1 }}>
               <CaretakerTabNavigator />
             </View>
           )}
-          {userId && appScreen === 'home' && (
+          {userId && (appScreen === 'home' || appScreen === 'settings') && (
             <View style={{ flex: 1 }}>
-              <TabNavigator goCrisis={goCrisis} />
-              <TouchableOpacity
-                onPress={goCrisis}
-                style={[styles.overloadBtn, {
-                  backgroundColor: risk.score <= 2 ? '#4CAF82' : risk.score <= 4 ? '#E0A83A' : risk.score <= 6 ? '#E08A3A' : '#E06B3A',
-                }]}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.overloadBtnText}>
-                  {risk.score <= 2 ? 'Calm' : risk.score <= 4 ? 'Stable' : risk.score <= 6 ? 'Elevated Response' : 'High Stress'}
-                </Text>
-              </TouchableOpacity>
+              <TabNavigator goCrisis={goCrisis} initialRouteName={appScreen === 'settings' ? 'Settings' : 'House'} />
+              {currentTab === 'House' ? (
+                <TouchableOpacity
+                  onPress={() => setSosConfirmOpen(true)}
+                  style={styles.sosBtn}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.sosBtnText}>SOS</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={goCrisis}
+                  style={[styles.overloadBtn, {
+                    backgroundColor: risk.score <= 2 ? '#4CAF82' : risk.score <= 4 ? '#E0A83A' : risk.score <= 6 ? '#E08A3A' : '#E06B3A',
+                  }]}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.overloadBtnText}>
+                    {risk.score <= 2 ? 'Calm' : risk.score <= 4 ? 'Stable' : risk.score <= 6 ? 'Elevated Response' : 'High Stress'}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
           <NotificationModal />
         </NavigationContainer>
+
+        {/* ── SOS Confirmation Modal ───────────────────────────────────────── */}
+        <Modal visible={sosConfirmOpen} transparent animationType="fade" onRequestClose={() => setSosConfirmOpen(false)}>
+          <View style={styles.popupOverlay}>
+            <View style={[styles.popupCard, { paddingBottom: 32 }]}>
+              <View style={{ alignItems: 'center', marginBottom: 16 }}>
+                <AlertTriangle size={32} color={colors.riskHigh} />
+              </View>
+              <Text style={styles.popupTitle}>Send Emergency Alert?</Text>
+              <Text style={styles.popupText}>
+                Are you sure you want to send an SOS alert to your contacts and caretaker?
+              </Text>
+              
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 24, width: '100%' }}>
+                <TouchableOpacity onPress={() => setSosConfirmOpen(false)} style={[styles.modalBtn, { backgroundColor: colors.muted }]} activeOpacity={0.8}>
+                  <Text style={[styles.modalBtnText, { color: colors.foreground }]}>No</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleSos} style={[styles.modalBtn, { backgroundColor: colors.riskHigh }]} activeOpacity={0.8}>
+                  <Text style={styles.modalBtnText}>Yes</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ── SOS Sent Modal ───────────────────────────────────────── */}
+        <Modal visible={sosSent} transparent animationType="fade" onRequestClose={() => setSosSent(false)}>
+          <View style={styles.popupOverlay}>
+            <View style={styles.popupCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <CheckCircle2 size={24} color={colors.riskHigh} />
+                <Text style={styles.popupTitle}>SOS Sent</Text>
+              </View>
+              <Text style={styles.popupText}>
+                An emergency alert has been dispatched to your contacts and caretaker. Help is on the way.
+              </Text>
+            </View>
+          </View>
+        </Modal>
 
         <Modal visible={alertOpen} transparent animationType="slide" onRequestClose={() => setAlertOpen(false)}>
           <LiveAlertModal
@@ -479,6 +583,27 @@ const styles = StyleSheet.create({
   overloadBtnText: {
     color: '#fff', ...fonts.bold, fontSize: 16,
   },
+  sosBtn: {
+    position: 'absolute',
+    bottom: 74,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.riskHigh,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 999,
+    elevation: 8,
+    shadowColor: colors.riskHigh,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    zIndex: 30,
+  },
+  sosBtnText: {
+    color: '#fff', ...fonts.bold, fontSize: 18,
+  },
   popupOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -508,5 +633,12 @@ const styles = StyleSheet.create({
     color: colors.mutedForeground,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  modalBtn: {
+    flex: 1, height: 50, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  modalBtnText: {
+    fontSize: 16, color: '#fff', ...fonts.bold,
   },
 });

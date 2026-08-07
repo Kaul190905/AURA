@@ -5,7 +5,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, Globe } from 'lucide-react-native';
+import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, Globe, User } from 'lucide-react-native';
 import { signIn, signUp, signInWithGoogle } from '../services/supabaseClient';
 import { colors, fonts, radius, spacing } from '../theme';
 
@@ -18,6 +18,7 @@ type Mode = 'signin' | 'signup';
 export default function LoginScreen({ onSuccess }: Props) {
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<Mode>('signin');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -56,7 +57,12 @@ export default function LoginScreen({ onSuccess }: Props) {
     setSuccessMsg(null);
     try {
       if (mode === 'signup') {
-        await signUp(email.trim(), password);
+        if (!username.trim()) {
+          setError('Please enter a username.');
+          setLoading(false);
+          return;
+        }
+        await signUp(email.trim(), password, username.trim());
         setSuccessMsg('Account created! Check your email to confirm, then sign in.');
         setMode('signin');
       } else {
@@ -76,8 +82,10 @@ export default function LoginScreen({ onSuccess }: Props) {
     try {
       await signInWithGoogle();
       // For web/redirect-based OAuth, the app will reload on redirect and trigger onAuthStateChange
+      onSuccess();
     } catch (err: any) {
       setError(err?.message ?? 'Google Sign-In failed.');
+    } finally {
       setLoading(false);
     }
   };
@@ -138,6 +146,24 @@ export default function LoginScreen({ onSuccess }: Props) {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {isSignup && (
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Username</Text>
+                <View style={styles.inputRow}>
+                  <User size={18} color={colors.mutedForeground} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    value={username}
+                    onChangeText={setUsername}
+                    placeholder="How should we call you?"
+                    placeholderTextColor={colors.mutedForeground}
+                    autoCapitalize="words"
+                    returnKeyType="next"
+                  />
+                </View>
+              </View>
+            )}
 
             {/* Email field */}
             <View style={styles.fieldGroup}>
