@@ -78,7 +78,7 @@ export type AppState = {
   setTeacherMode: (val: boolean) => void;
   selectedStudent: string | null;
   setSelectedStudent: (id: string | null) => void;
-  mockStudents: Array<{ id: string; name: string; location: string; risk: number; isCrisis: boolean }>;
+  mockStudents: Array<{ id: string; name: string; location: string; risk: number; isCrisis: boolean; rollNumber?: string; className?: string; recentActivity?: string; lastUpdated?: string }>;
 };
 
 export const AppContext = React.createContext<AppState>({} as AppState);

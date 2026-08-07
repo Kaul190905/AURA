@@ -168,10 +168,11 @@ export default function App() {
   const [teacherMode, setTeacherMode] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const mockStudents = useMemo(() => [
-    { id: 's1', name: 'John Doe', location: 'Library', risk: 2, isCrisis: false },
-    { id: 's2', name: 'Sarah Smith', location: 'Cafeteria', risk: 6, isCrisis: false },
-    { id: 's3', name: 'Mike Johnson', location: 'Classroom B', risk: 9, isCrisis: true },
-    { id: 's4', name: 'Emma Davis', location: 'Gym', risk: 3, isCrisis: false },
+    { id: 's1', name: 'Aarav Kumar', location: 'Library', risk: 2, isCrisis: false, rollNumber: 'R101', className: '10A', recentActivity: 'Started deep breathing', lastUpdated: '2 mins ago' },
+    { id: 's2', name: 'Nisha Patel', location: 'Cafeteria', risk: 6, isCrisis: false, rollNumber: 'R102', className: '9B', recentActivity: 'Noise level increased', lastUpdated: 'Just now' },
+    { id: 's3', name: 'Rahul Sharma', location: 'Classroom B', risk: 9, isCrisis: true, rollNumber: 'R103', className: '11C', recentActivity: 'Manually activated Reset Mode', lastUpdated: '1 min ago' },
+    { id: 's4', name: 'Meera Iyer', location: 'Gym', risk: 3, isCrisis: false, rollNumber: 'R104', className: '8A', recentActivity: 'Battery at 15%', lastUpdated: '10 mins ago' },
+    { id: 's5', name: 'Arjun Singh', location: 'Playground', risk: 8, isCrisis: false, rollNumber: 'R105', className: '10B', recentActivity: 'Elevated heart rate', lastUpdated: 'Just now' },
   ], []);
 
   // Handle Deep Links for Google OAuth Redirect

@@ -1,10 +1,9 @@
 import React, { useContext, useMemo, useEffect, useState } from 'react';
 import {
-import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Switch
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Switch, TextInput
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Star, Heart, Activity, MapPin, Watch, ShieldAlert, Phone, Navigation, MessageCircle, Bell, ArrowLeft, Users } from 'lucide-react-native';
+import { Star, Heart, Activity, MapPin, Watch, ShieldAlert, Phone, Navigation, MessageCircle, Bell, ArrowLeft, Users, Search, CheckCircle2, User } from 'lucide-react-native';
 import { LineChart } from 'react-native-gifted-charts';
 
 import { AppContext } from '../AppContext';
@@ -25,6 +24,9 @@ export default function CaretakerDashboardScreen() {
   // Fetch real alerts from backend
   const [backendAlerts, setBackendAlerts] = useState<AlertResponse[]>([]);
   const [alertsLoading, setAlertsLoading] = useState(false);
+
+  const [activeFilter, setActiveFilter] = useState<'All' | 'Safe' | 'Needs Attention' | 'Reset Mode'>('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!userId) return;
@@ -54,6 +56,36 @@ export default function CaretakerDashboardScreen() {
     rows.push({ value: risk.score });
     return rows;
   }, [history, risk.score]);
+
+  const filteredStudents = useMemo(() => {
+    let list = mockStudents;
+    
+    // 1. Search Filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(s => 
+        s.name.toLowerCase().includes(q) || 
+        (s.rollNumber && s.rollNumber.toLowerCase().includes(q)) ||
+        (s.className && s.className.toLowerCase().includes(q))
+      );
+    }
+    
+    // 2. Tab Filter
+    if (activeFilter === 'Safe') {
+      list = list.filter(s => !s.isCrisis && s.risk < 5);
+    } else if (activeFilter === 'Needs Attention') {
+      list = list.filter(s => !s.isCrisis && s.risk >= 5);
+    } else if (activeFilter === 'Reset Mode') {
+      list = list.filter(s => s.isCrisis);
+    }
+    
+    // 3. Sorting: High Priority (isCrisis OR risk >= 5) first
+    return [...list].sort((a, b) => {
+      const aPriority = a.isCrisis || a.risk >= 5 ? 1 : 0;
+      const bPriority = b.isCrisis || b.risk >= 5 ? 1 : 0;
+      return bPriority - aPriority;
+    });
+  }, [mockStudents, searchQuery, activeFilter]);
 
   const mockLocation = "Library";
   
@@ -99,36 +131,138 @@ export default function CaretakerDashboardScreen() {
             <Bell size={20} color={colors.primary} />
             {unreadCount > 0 && <View style={styles.unreadBadge} />}
           </TouchableOpacity>
-          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Teacher Roster View */}
+      {/* Teacher Roster View / Student Alerts */}
       {teacherMode && !selectedStudent ? (
-        <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140 }}>
-          {mockStudents.map(student => {
-            const isHighRisk = student.risk >= 5;
-            const rColor = riskColor(student.risk);
-            return (
-              <TouchableOpacity 
-                key={student.id} 
-                style={[styles.rosterCard, cardStyle, neuSm, { borderLeftWidth: 4, borderLeftColor: rColor }]} 
-                onPress={() => setSelectedStudent(student.id)}
-                activeOpacity={0.8}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.studentName, textStyle]}>{student.name}</Text>
-                  <Text style={styles.studentLocation}><MapPin size={12} color={colors.mutedForeground} /> {student.location}</Text>
-                </View>
-                <View style={{ alignItems: 'center' }}>
-                  <View style={[styles.rosterRiskRing, { borderColor: rColor }]}>
-                    <Text style={[styles.rosterRiskScore, { color: rColor }]}>{student.risk}</Text>
+        <ScrollView contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
+          <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}>
+            <View style={{ marginBottom: spacing.md }}>
+              <Text style={[styles.greeting, textStyle, { fontSize: 24 }]}>Student Alerts</Text>
+              <Text style={styles.riskSubLabel}>Students currently requiring attention.</Text>
+            </View>
+
+            {/* Filter Tabs */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: spacing.md }}>
+              {['All', 'Safe', 'Needs Attention', 'Reset Mode'].map(tab => (
+                <TouchableOpacity
+                  key={tab}
+                  style={[styles.tChip, activeFilter === tab && styles.tChipActive, cardStyle, activeFilter === tab && { backgroundColor: colors.muted }]}
+                  onPress={() => setActiveFilter(tab as any)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.tChipText, textStyle, activeFilter === tab && { color: colors.primary }]}>{tab}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* Search */}
+            <View style={[styles.searchContainer, cardStyle, neuSm, { marginBottom: spacing.lg }]}>
+              <Search size={16} color={colors.mutedForeground} style={{ marginLeft: 12 }} />
+              <TextInput
+                style={[styles.searchInput, textStyle]}
+                placeholder="Search Name, Roll Number, Class..."
+                placeholderTextColor={colors.mutedForeground}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+
+            {/* Alert List */}
+            {filteredStudents.length > 0 ? (
+              filteredStudents.map(student => {
+                const isHighRisk = student.risk >= 5;
+                const rColor = riskColor(student.risk);
+                const isPriority = student.isCrisis || isHighRisk;
+                const statusText = student.isCrisis ? 'Reset Mode Active' : (isHighRisk ? 'Needs Attention' : 'Safe');
+
+                return (
+                  <View key={student.id} style={[
+                    styles.rosterCard, cardStyle, neuSm, 
+                    { flexDirection: 'column', alignItems: 'stretch' },
+                    isPriority ? { borderWidth: 1, borderColor: `${colors.riskHigh}40`, backgroundColor: `${colors.riskHigh}08` } : { borderLeftWidth: 4, borderLeftColor: rColor }
+                  ]}>
+                    {isPriority && (
+                      <View style={[styles.emergencyHeader, { marginBottom: 12 }]}>
+                        <ShieldAlert size={16} color={colors.riskHigh} />
+                        <Text style={[styles.emergencyTitle, { fontSize: 13 }]}>⚠ Student Needs Attention</Text>
+                      </View>
+                    )}
+                    
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center' }}>
+                            <User size={20} color={colors.mutedForeground} />
+                          </View>
+                          <View>
+                            <Text style={[styles.studentName, textStyle]}>{student.name}</Text>
+                            <Text style={styles.studentLocation}>
+                              {student.className ? `Class: ${student.className} ` : ''}
+                              {student.rollNumber ? `· Roll: ${student.rollNumber}` : ''}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      <View style={{ alignItems: 'center' }}>
+                        <View style={[styles.rosterRiskRing, { borderColor: rColor, width: 36, height: 36 }]}>
+                          <Text style={[styles.rosterRiskScore, { color: rColor, fontSize: 14 }]}>{student.risk}</Text>
+                        </View>
+                        <Text style={[styles.rosterRiskLabel, { color: rColor }]}>{student.isCrisis ? 'CRISIS' : (isHighRisk ? 'ELEVATED' : 'SAFE')}</Text>
+                      </View>
+                    </View>
+
+                    <View style={{ marginTop: 12, gap: 4 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <MapPin size={12} color={colors.mutedForeground} />
+                        <Text style={[styles.factorText, textStyle, { fontSize: 12 }]}>Location: <Text style={{ ...fonts.bold }}>{student.location}</Text></Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Activity size={12} color={colors.mutedForeground} />
+                        <Text style={[styles.factorText, textStyle, { fontSize: 12 }]}>Status: <Text style={{ color: rColor, ...fonts.bold }}>{statusText}</Text></Text>
+                      </View>
+                      {student.recentActivity && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <MessageCircle size={12} color={colors.mutedForeground} />
+                          <Text style={[styles.factorText, textStyle, { fontSize: 12 }]}>Reason: {student.recentActivity}</Text>
+                        </View>
+                      )}
+                      {student.lastUpdated && (
+                        <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 4 }}>Last Updated: {student.lastUpdated}</Text>
+                      )}
+                    </View>
+
+                    {/* Quick Actions */}
+                    <View style={[styles.supportGrid, { marginTop: 16 }]}>
+                      <TouchableOpacity 
+                        style={[styles.emergencyBtn, isPriority ? { backgroundColor: colors.riskHigh } : { backgroundColor: colors.primary, flex: 1.5 }]} 
+                        activeOpacity={0.8}
+                        onPress={() => setSelectedStudent(student.id)}
+                      >
+                        <Text style={styles.emergencyBtnText}>View Student</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.emergencyBtn, cardStyle, { backgroundColor: 'transparent', borderColor: colors.muted, borderWidth: 1 }]} activeOpacity={0.8}>
+                        <Phone size={14} color={darkMode ? '#fff' : colors.foreground} />
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.emergencyBtn, cardStyle, { backgroundColor: 'transparent', borderColor: colors.muted, borderWidth: 1 }]} activeOpacity={0.8}>
+                        <MessageCircle size={14} color={darkMode ? '#fff' : colors.foreground} />
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.emergencyBtn, cardStyle, { backgroundColor: 'transparent', borderColor: colors.muted, borderWidth: 1 }]} activeOpacity={0.8}>
+                        <Navigation size={14} color={darkMode ? '#fff' : colors.foreground} />
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <Text style={[styles.rosterRiskLabel, { color: rColor }]}>{student.isCrisis ? 'CRISIS' : (isHighRisk ? 'ELEVATED' : 'SAFE')}</Text>
-                </View>
-              </TouchableOpacity>
-            )
-          })}
+                )
+              })
+            ) : (
+              <View style={[styles.rosterCard, cardStyle, neuSm, { alignItems: 'center', paddingVertical: 40, flexDirection: 'column' }]}>
+                <CheckCircle2 size={32} color={colors.primary} style={{ marginBottom: 12 }} />
+                <Text style={[styles.greeting, textStyle, { fontSize: 16, textAlign: 'center' }]}>All students are currently safe.</Text>
+                <Text style={[styles.riskSubLabel, { textAlign: 'center', marginTop: 4 }]}>No students require attention at the moment.</Text>
+              </View>
+            )}
+          </View>
         </ScrollView>
       ) : (
         <>
@@ -449,5 +583,19 @@ const getStyles = () => StyleSheet.create({
   },
   supportBtnText: {
     fontSize: 12, color: colors.foreground, ...fonts.medium,
-  }
+  },
+  tChip: {
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.full,
+    backgroundColor: colors.background,
+  },
+  tChipActive: { backgroundColor: colors.muted },
+  tChipText: { fontSize: 12, color: colors.foreground, ...fonts.medium },
+  searchContainer: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.background, borderRadius: radius.lg,
+    height: 48,
+  },
+  searchInput: {
+    flex: 1, paddingHorizontal: 12, fontSize: 14, ...fonts.medium,
+  },
 });
