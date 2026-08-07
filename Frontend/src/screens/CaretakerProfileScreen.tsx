@@ -226,7 +226,7 @@ export default function CaretakerProfileScreen() {
                   Your data stays on this device. Nothing is uploaded unless you share it with a caretaker.
                 </Text>
               </View>
-              <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('welcome'); await supabase.auth.signOut(); }} style={styles.deleteBtn} activeOpacity={0.8}>
+              <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('login'); await supabase.auth.signOut(); }} style={styles.deleteBtn} activeOpacity={0.8}>
                 <LogOut size={14} color={colors.riskHigh} />
                 <Text style={styles.deleteBtnText}>Logout</Text>
               </TouchableOpacity>

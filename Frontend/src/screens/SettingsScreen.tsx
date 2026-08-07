@@ -85,7 +85,7 @@ export default function SettingsScreen() {
                 <ChevronRight size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('welcome'); await supabase.auth.signOut(); }} style={styles.navRow} activeOpacity={0.8}>
+              <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('login'); await supabase.auth.signOut(); }} style={styles.navRow} activeOpacity={0.8}>
                 <Text style={styles.navRowText}>Logout</Text>
                 <LogOut size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
@@ -312,7 +312,3 @@ const getStyles = () => StyleSheet.create({
   },
   previewButtonText: { fontSize: 13, ...fonts.bold },
 });
-/ /   T r i g g e r   G i t H u b   A c t i o n  
- / /   R e t r y   t r i g g e r  
- / /   R e t r y   a g a i n  
- 
