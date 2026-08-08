@@ -5,8 +5,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, User } from 'lucide-react-native';
-import { signIn, signUp } from '../services/supabaseClient';
+import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, Globe, User } from 'lucide-react-native';
+import { signIn, signUp, signInWithGoogle } from '../services/supabaseClient';
 import { colors, fonts, radius, spacing } from '../theme';
 
 interface Props {
@@ -57,7 +57,12 @@ export default function LoginScreen({ onSuccess }: Props) {
     setSuccessMsg(null);
     try {
       if (mode === 'signup') {
-        await signUp(email.trim(), password);
+        if (!username.trim()) {
+          setError('Please enter a username.');
+          setLoading(false);
+          return;
+        }
+        await signUp(email.trim(), password, username.trim());
         setSuccessMsg('Account created! Check your email to confirm, then sign in.');
         setMode('signin');
       } else {
@@ -66,6 +71,20 @@ export default function LoginScreen({ onSuccess }: Props) {
       }
     } catch (err: any) {
       setError(err?.message ?? 'Authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+      // For web/redirect-based OAuth, the app will reload on redirect and trigger onAuthStateChange
+      onSuccess();
+    } catch (err: any) {
+      setError(err?.message ?? 'Google Sign-In failed.');
     } finally {
       setLoading(false);
     }
@@ -128,23 +147,23 @@ export default function LoginScreen({ onSuccess }: Props) {
               </TouchableOpacity>
             </View>
 
-            {/* Username field */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Username</Text>
-              <View style={styles.inputRow}>
-                <User size={18} color={colors.mutedForeground} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  value={username}
-                  onChangeText={setUsername}
-                  placeholder="Username"
-                  placeholderTextColor={colors.mutedForeground}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="next"
-                />
+            {isSignup && (
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Username</Text>
+                <View style={styles.inputRow}>
+                  <User size={18} color={colors.mutedForeground} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    value={username}
+                    onChangeText={setUsername}
+                    placeholder="How should we call you?"
+                    placeholderTextColor={colors.mutedForeground}
+                    autoCapitalize="words"
+                    returnKeyType="next"
+                  />
+                </View>
               </View>
-            </View>
+            )}
 
             {/* Email field */}
             <View style={styles.fieldGroup}>
@@ -221,6 +240,23 @@ export default function LoginScreen({ onSuccess }: Props) {
                   <ChevronRight size={18} color="#fff" />
                 </>
               )}
+            </TouchableOpacity>
+
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Google Sign-In button */}
+            <TouchableOpacity
+              style={[styles.googleBtn, loading && styles.btnDisabled]}
+              onPress={handleGoogleSignIn}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              <Globe size={18} color={colors.foreground} />
+              <Text style={styles.googleBtnText}>Continue with Google</Text>
             </TouchableOpacity>
           </View>
 
@@ -408,5 +444,42 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
     marginTop: spacing.xs,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    marginHorizontal: spacing.md,
+    color: colors.mutedForeground,
+    fontSize: 12,
+    ...fonts.medium,
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+    borderRadius: radius.lg,
+    height: 52,
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 2,
+    shadowColor: '#A3B1C6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  googleBtnText: {
+    color: colors.foreground,
+    fontSize: 15,
+    ...fonts.bold,
   },
 });

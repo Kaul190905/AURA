@@ -13,9 +13,8 @@ class Settings(BaseSettings):
     SUPABASE_KEY: str
 
     # CORS setup — restrict to known origins in production
-    BACKEND_CORS_ORIGINS: List[str] = [
-        "https://aura-backend-yit7.onrender.com",
-        "http://localhost:8000",
+    BACKEND_CORS_ORIGINS: List[str] = [        
+        "https://aura-backend-av7z.onrender.com",
         "http://localhost:3000",
     ]
 
