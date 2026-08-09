@@ -26,7 +26,7 @@ export default function HomeScreen() {
   const styles = getStyles();
   const {
     risk, selfReport, setSelfReport, setIsNotificationCenterOpen,
-    notifications, bleConnected, navigateTo,
+    notifications, bleConnected, navigateTo, triggerSos,
     userId,
     noise, temperature,
   } = useContext(AppContext);
@@ -75,7 +75,14 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.greeting}>Hi, {userName}!</Text>
         </View>
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
+          <TouchableOpacity
+            onPress={triggerSos}
+            style={{ backgroundColor: '#E06B3A', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 }}
+            activeOpacity={0.85}
+          >
+            <Text style={{ color: '#fff', fontSize: 14, ...fonts.bold }}>SOS</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.sparkleBtn, neuSm]}
             onPress={() => setIsNotificationCenterOpen(true)}
@@ -87,7 +94,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
+      <View style={{ flex: 1 }}>
         {/* Live Details Dashboard */}
         <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}>
         <Text style={[styles.sectionTitle, { marginBottom: 16, marginLeft: 4 }]}>Live Details</Text>
@@ -261,7 +268,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
+      </View>
 
       {/* ── Live Sensor Metrics Modal ───────────────────────────────────────── */}
       <Modal

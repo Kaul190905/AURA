@@ -21,6 +21,7 @@ import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
+import OnboardingScreen from './src/screens/OnboardingScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import CrisisModeScreen from './src/screens/CrisisModeScreen';
 import StrategyLibraryScreen from './src/screens/StrategyLibraryScreen';
@@ -399,7 +400,7 @@ export default function App() {
       bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
       accommodations, setAccommodations, highContrast, setHighContrast,
       reduceMotion, setReduceMotion, darkMode, setDarkMode, colorVisionMode, setColorVisionMode: handleSetColorVisionMode, sensitivity, setSensitivity,
-      risk, primaryTrigger, suggestions, goCrisis,
+      risk, primaryTrigger, suggestions, goCrisis, triggerSos: () => setSosConfirmOpen(true),
       navigateTo: setAppScreen,
       profilePhoto, setProfilePhoto: handleSetProfilePhoto,
       userId, setUserId,
@@ -434,8 +435,9 @@ export default function App() {
           {!sessionLoading && userId && appScreen === 'welcome' && <WelcomeScreen onNext={async (role) => {
             await supabase.auth.updateUser({ data: { role, roleSelected: true } });
             setUserRole(role);
-            setAppScreen(role === 'caregiver' ? 'caretaker-home' : 'profile');
+            setAppScreen(role === 'caregiver' ? 'caretaker-home' : 'onboarding');
           }} />}
+          {!sessionLoading && userId && appScreen === 'onboarding' && <OnboardingScreen onDone={() => setAppScreen('home')} />}
           {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('settings')} onBack={() => setAppScreen('settings')} />}
 
           {userId && appScreen === 'recovery' && <RecoverySummaryScreen onDone={() => setAppScreen('home')} />}
@@ -451,15 +453,7 @@ export default function App() {
           {userId && (appScreen === 'home' || appScreen === 'settings') && (
             <View style={{ flex: 1 }}>
               <TabNavigator goCrisis={goCrisis} initialRouteName={appScreen === 'settings' ? 'Settings' : 'House'} />
-              {currentTab === 'House' ? (
-                <TouchableOpacity
-                  onPress={() => setSosConfirmOpen(true)}
-                  style={styles.sosBtn}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.sosBtnText}>SOS</Text>
-                </TouchableOpacity>
-              ) : (
+              {currentTab !== 'House' && (
                 <TouchableOpacity
                   onPress={goCrisis}
                   style={[styles.overloadBtn, {
