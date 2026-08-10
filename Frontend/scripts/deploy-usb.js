@@ -29,7 +29,7 @@ async function main() {
   // 1. Check for ADB and connected devices
   console.log('Checking for connected USB devices...');
   const adbOutput = runCommandSilent('adb devices');
-  
+
   if (!adbOutput) {
     console.error('\n[ERROR] ADB is not installed or not available in PATH.');
     console.error('Please ensure Android Platform Tools are installed and added to your system PATH.');
@@ -65,10 +65,10 @@ async function main() {
   // 2. Build the app
   console.log('Building Android app (assembleDebug)...');
   const androidDir = path.join(__dirname, '..', 'android');
-  
+
   const gradlewCmd = os.platform() === 'win32' ? 'gradlew.bat assembleDebug' : './gradlew assembleDebug';
   const buildSuccess = runCommand(gradlewCmd, androidDir);
-  
+
   if (!buildSuccess) {
     console.error('\n[ERROR] Android build failed. See logs above.');
     process.exit(1);
@@ -77,7 +77,7 @@ async function main() {
   // 3. Install the APK
   console.log('\nInstalling APK to device (reinstall enabled)...');
   const apkPath = path.join(androidDir, 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
-  
+
   if (!fs.existsSync(apkPath)) {
     console.error(`\n[ERROR] APK not found at expected path: ${apkPath}`);
     process.exit(1);
@@ -94,9 +94,9 @@ async function main() {
   // The app package and main activity name
   const packageName = 'com.aura.mobile';
   const activityName = '.MainActivity';
-  
+
   const launchSuccess = runCommand(`adb -s ${targetDevice} shell am start -n ${packageName}/${activityName}`);
-  
+
   if (!launchSuccess) {
     console.error('\n[ERROR] Failed to launch the app.');
     process.exit(1);

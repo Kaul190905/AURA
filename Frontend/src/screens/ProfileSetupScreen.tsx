@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,13 +29,13 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
 
   const toggleTrigger = (k: TriggerKey) => {
     const next = { ...profile };
-    if (k in next) delete next[k]; else next[k] = 3;
+    if (k in next) {delete next[k];} else {next[k] = 3;}
     setProfile(next);
   };
   const calculateAge = (yobString: string) => {
-    if (!yobString || yobString.length !== 4) return '';
+    if (!yobString || yobString.length !== 4) {return '';}
     const yob = parseInt(yobString, 10);
-    if (isNaN(yob)) return '';
+    if (isNaN(yob)) {return '';}
     const currentYear = new Date().getFullYear();
     return `${currentYear - yob} years old`;
   };
@@ -43,20 +43,20 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
   const handleContinue = () => {
     let newErrors: Record<string, string> = {};
     if (!dob || dob.length !== 4 || isNaN(parseInt(dob, 10))) {
-      newErrors.dob = "Year of Birth is required (e.g., 1995)";
+      newErrors.dob = 'Year of Birth is required (e.g., 1995)';
     }
-    if (!caregiver?.name) newErrors.name = "Caregiver Name is required";
-    
+    if (!caregiver?.name) {newErrors.name = 'Caregiver Name is required';}
+
     if (!caregiver?.phone) {
-      newErrors.phone = "Caregiver Phone is required";
+      newErrors.phone = 'Caregiver Phone is required';
     } else if (!/^\d{10}$/.test(caregiver.phone.replace(/\D/g, ''))) {
-      newErrors.phone = "Phone number must be 10 digits";
+      newErrors.phone = 'Phone number must be 10 digits';
     }
 
     if (!caregiver?.email) {
-      newErrors.email = "Caregiver Email is required";
+      newErrors.email = 'Caregiver Email is required';
     } else if (!/^[a-zA-Z0-9._%+-]+@(gmail\.com|edu\.in)$/i.test(caregiver.email)) {
-      newErrors.email = "Must be a @gmail.com or @edu.in address";
+      newErrors.email = 'Must be a @gmail.com or @edu.in address';
     }
 
     if (Object.keys(newErrors).length > 0) {

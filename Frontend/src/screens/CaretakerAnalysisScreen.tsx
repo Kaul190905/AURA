@@ -24,7 +24,7 @@ export default function CaretakerAnalysisScreen() {
   const [patternsLoading, setPatternsLoading] = useState(false);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {return;}
     setPatternsLoading(true);
     getBehavioralPatterns(userId)
       .then(setPatterns)
@@ -62,14 +62,14 @@ export default function CaretakerAnalysisScreen() {
 
   return (
     <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
-      
+
       {/* Top Bar Duplicate layout */}
       <View style={styles.topBar}>
         <View>
           <Text style={styles.topLabel}>CAREGIVER VIEW</Text>
           <Text style={[styles.greeting, textStyle]}>Analysis & Insights</Text>
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           activeOpacity={0.7}
           style={[styles.sparkleBtn, cardStyle, neuSm]}
           onPress={() => setInsightsVisible(true)}
@@ -135,7 +135,7 @@ export default function CaretakerAnalysisScreen() {
               )}
             </View>
           </AccItem>
-          
+
           <AccItem id="peak" title="Peak Overload Times" icon={<Activity size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
               <View style={[styles.factorItem, cardStyle]}>
@@ -143,7 +143,7 @@ export default function CaretakerAnalysisScreen() {
               </View>
             </View>
           </AccItem>
-          
+
           <AccItem id="strat" title="Strategy Effectiveness" icon={<Target size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
               {strategies.slice(0, 3).map((s) => (
@@ -156,7 +156,7 @@ export default function CaretakerAnalysisScreen() {
               ))}
             </View>
           </AccItem>
-          
+
           <AccItem id="recovery" title="Recovery Duration" icon={<Clock size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
               <View style={[styles.factorItem, cardStyle]}>
@@ -193,7 +193,7 @@ export default function CaretakerAnalysisScreen() {
               </View>
             )}
           </AccItem>
-          
+
           {/* Recovery Duration Trend */}
           <AccItem id="recovery" title="Recovery Duration Trend" icon={<Clock size={18} color={colors.primary} />}>
             <View style={{ marginTop: 8, alignItems: 'center' }}>
@@ -220,7 +220,7 @@ export default function CaretakerAnalysisScreen() {
             <View style={{ gap: 12, marginTop: 8 }}>
               {[
                 { name: 'Downtown Subway', risk: 'High', visits: 4 },
-                { name: 'Shopping Mall', risk: 'Medium', visits: 2 }
+                { name: 'Shopping Mall', risk: 'Medium', visits: 2 },
               ].map((loc, i) => (
                 <View key={i} style={[styles.eventRow, cardStyle, { justifyContent: 'space-between' }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -275,11 +275,11 @@ export default function CaretakerAnalysisScreen() {
           </AccItem>
         </Accordion>
       </ScrollView>
-      <DetailedInsightsModal 
-        visible={insightsVisible} 
-        onClose={() => setInsightsVisible(false)} 
-        history={history} 
-        strategies={strategies} 
+      <DetailedInsightsModal
+        visible={insightsVisible}
+        onClose={() => setInsightsVisible(false)}
+        history={history}
+        strategies={strategies}
       />
     </View>
   );

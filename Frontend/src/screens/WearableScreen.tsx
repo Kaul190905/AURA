@@ -24,7 +24,7 @@ export default function WearableScreen() {
 
   // Push sensor data to backend when BLE is connected
   useEffect(() => {
-    if (!bleConnected || !userId) return;
+    if (!bleConnected || !userId) {return;}
     submitSensorData({
       user_id: userId,
       noise,
@@ -70,7 +70,7 @@ export default function WearableScreen() {
             </View>
           </View>
           <Text style={styles.sensorHint}>Move the sliders to see your House dashboard react in real time.</Text>
-          
+
           {/* Noise slider */}
           <View style={[styles.sliderCard, { marginTop: 12 }]}>
             <View style={styles.sliderCardTop}>

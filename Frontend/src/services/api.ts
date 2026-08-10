@@ -141,7 +141,7 @@ async function authFetch(path: string, init: RequestInit = {}): Promise<Response
     ...(init.headers as Record<string, string> | undefined),
   };
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.Authorization = `Bearer ${token}`;
   }
   const url = `${API_BASE_URL}${path}`;
   const response = await fetch(url, { ...init, headers });
@@ -204,7 +204,7 @@ export async function getAlerts(
   severity?: string,
 ): Promise<AlertResponse[]> {
   const params = new URLSearchParams({ user_id: userId });
-  if (severity) params.append('severity', severity);
+  if (severity) {params.append('severity', severity);}
   const res = await authFetch(`/alerts/?${params.toString()}`);
   return res.json();
 }

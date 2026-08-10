@@ -49,7 +49,7 @@ const palettes = {
     riskMedSoft: '#FCE7F3',
     riskHighSoft: '#FEE2E2',
     primary: '#4B5563', // Gray
-  }
+  },
 };
 
 export const colors = { ...baseColors };

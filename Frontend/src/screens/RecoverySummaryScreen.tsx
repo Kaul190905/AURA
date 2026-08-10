@@ -48,12 +48,12 @@ export default function RecoverySummaryScreen({ onDone }: Props) {
                 <Text style={[styles.statValue, { color: colors.primary }]}>{risk.score}</Text>
              </View>
           </View>
-          
+
           <View style={styles.detailRow}>
              <Clock size={16} color={colors.mutedForeground} />
              <Text style={styles.detailText}>Duration: <Text style={fonts.semibold}>8 mins</Text></Text>
           </View>
-          
+
           <View style={styles.detailRow}>
              <Activity size={16} color={colors.mutedForeground} />
              <Text style={styles.detailText}>Strategy Used: <Text style={fonts.semibold}>Deep Breathing</Text></Text>
@@ -63,10 +63,10 @@ export default function RecoverySummaryScreen({ onDone }: Props) {
         {/* Feedback Section */}
         <View style={styles.feedbackContainer}>
           <Text style={styles.feedbackTitle}>Was this helpful?</Text>
-          
+
           <View style={styles.buttonRow}>
-            <TouchableOpacity 
-              style={[styles.feedbackBtn, neuSm]} 
+            <TouchableOpacity
+              style={[styles.feedbackBtn, neuSm]}
               activeOpacity={0.8}
               onPress={() => handleFeedback(true)}
             >
@@ -74,8 +74,8 @@ export default function RecoverySummaryScreen({ onDone }: Props) {
               <Text style={styles.feedbackBtnText}>Yes</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.feedbackBtn, neuSm]} 
+            <TouchableOpacity
+              style={[styles.feedbackBtn, neuSm]}
               activeOpacity={0.8}
               onPress={() => handleFeedback(false)}
             >

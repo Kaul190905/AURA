@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,7 +27,7 @@ export default function SettingsScreen() {
   const [nameSuccess, setNameSuccess] = useState(false);
 
   const handleUpdateName = async () => {
-    if (!newName.trim()) return;
+    if (!newName.trim()) {return;}
     setUpdatingName(true);
     setNameSuccess(false);
     try {
@@ -96,13 +96,13 @@ export default function SettingsScreen() {
           {/* Accessibility */}
           <AccItem id="a11y" title="Accessibility" icon={<Eye size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
-              
+
               <View style={styles.colorVisionSection}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <Palette size={16} color={colors.primary} />
                   <Text style={styles.colorVisionTitle}>Color Vision Support</Text>
                 </View>
-                
+
                 <View style={styles.radioGroup}>
                   {([
                     { id: 'default', label: 'Default' },
@@ -127,7 +127,7 @@ export default function SettingsScreen() {
                 {/* Live Preview Card */}
                 <View style={[styles.previewCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
                   <Text style={styles.previewTitle}>Live Preview</Text>
-                  
+
                   <View style={styles.previewRow}>
                     <View style={[styles.previewBadge, { backgroundColor: colors.muted }]}>
                       <View style={[styles.previewDot, { backgroundColor: colors.riskLow }]} />
@@ -138,7 +138,7 @@ export default function SettingsScreen() {
                       <Text style={[styles.previewBadgeText, { color: colors.foreground }]}>Warning</Text>
                     </View>
                   </View>
-                  
+
                   <View style={[styles.previewRiskCard, { backgroundColor: colors.muted }]}>
                     <View style={[styles.previewRiskRing, { borderColor: colors.riskHigh, backgroundColor: colors.background }]}>
                       <Text style={[styles.previewRiskScore, { color: colors.riskHigh }]}>72</Text>
@@ -192,7 +192,7 @@ export default function SettingsScreen() {
                 <Smartphone size={16} color={colors.mutedForeground} />
                 <Text style={styles.navRowText}>App Version: v{require('../../package.json').version}</Text>
               </View>
-              
+
               <View style={styles.colorVisionSection}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <Zap size={16} color={colors.primary} />
@@ -284,7 +284,7 @@ const getStyles = () => StyleSheet.create({
   },
   radioItemActive: { ...neuInset },
   radioLabel: { fontSize: 13, color: colors.foreground, ...fonts.medium },
-  
+
   previewCard: {
     borderRadius: radius.lg, padding: 16, borderWidth: 1, gap: 12,
   },

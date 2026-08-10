@@ -1,11 +1,11 @@
 import 'react-native-gesture-handler';
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, StyleSheet, TouchableOpacity, Text, Modal, Linking } from 'react-native';
-import { House, Library, TrendingUp, Bluetooth, Settings, Heart, User, AlertTriangle, CheckCircle2 } from 'lucide-react-native';
+import { House, Library, TrendingUp, Bluetooth, Settings, User, AlertTriangle, CheckCircle2 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { colors, fonts, applyColorVisionMode } from './src/theme';
@@ -15,12 +15,13 @@ import { computeRisk } from './src/utils';
 
 // Backend services
 import { supabase } from './src/services/supabaseClient';
-import { submitSensorData, logOverloadEvent, getRecommendations } from './src/services/api';
+import { submitSensorData, logOverloadEvent } from './src/services/api';
 import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
 
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
+import OnboardingScreen from './src/screens/OnboardingScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import CrisisModeScreen from './src/screens/CrisisModeScreen';
 import StrategyLibraryScreen from './src/screens/StrategyLibraryScreen';
@@ -41,10 +42,9 @@ import LiveAlertModal from './src/components/LiveAlertModal';
 import { AppContext, AppNotification, AppScreen, AppState } from './src/AppContext';
 
 const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
 
 // ── Tab Navigator (main app) ──────────────────────────────────────────────────
-function TabNavigator({ goCrisis, initialRouteName = 'House' }: { goCrisis: () => void, initialRouteName?: string }) {
+function TabNavigator({ initialRouteName = 'House' }: { initialRouteName?: string }) {
   return (
     <Tab.Navigator
       initialRouteName={initialRouteName}
@@ -131,7 +131,7 @@ export default function App() {
     { id: '1', title: 'High Noise Detected', description: 'Environment exceeded 85dB.', time: Date.now() - 3600000, read: false, type: 'alert' },
     { id: '2', title: 'Risk Level Increased', description: 'Sensory overload risk is High.', time: Date.now() - 7200000, read: true, type: 'alert' },
     { id: '3', title: 'Suggestion Accepted', description: 'User started Deep Breathing.', time: Date.now() - 86400000, read: true, type: 'suggestion' },
-    { id: '4', title: 'Wearable Battery Low', description: 'Device is at 15%.', time: Date.now() - 172800000, read: true, type: 'system' }
+    { id: '4', title: 'Wearable Battery Low', description: 'Device is at 15%.', time: Date.now() - 172800000, read: true, type: 'system' },
   ]);
 
   const [profile, setProfile] = useState<Partial<Record<TriggerKey, number>>>({ sound: 4, temp: 2 });
@@ -178,7 +178,7 @@ export default function App() {
   // Handle Deep Links for Google OAuth Redirect
   useEffect(() => {
     const handleDeepLink = ({ url }: { url: string }) => {
-      if (!url) return;
+      if (!url) {return;}
       // Supabase returns tokens as hash fragments (#access_token=...), replace with ? so searchParams can parse them
       const parsedUrl = new URL(url.replace('#', '?'));
       const accessToken = parsedUrl.searchParams.get('access_token');
@@ -193,7 +193,7 @@ export default function App() {
 
     const linkSubscription = Linking.addEventListener('url', handleDeepLink);
     Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink({ url });
+      if (url) {handleDeepLink({ url });}
     });
     return () => {
       linkSubscription.remove();
@@ -205,7 +205,7 @@ export default function App() {
     const handleAuth = async (user: any) => {
       const storedRole = user?.user_metadata?.role;
       const roleSelected = user?.user_metadata?.roleSelected;
-      
+
       if (roleSelected && storedRole === 'user') {
         setUserRole('user');
         setAppScreen('home');
@@ -241,13 +241,13 @@ export default function App() {
 
   const primaryTrigger = useMemo<TriggerKey>(() => {
     const entries = Object.entries(profile) as [TriggerKey, number][];
-    if (!entries.length) return 'sound';
+    if (!entries.length) {return 'sound';}
     return entries.sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0][0];
   }, [profile]);
 
   // ── Periodic sensor data push ───────────────────────────────────────────────
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {return;}
     const push = async () => {
       try {
         await submitSensorData({
@@ -278,7 +278,7 @@ export default function App() {
       }
     });
     AsyncStorage.getItem('profilePhoto').then(val => {
-      if (val) setProfilePhoto(val);
+      if (val) {setProfilePhoto(val);}
     });
   }, []);
 
@@ -332,13 +332,13 @@ export default function App() {
       setAlertOpen(true);
       setAlertShownForScore(risk.score);
     }
-    if (risk.score < 3) setAlertShownForScore(null);
+    if (risk.score < 3) {setAlertShownForScore(null);}
   }, [risk.score, appScreen, alertShownForScore, isCrisisMode]);
 
   const [highNoiseAlerted, setHighNoiseAlerted] = useState(false);
   const [dangerousTempAlerted, setDangerousTempAlerted] = useState(false);
   const [popupState, setPopupState] = useState({ visible: false, message: '' });
-  
+
   useEffect(() => {
     if (noise > 75 && !highNoiseAlerted) {
       setHighNoiseAlerted(true);
@@ -348,9 +348,9 @@ export default function App() {
         description: `Noise level reached ${noise}dB, exceeding safe limits.`,
         time: Date.now(),
         read: false,
-        type: 'alert'
+        type: 'alert',
       }, ...prev]);
-      
+
       setPopupState({ visible: true, message: `Noise level reached ${noise}dB. An alert has been sent to your caretaker.` });
       setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
     } else if (noise <= 75 && highNoiseAlerted) {
@@ -369,9 +369,9 @@ export default function App() {
         description: `Core body temperature is ${temperature}°F (${condition}).`,
         time: Date.now(),
         read: false,
-        type: 'alert'
+        type: 'alert',
       }, ...prev]);
-      
+
       setPopupState({ visible: true, message: `Core temperature is ${temperature}°F. An alert has been sent to your caretaker.` });
       setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
     } else if (!isDangerousTemp && dangerousTempAlerted) {
@@ -399,7 +399,7 @@ export default function App() {
       bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
       accommodations, setAccommodations, highContrast, setHighContrast,
       reduceMotion, setReduceMotion, darkMode, setDarkMode, colorVisionMode, setColorVisionMode: handleSetColorVisionMode, sensitivity, setSensitivity,
-      risk, primaryTrigger, suggestions, goCrisis,
+      risk, primaryTrigger, suggestions, goCrisis, triggerSos: () => setSosConfirmOpen(true),
       navigateTo: setAppScreen,
       profilePhoto, setProfilePhoto: handleSetProfilePhoto,
       userId, setUserId,
@@ -413,15 +413,15 @@ export default function App() {
   return (
     <AppContext.Provider value={appState}>
       <SafeAreaProvider>
-        <NavigationContainer 
+        <NavigationContainer
           key={colorVisionMode}
           onStateChange={(state) => {
-            if (!state) return;
+            if (!state) {return;}
             const currentRoute = state.routes[state.index];
             if (currentRoute.state && currentRoute.state.routes) {
               const idx = currentRoute.state.index ?? 0;
               const nestedRoute = currentRoute.state.routes[idx];
-              if (nestedRoute) setCurrentTab(nestedRoute.name);
+              if (nestedRoute) {setCurrentTab(nestedRoute.name);}
             } else {
               setCurrentTab(currentRoute.name);
             }
@@ -434,8 +434,9 @@ export default function App() {
           {!sessionLoading && userId && appScreen === 'welcome' && <WelcomeScreen onNext={async (role) => {
             await supabase.auth.updateUser({ data: { role, roleSelected: true } });
             setUserRole(role);
-            setAppScreen(role === 'caregiver' ? 'caretaker-home' : 'profile');
+            setAppScreen(role === 'caregiver' ? 'caretaker-home' : 'onboarding');
           }} />}
+          {!sessionLoading && userId && appScreen === 'onboarding' && <OnboardingScreen onDone={() => setAppScreen('home')} />}
           {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('settings')} onBack={() => setAppScreen('settings')} />}
 
           {userId && appScreen === 'recovery' && <RecoverySummaryScreen onDone={() => setAppScreen('home')} />}
@@ -450,16 +451,8 @@ export default function App() {
           )}
           {userId && (appScreen === 'home' || appScreen === 'settings') && (
             <View style={{ flex: 1 }}>
-              <TabNavigator goCrisis={goCrisis} initialRouteName={appScreen === 'settings' ? 'Settings' : 'House'} />
-              {currentTab === 'House' ? (
-                <TouchableOpacity
-                  onPress={() => setSosConfirmOpen(true)}
-                  style={styles.sosBtn}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.sosBtnText}>SOS</Text>
-                </TouchableOpacity>
-              ) : (
+              <TabNavigator initialRouteName={appScreen === 'settings' ? 'Settings' : 'House'} />
+              {currentTab !== 'House' && (
                 <TouchableOpacity
                   onPress={goCrisis}
                   style={[styles.overloadBtn, {
@@ -488,7 +481,7 @@ export default function App() {
               <Text style={styles.popupText}>
                 Are you sure you want to send an SOS alert to your contacts and caretaker?
               </Text>
-              
+
               <View style={{ flexDirection: 'row', gap: 12, marginTop: 24, width: '100%' }}>
                 <TouchableOpacity onPress={() => setSosConfirmOpen(false)} style={[styles.modalBtn, { backgroundColor: colors.muted }]} activeOpacity={0.8}>
                   <Text style={[styles.modalBtnText, { color: colors.foreground }]}>No</Text>

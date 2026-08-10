@@ -39,7 +39,7 @@ export default function StrategyLibraryScreen() {
   const remove = (id: string) => setStrategies(strategies.filter((s) => s.id !== id));
 
   const save = () => {
-    if (!title.trim()) return;
+    if (!title.trim()) {return;}
     setStrategies([{
       id: Math.random().toString(36).slice(2),
       title: title.trim(), note: note.trim() || undefined,
@@ -49,15 +49,15 @@ export default function StrategyLibraryScreen() {
   };
 
   const handleEditSave = () => {
-    if (!editingStrategy || !editingStrategy.title.trim()) return;
+    if (!editingStrategy || !editingStrategy.title.trim()) {return;}
     setStrategies(strategies.map(s => s.id === editingStrategy.id ? editingStrategy : s));
     setEditingStrategy(null);
   };
 
   const handleRatingSave = () => {
-    if (!ratingStrategy) return;
+    if (!ratingStrategy) {return;}
     const val = parseInt(ratingValue, 10);
-    if (isNaN(val) || val < 1 || val > 10) return; // Require 1-10
+    if (isNaN(val) || val < 1 || val > 10) {return;} // Require 1-10
 
     setStrategies(strategies.map(s => {
       if (s.id === ratingStrategy.id) {
@@ -154,14 +154,14 @@ export default function StrategyLibraryScreen() {
                 keyboardType="phone-pad"
               />
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-                <TouchableOpacity 
-                  onPress={() => { setCaregiver(tempCaregiver); setEditingCaregiver(false); }} 
+                <TouchableOpacity
+                  onPress={() => { setCaregiver(tempCaregiver); setEditingCaregiver(false); }}
                   style={styles.saveBtn}
                 >
                   <Text style={styles.saveBtnText}>Save</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  onPress={() => setEditingCaregiver(false)} 
+                <TouchableOpacity
+                  onPress={() => setEditingCaregiver(false)}
                   style={styles.cancelBtn}
                 >
                   <Text style={styles.cancelBtnText}>Cancel</Text>
@@ -198,16 +198,16 @@ export default function StrategyLibraryScreen() {
                 ) : (
                   <View style={{ gap: 8 }}>
                     {list.map((s) => (
-                      <TouchableOpacity 
-                        key={s.id} 
-                        style={styles.strategyCard} 
+                      <TouchableOpacity
+                        key={s.id}
+                        style={styles.strategyCard}
                         activeOpacity={0.8}
                         onPress={() => setSelectedStrategyId(selectedStrategyId === s.id ? null : s.id)}
                       >
                         <View style={{ flex: 1 }}>
                           <Text style={styles.strategyTitle}>{s.title}</Text>
                           {s.note && <Text style={styles.strategyNote}>{s.note}</Text>}
-                          <TouchableOpacity 
+                          <TouchableOpacity
                             style={styles.helpedBadge}
                             onPress={() => { setRatingStrategy(s); setRatingValue(''); }}
                             activeOpacity={0.8}
@@ -279,7 +279,7 @@ export default function StrategyLibraryScreen() {
             <Text style={styles.addCardTitle}>How much did this help?</Text>
             <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 12 }}>Rate from 1 to 10</Text>
             <TextInput
-              value={ratingValue} 
+              value={ratingValue}
               onChangeText={(t) => {
                 const num = parseInt(t, 10);
                 if (t === '' || (!isNaN(num) && num >= 1 && num <= 10)) {

@@ -19,8 +19,8 @@ export default function CaretakerGateScreen({ onBack, onSuccess }: Props) {
   const insets = useSafeAreaInsets();
 
   const submit = () => {
-    if (code.length === 4) onSuccess();
-    else setError(true);
+    if (code.length === 4) {onSuccess();}
+    else {setError(true);}
   };
 
   return (

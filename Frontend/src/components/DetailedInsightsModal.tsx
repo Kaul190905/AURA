@@ -17,10 +17,10 @@ export function DetailedInsightsModal({ visible, onClose, history, strategies }:
     let m = 0, a = 0, e = 0, n = 0;
     history.filter(h => h.score >= 5).forEach(h => {
       const hour = new Date(h.time).getHours();
-      if (hour >= 6 && hour < 12) m++;
-      else if (hour >= 12 && hour < 17) a++;
-      else if (hour >= 17 && hour < 22) e++;
-      else n++;
+      if (hour >= 6 && hour < 12) {m++;}
+      else if (hour >= 12 && hour < 17) {a++;}
+      else if (hour >= 17 && hour < 22) {e++;}
+      else {n++;}
     });
     return [
       { label: 'Morning (6am-12pm)', count: m },
@@ -66,7 +66,7 @@ export function DetailedInsightsModal({ visible, onClose, history, strategies }:
               {effectiveStrategies.map((s, i) => (
                 <View key={s.id} style={styles.row}>
                   <Text style={styles.rowLabel}>{s.title}</Text>
-                  <Text style={styles.rowValue}>{Math.round((s.helped/s.tried)*100)}% success</Text>
+                  <Text style={styles.rowValue}>{Math.round((s.helped / s.tried) * 100)}% success</Text>
                 </View>
               ))}
             </View>

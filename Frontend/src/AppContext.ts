@@ -15,7 +15,7 @@ export type AppScreen =
   | 'login' | 'welcome' | 'profile' | 'home' | 'crisis'
   | 'recovery' | 'settings' | 'speech' | 'plans'
   | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
-  | 'user_profile';
+  | 'user_profile' | 'onboarding';
 
 export type AppState = {
   userRole: 'user' | 'caregiver' | null;
@@ -63,6 +63,7 @@ export type AppState = {
   primaryTrigger: TriggerKey;
   suggestions: Strategy[];
   goCrisis: () => void;
+  triggerSos: () => void;
   navigateTo: (s: AppScreen) => void;
   profilePhoto: string | null;
   setProfilePhoto: (v: string | null) => void;

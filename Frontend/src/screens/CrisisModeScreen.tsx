@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Modal
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Star, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react-native';
@@ -43,7 +43,7 @@ export default function CrisisModeScreen({ onExit }: Props) {
   }, [reduceMotion]);
 
   useEffect(() => {
-    if (!running) return;
+    if (!running) {return;}
     const id = setInterval(() => {
       setSeconds((s) => {
         if (s + 1 >= 300) {
@@ -111,9 +111,9 @@ export default function CrisisModeScreen({ onExit }: Props) {
 
       {/* Exit */}
       <View style={{ gap: 12 }}>
-        <TouchableOpacity 
-          onPress={handleSos} 
-          style={styles.sosBtn} 
+        <TouchableOpacity
+          onPress={handleSos}
+          style={styles.sosBtn}
           activeOpacity={0.85}
         >
           <AlertTriangle size={18} color="#fff" />
