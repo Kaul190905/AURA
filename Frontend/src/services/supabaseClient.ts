@@ -40,6 +40,15 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) {throw error;}
+  try {
+    const isSignedIntoGoogle = await GoogleSignin.hasPreviousSignIn();
+    if (isSignedIntoGoogle) {
+      await GoogleSignin.revokeAccess();
+      await GoogleSignin.signOut();
+    }
+  } catch (e) {
+    console.warn('Google sign out error:', e);
+  }
 }
 
 

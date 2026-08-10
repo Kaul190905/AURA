@@ -67,31 +67,43 @@ async def create_user(
 @router.get("/{user_id}", response_model=UserResponse, summary="Get a User by ID")
 async def get_user(
     user_id: UUID, 
+    current_user = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service)
 ):
     """
     Retrieve a user by their UUID.
     """
+    from fastapi import HTTPException
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this user profile")
     return await user_service.get_user_by_id(user_id)
 
 @router.put("/{user_id}", response_model=UserResponse, summary="Update a User")
 async def update_user(
     user_id: UUID, 
     user_update: UserUpdate, 
+    current_user = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service)
 ):
     """
     Update a user's details.
     """
+    from fastapi import HTTPException
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this user profile")
     return await user_service.update_user(user_id, user_update)
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a User")
 async def delete_user(
     user_id: UUID, 
+    current_user = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service)
 ):
     """
     Delete a user from the AURA database.
     """
+    from fastapi import HTTPException
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this user profile")
     await user_service.delete_user(user_id)
     return None
