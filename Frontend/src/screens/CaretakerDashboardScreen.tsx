@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Activity, MapPin, Watch, ShieldAlert, Phone, Navigation, Bell, CheckCircle2, User } from 'lucide-react-native';
+import { Activity, MapPin, Watch, ShieldAlert, Phone, Navigation, Bell, CheckCircle2, User, Users } from 'lucide-react-native';
 
 import { AppContext } from '../AppContext';
 import { Accordion, AccItem } from '../components/Accordion';
@@ -13,32 +13,11 @@ import { riskColor, riskLabel, timeAgo } from '../utils';
 // ─── Critical Alert Data Shape ────────────────────────────────────────────────
 // Structured for future backend replacement — swap buildCriticalAlerts() with
 // an API call without any UI changes.
-type CriticalAlert = {
-  id: string;
-  name: string;
-  role: 'User' | 'Student';
-  status: string;
-  riskScore: number;
-  riskLevel: 'high' | 'medium' | 'low';
-  isCrisis: boolean;
-  location: string;
-  triggeredAt: number; // epoch ms
-  reason: string;
-};
-
-// Priority weight: Reset Mode (3) > High (2) > Medium (1)
-function alertPriority(a: CriticalAlert): number {
-  if (a.isCrisis) {return 3;}
-  if (a.riskLevel === 'high') {return 2;}
-  if (a.riskLevel === 'medium') {return 1;}
-  return 0;
-}
-
 export default function CaretakerDashboardScreen() {
   const styles = getStyles();
   const {
     risk, isCrisisMode, notifications, setIsNotificationCenterOpen,
-    bleConnected, darkMode, mockStudents,
+    bleConnected, darkMode,
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
@@ -54,53 +33,6 @@ export default function CaretakerDashboardScreen() {
   const userStatusDesc = isCrisisMode
     ? 'User has activated emergency protocol and requested space.'
     : (risk.score >= 5 ? 'Elevated sensory levels detected.' : 'User is currently stable.');
-
-  // ── Build Critical Alerts from shared state ──────────────────────────────
-  // This function is the single data-source point. Replace with an API call
-  // in the future without touching the render tree below.
-  const criticalAlerts = useMemo<CriticalAlert[]>(() => {
-    const alerts: CriticalAlert[] = [];
-
-    // 1. Connected User (from risk engine)
-    if (isCrisisMode || risk.score >= 3) {
-      const level = isCrisisMode ? 'high' : (risk.score >= 5 ? 'high' : 'medium');
-      alerts.push({
-        id: 'connected-user',
-        name: 'Connected User',
-        role: 'User',
-        status: isCrisisMode ? 'Reset Mode Active' : (risk.score >= 5 ? 'Needs Attention' : 'Elevated'),
-        riskScore: risk.score,
-        riskLevel: level,
-        isCrisis: isCrisisMode,
-        location: 'Library',
-        triggeredAt: Date.now() - 2 * 60 * 1000, // 2 min ago mock
-        reason: isCrisisMode
-          ? 'User activated the Reset Mode emergency protocol.'
-          : 'Elevated wearable stress indicators and environmental noise detected.',
-      });
-    }
-
-    // 2. Students from mockStudents (teacher mode shared state)
-    for (const s of mockStudents) {
-      if (!s.isCrisis && s.risk < 3) {continue;} // skip low risk
-      const level: CriticalAlert['riskLevel'] = s.isCrisis ? 'high' : (s.risk >= 5 ? 'high' : 'medium');
-      alerts.push({
-        id: s.id,
-        name: s.name,
-        role: 'Student',
-        status: s.isCrisis ? 'Reset Mode Active' : (s.risk >= 5 ? 'Needs Attention' : 'Elevated'),
-        riskScore: s.risk,
-        riskLevel: level,
-        isCrisis: s.isCrisis,
-        location: s.location,
-        triggeredAt: Date.now() - Math.floor(Math.random() * 10) * 60 * 1000,
-        reason: s.recentActivity ?? 'Elevated sensory stress indicators detected.',
-      });
-    }
-
-    // Sort by priority descending
-    return alerts.sort((a, b) => alertPriority(b) - alertPriority(a));
-  }, [risk, isCrisisMode, mockStudents]);
 
   const mockLocation = 'Library';
 
@@ -133,113 +65,6 @@ export default function CaretakerDashboardScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
         <Accordion>
-
-          {/* ── Critical Alerts AccItem ─────────────────────────────────── */}
-          <AccItem
-            id="critical-alerts"
-            title="Critical Alerts"
-            defaultOpen
-            icon={<ShieldAlert size={18} color={criticalAlerts.length > 0 ? colors.riskHigh : colors.primary} />}
-            badge={
-              criticalAlerts.length > 0
-                ? <View style={[styles.alertBadge, { backgroundColor: `${colors.riskHigh}20`, borderColor: `${colors.riskHigh}40` }]}><Text style={[styles.alertBadgeText, { color: colors.riskHigh }]}>{criticalAlerts.length}</Text></View>
-                : <Text style={styles.badge}>All Safe</Text>
-            }
-          >
-        {criticalAlerts.length === 0 ? (
-          /* Empty state */
-          <View style={[styles.emptyCard, cardStyle, { marginTop: 8, marginBottom: 4 }]}>
-            <CheckCircle2 size={28} color={colors.primary} style={{ marginBottom: 8 }} />
-            <Text style={[styles.emptyTitle, textStyle]}>Everyone is currently safe.</Text>
-            <Text style={styles.emptySubtitle}>No active alerts at this time.</Text>
-          </View>
-        ) : (
-          <View style={{ marginTop: 8 }}>
-            {criticalAlerts.map(alert => {
-              const rColor = riskColor(alert.riskScore);
-              const isPriority = alert.isCrisis || alert.riskLevel === 'high';
-              return (
-                <View
-                  key={alert.id}
-                  style={[
-                    styles.alertCard, cardStyle, neuSm,
-                    isPriority
-                      ? { borderWidth: 1, borderColor: `${colors.riskHigh}40`, backgroundColor: darkMode ? '#1c1c1e' : `${colors.riskHigh}08` }
-                      : { borderLeftWidth: 4, borderLeftColor: rColor },
-                  ]}
-                >
-                  {/* Priority banner */}
-                  {isPriority && (
-                    <View style={styles.priorityBanner}>
-                      <ShieldAlert size={14} color={colors.riskHigh} />
-                      <Text style={styles.priorityBannerText}>⚠ Requires Immediate Attention</Text>
-                    </View>
-                  )}
-
-                  {/* Header row: avatar + name + risk ring */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                      <View style={styles.avatar}>
-                        <User size={20} color={colors.mutedForeground} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.alertName, textStyle]}>{alert.name}</Text>
-                        <Text style={styles.alertRole}>{alert.role}</Text>
-                      </View>
-                    </View>
-                    <View style={{ alignItems: 'center' }}>
-                      <View style={[styles.riskRing, { borderColor: rColor }]}>
-                        <Text style={[styles.riskRingScore, { color: rColor }]}>{alert.riskScore}</Text>
-                      </View>
-                      <Text style={[styles.riskRingLabel, { color: rColor }]}>
-                        {alert.isCrisis ? 'CRISIS' : (alert.riskLevel === 'high' ? 'HIGH' : 'MED')}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Details */}
-                  <View style={{ gap: 5, marginBottom: 12 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Activity size={12} color={colors.mutedForeground} />
-                      <Text style={[styles.detailText, textStyle]}>
-                        Status: <Text style={{ color: rColor, ...fonts.semibold }}>{alert.status}</Text>
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <MapPin size={12} color={colors.mutedForeground} />
-                      <Text style={[styles.detailText, textStyle]}>
-                        Location: <Text style={{ ...fonts.semibold }}>{alert.location}</Text>
-                      </Text>
-                    </View>
-                    <Text style={styles.triggeredText}>Triggered {timeAgo(alert.triggeredAt)}</Text>
-                    <View style={[styles.reasonBox, { backgroundColor: darkMode ? '#2a2a2a' : colors.muted }]}>
-                      <Text style={[styles.reasonText, textStyle]}>Reason: {alert.reason}</Text>
-                    </View>
-                  </View>
-
-                  {/* Quick Actions */}
-                  <View style={styles.actionRow}>
-                    <TouchableOpacity style={[styles.actionBtn, { backgroundColor: isPriority ? colors.riskHigh : colors.primary, flex: 2 }]} activeOpacity={0.8}>
-                      <Text style={styles.actionBtnText}>View Details</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.actionBtnOutline, cardStyle]} activeOpacity={0.8}>
-                      <Navigation size={13} color={darkMode ? '#fff' : colors.foreground} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.actionBtnOutline, cardStyle]} activeOpacity={0.8}>
-                      <Phone size={13} color={darkMode ? '#fff' : colors.foreground} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.actionBtnOutline, cardStyle]} activeOpacity={0.8}>
-                      <CheckCircle2 size={13} color={colors.primary} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        )}
-          </AccItem>
-
-          {/* Current User Risk */}
           <AccItem id="risk-status" title="Current User Status" defaultOpen
             icon={<ShieldAlert size={18} color={isCrisisMode ? colors.riskHigh : colors.primary} />}>
             <View style={[styles.riskCard, cardStyle, neuSm, { marginTop: 8 }]}>
@@ -257,7 +82,7 @@ export default function CaretakerDashboardScreen() {
             </View>
           </AccItem>
 
-          {/* Location */}
+          {/* Current Location */}
           <AccItem id="location" title="Current Location"
             icon={<MapPin size={18} color={isCrisisMode ? colors.riskHigh : colors.primary} />}>
             {isCrisisMode ? (

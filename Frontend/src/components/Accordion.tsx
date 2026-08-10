@@ -9,7 +9,6 @@ import { AppContext } from '../AppContext';
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
 }
-
 interface AccordionProps {
   children: ReactNode;
 }
@@ -17,13 +16,14 @@ interface AccordionProps {
 interface AccItemProps {
   id: string;
   title: string;
+  subtitle?: string;
   icon?: ReactNode;
   badge?: ReactNode;
   children: ReactNode;
   defaultOpen?: boolean;
 }
 
-export function AccItem({ title, icon, badge, children, defaultOpen = false }: AccItemProps) {
+export function AccItem({ title, subtitle, icon, badge, children, defaultOpen = false }: AccItemProps) {
   const styles = getStyles();
   const [open, setOpen] = useState(defaultOpen);
   const { darkMode, userRole } = useContext(AppContext);
@@ -47,6 +47,9 @@ export function AccItem({ title, icon, badge, children, defaultOpen = false }: A
         )}
         <View style={styles.labelWrap}>
           <Text style={[styles.title, dmText]} numberOfLines={1}>{title}</Text>
+          {subtitle && (
+            <Text style={[styles.subtitle, dmText, { opacity: 0.7 }]} numberOfLines={1}>{subtitle}</Text>
+          )}
         </View>
         {badge}
         <ChevronDown
@@ -112,6 +115,11 @@ const getStyles = () => StyleSheet.create({
     fontSize: 14,
     color: colors.foreground,
     ...fonts.semibold,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: colors.foreground,
+    marginTop: 2,
   },
   body: {
     paddingHorizontal: spacing.lg,
