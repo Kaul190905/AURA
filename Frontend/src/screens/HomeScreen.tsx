@@ -242,31 +242,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* AURA Toolkit */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Zap size={18} color={colors.primary} />
-              <Text style={styles.sectionTitle}>AURA Toolkit</Text>
-            </View>
-          </View>
-          <View style={{ gap: 8, marginTop: 8 }}>
-            <TouchableOpacity onPress={() => navigateTo('speech')} style={[styles.navRow, { backgroundColor: colors.muted, borderRadius: radius.md, padding: 12 }]} activeOpacity={0.8}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <Mic size={18} color={colors.primary} />
-                <Text style={{ fontSize: 14, color: colors.foreground, ...fonts.medium }}>Speech Diary</Text>
-              </View>
-              <ChevronRight size={16} color={colors.mutedForeground} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigateTo('plans')} style={[styles.navRow, { backgroundColor: colors.muted, borderRadius: radius.md, padding: 12 }]} activeOpacity={0.8}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <CalendarDays size={18} color={colors.primary} />
-                <Text style={{ fontSize: 14, color: colors.foreground, ...fonts.medium }}>My Plans & Routines</Text>
-              </View>
-              <ChevronRight size={16} color={colors.mutedForeground} />
-            </TouchableOpacity>
-          </View>
-        </View>
+
       </View>
 
       {/* ── Live Sensor Metrics Modal ───────────────────────────────────────── */}
