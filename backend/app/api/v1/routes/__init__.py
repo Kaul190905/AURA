@@ -10,6 +10,7 @@ from app.api.v1.routes.prediction import router as prediction_router
 from app.api.v1.routes.overload_events import router as overload_events_router
 from app.api.v1.routes.strategies import router as strategies_router
 from app.api.v1.routes.accommodations import router as accommodations_router
+from app.api.v1.routes.caregivers import router as caregivers_router
 
 api_router = APIRouter()
 
@@ -25,3 +26,4 @@ api_router.include_router(prediction_router, prefix="/prediction", tags=["Predic
 api_router.include_router(overload_events_router, prefix="/overload-events", tags=["Overload Events"])
 api_router.include_router(strategies_router, prefix="/strategies", tags=["Strategies"])
 api_router.include_router(accommodations_router, prefix="/accommodations", tags=["Accommodations"])
+api_router.include_router(caregivers_router, prefix="/caregivers", tags=["Caregivers"])

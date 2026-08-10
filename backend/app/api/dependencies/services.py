@@ -27,6 +27,8 @@ from app.repositories.strategy_repository import StrategyRepository
 from app.services.strategy_service import StrategyService
 from app.repositories.accommodation_repository import AccommodationRepository
 from app.services.accommodation_service import AccommodationService
+from app.repositories.caregiver_repository import CaregiverRepository
+from app.services.caregiver_service import CaregiverService
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +46,17 @@ def get_user_service(
 ) -> UserService:
     """Dependency to provide a UserService instance."""
     return UserService(user_repo, prefs_repo)
+
+def get_caregiver_repository(db: AsyncSession = Depends(get_db)) -> CaregiverRepository:
+    """Dependency to provide a CaregiverRepository instance."""
+    return CaregiverRepository(db)
+
+def get_caregiver_service(
+    caregiver_repo: CaregiverRepository = Depends(get_caregiver_repository),
+    user_repo: UserRepository = Depends(get_user_repository)
+) -> CaregiverService:
+    """Dependency to provide a CaregiverService instance."""
+    return CaregiverService(caregiver_repo, user_repo)
 
 def get_sensor_data_repository(db: AsyncSession = Depends(get_db)) -> SensorDataRepository:
     """Dependency to provide a SensorDataRepository instance."""

@@ -3,9 +3,10 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Activity, MapPin, Watch, ShieldAlert, Phone, Navigation, Bell, CheckCircle2, User, Users } from 'lucide-react-native';
+import { Activity, MapPin, Watch, ShieldAlert, Phone, Navigation, Bell, CheckCircle2, User, Users, Check, X } from 'lucide-react-native';
 
 import { AppContext } from '../AppContext';
+import { CaregiverResponse, getPendingInvitations, getAssignedUsers, acceptInvitation, rejectInvitation } from '../services/caregiverApi';
 import { Accordion, AccItem } from '../components/Accordion';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { riskColor, riskLabel, timeAgo } from '../utils';
@@ -28,13 +29,62 @@ export default function CaretakerDashboardScreen() {
   const unreadCount = notifications.filter(n => !n.read).length;
   const riskC = riskColor(risk.score);
 
-  // Deriving Caretaker Status from risk
-  const userStatus = isCrisisMode ? 'Reset Mode Active' : (risk.score >= 5 ? 'Needs Attention' : 'Safe');
+  const [invitations, setInvitations] = useState<CaregiverResponse[]>([]);
+  const [assignedUsers, setAssignedUsers] = useState<CaregiverResponse[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchInvitations();
+    fetchAssignedUsers();
+  }, []);
+
+  const fetchInvitations = async () => {
+    try {
+      const data = await getPendingInvitations();
+      setInvitations(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchAssignedUsers = async () => {
+    try {
+      const data = await getAssignedUsers();
+      setAssignedUsers(data);
+      if (data.length > 0 && !selectedUserId) {
+        setSelectedUserId(data[0].user_id);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAccept = async (id: string) => {
+    try {
+      await acceptInvitation(id);
+      fetchInvitations();
+      fetchAssignedUsers();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    try {
+      await rejectInvitation(id);
+      fetchInvitations();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Mocking data based on selection to show dynamic UI
+  const displayRiskScore = selectedUserId ? risk.score : 0;
+  const userStatus = isCrisisMode ? 'Reset Mode Active' : (displayRiskScore >= 5 ? 'Needs Attention' : 'Safe');
   const userStatusDesc = isCrisisMode
     ? 'User has activated emergency protocol and requested space.'
-    : (risk.score >= 5 ? 'Elevated sensory levels detected.' : 'User is currently stable.');
-
-  const mockLocation = 'Library';
+    : (displayRiskScore >= 5 ? 'Elevated sensory levels detected.' : 'User is currently stable.');
+  const mockLocation = selectedUserId ? 'Library' : 'Unknown';
 
   return (
     <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
@@ -64,7 +114,67 @@ export default function CaretakerDashboardScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
-        <Accordion>
+        
+        {invitations.length > 0 && (
+          <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.md }}>
+            <Text style={[styles.sectionTitle, textStyle]}>Pending Invitations</Text>
+            {invitations.map((inv) => (
+              <View key={inv.id} style={[styles.alertCard, cardStyle, neuSm, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }]}>
+                <View>
+                  <Text style={[styles.alertName, textStyle]}>User ID: {inv.user_id.substring(0, 8)}...</Text>
+                  <Text style={styles.alertRole}>Invited to be a caregiver</Text>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                  <TouchableOpacity onPress={() => handleAccept(inv.id)} style={{ backgroundColor: colors.riskLow, padding: 8, borderRadius: 8 }}>
+                    <Check size={20} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleReject(inv.id)} style={{ backgroundColor: colors.riskHighSoft, padding: 8, borderRadius: 8 }}>
+                    <X size={20} color={colors.riskHigh} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {assignedUsers.length > 0 && (
+          <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.md }}>
+            <Text style={[styles.sectionTitle, textStyle]}>Assigned Users</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8, overflow: 'visible' }}>
+              {assignedUsers.map((u) => {
+                const isSelected = selectedUserId === u.user_id;
+                return (
+                  <TouchableOpacity
+                    key={u.user_id}
+                    onPress={() => setSelectedUserId(u.user_id)}
+                    style={[{
+                      paddingHorizontal: 16, paddingVertical: 10,
+                      borderRadius: 16, marginRight: 12, borderWidth: 2,
+                      borderColor: isSelected ? colors.primary : 'transparent',
+                      backgroundColor: isSelected ? `${colors.primary}15` : colors.muted,
+                    }]}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <User size={16} color={isSelected ? colors.primary : colors.mutedForeground} />
+                      <Text style={[{ fontSize: 14, ...fonts.bold, color: isSelected ? colors.primary : colors.mutedForeground }]}>
+                        User {u.user_id.substring(0, 4)}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
+        {!selectedUserId && assignedUsers.length === 0 ? (
+           <View style={[styles.emptyCard, { marginHorizontal: spacing.lg }]}>
+             <Users size={32} color={colors.mutedForeground} />
+             <Text style={styles.emptyTitle}>No Assigned Users</Text>
+             <Text style={styles.emptySubtitle}>You don't have active permissions to monitor anyone yet.</Text>
+           </View>
+        ) : (
+          <Accordion>
           <AccItem id="risk-status" title="Current User Status" defaultOpen
             icon={<ShieldAlert size={18} color={isCrisisMode ? colors.riskHigh : colors.primary} />}>
             <View style={[styles.riskCard, cardStyle, neuSm, { marginTop: 8 }]}>
@@ -148,7 +258,8 @@ export default function CaretakerDashboardScreen() {
             </View>
           </AccItem>
 
-        </Accordion>
+          </Accordion>
+        )}
       </ScrollView>
     </View>
   );

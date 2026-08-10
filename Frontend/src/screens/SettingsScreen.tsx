@@ -85,6 +85,11 @@ export default function SettingsScreen() {
                 <ChevronRight size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
 
+              <TouchableOpacity onPress={() => navigateTo('caregiver_management')} style={styles.navRow} activeOpacity={0.8}>
+                <Text style={styles.navRowText}>Caregiver Management</Text>
+                <ChevronRight size={16} color={colors.mutedForeground} />
+              </TouchableOpacity>
+
               <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('login'); await supabase.auth.signOut(); }} style={styles.navRow} activeOpacity={0.8}>
                 <Text style={styles.navRowText}>Logout</Text>
                 <LogOut size={16} color={colors.mutedForeground} />

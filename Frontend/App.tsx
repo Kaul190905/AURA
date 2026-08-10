@@ -37,6 +37,7 @@ import CaretakerGateScreen from './src/screens/CaretakerGateScreen';
 import CaretakerDashboardScreen from './src/screens/CaretakerDashboardScreen';
 import CaretakerAnalysisScreen from './src/screens/CaretakerAnalysisScreen';
 import CaretakerProfileScreen from './src/screens/CaretakerProfileScreen';
+import CaregiverManagementScreen from './src/screens/CaregiverManagementScreen';
 import LiveAlertModal from './src/components/LiveAlertModal';
 
 import { AppContext, AppNotification, AppScreen, AppState } from './src/AppContext';
@@ -444,6 +445,12 @@ export default function App() {
           {userId && appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'user_profile' && <UserProfileScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setUserRole('caregiver'); setAppScreen('caretaker-home'); }} />}
+          {userId && appScreen === 'caregiver_management' && (
+             <View style={{ flex: 1, backgroundColor: colors.background }}>
+               <TouchableOpacity onPress={() => setAppScreen('settings')} style={{ padding: 16, paddingTop: 48 }}><Text style={{ color: colors.primary, fontWeight: 'bold' }}>← Back to Settings</Text></TouchableOpacity>
+               <CaregiverManagementScreen />
+             </View>
+          )}
           {userId && appScreen === 'caretaker-home' && (
             <View style={{ flex: 1 }}>
               <CaretakerTabNavigator />
