@@ -78,6 +78,6 @@ venv/
 
 # Trained ML artifacts (should not be checked in)
 app/ai/ml/artifacts/
-models/
+/models/
 reports/
 
