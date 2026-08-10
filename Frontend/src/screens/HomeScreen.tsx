@@ -1,7 +1,7 @@
-import React, { useContext, useState, useEffect, useCallback } from 'react';
+import React, { useContext, useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal,
+  View, Text, StyleSheet, TouchableOpacity, Modal,
 } from 'react-native';
 import Svg, { Circle, Path, Rect, Defs, LinearGradient, Stop, G } from 'react-native-svg';
 import Slider from '@react-native-community/slider';
@@ -11,14 +11,14 @@ import { Heart, Zap, Bell, Mic, CalendarDays, ChevronRight, X, Activity, Thermom
 import { AppContext } from '../AppContext';
 
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
-import { riskColor, riskLabel } from '../utils';
+import { riskColor } from '../utils';
 import { supabase } from '../services/supabaseClient';
 
 // ── Dynamic status label based on risk score ────────────────────────────────
 function statusLabel(score: number): string {
-  if (score <= 2) return 'Calm';
-  if (score <= 4) return 'Stable';
-  if (score <= 6) return 'Elevated Response';
+  if (score <= 2) {return 'Calm';}
+  if (score <= 4) {return 'Stable';}
+  if (score <= 6) {return 'Elevated Response';}
   return 'High Stress';
 }
 
@@ -27,7 +27,6 @@ export default function HomeScreen() {
   const {
     risk, selfReport, setSelfReport, setIsNotificationCenterOpen,
     notifications, bleConnected, navigateTo, triggerSos,
-    userId,
     noise, temperature,
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
@@ -98,11 +97,11 @@ export default function HomeScreen() {
         {/* Live Details Dashboard */}
         <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}>
         <Text style={[styles.sectionTitle, { marginBottom: 16, marginLeft: 4 }]}>Live Details</Text>
-        
+
         {/* Top Card: Concentric Rings */}
         <View style={styles.dashboardCard}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            
+
             {/* Rings */}
             <View style={{ width: 140, height: 140 }}>
               <Svg width="140" height="140" viewBox="0 0 160 160">
@@ -110,11 +109,11 @@ export default function HomeScreen() {
                   {/* Outer - BPM */}
                   <Circle cx="80" cy="80" r="65" stroke="#00C48C" strokeWidth="12" fill="none" strokeOpacity="0.2" />
                   <Circle cx="80" cy="80" r="65" stroke="#00C48C" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 65}`} strokeDashoffset={`${2 * Math.PI * 65 * (1 - 0.75)}`} strokeLinecap="round" />
-                  
+
                   {/* Middle - Temp */}
                   <Circle cx="80" cy="80" r="47" stroke="#FF9F43" strokeWidth="12" fill="none" strokeOpacity="0.2" />
                   <Circle cx="80" cy="80" r="47" stroke="#FF9F43" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 47}`} strokeDashoffset={`${2 * Math.PI * 47 * (1 - 0.65)}`} strokeLinecap="round" />
-                  
+
                   {/* Inner - Noise */}
                   <Circle cx="80" cy="80" r="29" stroke="#5F88FF" strokeWidth="12" fill="none" strokeOpacity="0.2" />
                   <Circle cx="80" cy="80" r="29" stroke="#5F88FF" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 29}`} strokeDashoffset={`${2 * Math.PI * 29 * (1 - 0.45)}`} strokeLinecap="round" />
@@ -159,7 +158,7 @@ export default function HomeScreen() {
               <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Heart rate</Text>
             </View>
             <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>72 <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>bpm</Text></Text>
-            
+
             <View style={{ flex: 1, justifyContent: 'flex-end', marginTop: 6 }}>
               <Svg height="80" width="100%" viewBox="0 0 100 50" preserveAspectRatio="none">
                 <Defs>
@@ -181,7 +180,7 @@ export default function HomeScreen() {
               <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Noise level</Text>
             </View>
             <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{Math.round(noise)} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>dB</Text></Text>
-            
+
             <View style={{ flex: 1, justifyContent: 'flex-end', marginTop: 6 }}>
               <Svg height="80" width="100%" viewBox="0 0 100 50" preserveAspectRatio="none">
                 <Rect x="5" y="25" width="8" height="25" rx="4" fill="#A7F3D0" />

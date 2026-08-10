@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
-  KeyboardAvoidingView, Platform, ScrollView
+  KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ear, Sun, User, Calendar, Phone, Mail } from 'lucide-react-native';
@@ -19,14 +19,14 @@ export default function OnboardingScreen({ onDone }: Props) {
   const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState(1);
-  const [name, setName] = useState(''); 
+  const [name, setName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleNext = () => {
     let newErrors: Record<string, string> = {};
 
     if (step === 1) {
-      if (!name.trim()) newErrors.name = 'Name is required';
+      if (!name.trim()) {newErrors.name = 'Name is required';}
       if (!dob || dob.length !== 4 || isNaN(parseInt(dob, 10))) {
         newErrors.dob = 'Year of Birth is required (e.g., 1995)';
       }
@@ -48,12 +48,12 @@ export default function OnboardingScreen({ onDone }: Props) {
       setStep(3);
     } else if (step === 3) {
       if (caregiver.phone && !/^\d{10}$/.test(caregiver.phone.replace(/\D/g, ''))) {
-        newErrors.phone = "Phone number must be 10 digits";
+        newErrors.phone = 'Phone number must be 10 digits';
       }
       if (caregiver.email && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i.test(caregiver.email)) {
-        newErrors.email = "Invalid email format";
+        newErrors.email = 'Invalid email format';
       }
-      
+
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
         return;
@@ -114,8 +114,8 @@ export default function OnboardingScreen({ onDone }: Props) {
       <Text style={styles.subtitle}>Select the sensory triggers that affect you.</Text>
 
       <View style={styles.gridContainer}>
-        <TouchableOpacity 
-          style={[styles.gridCard, ('sound' in profile) && styles.gridCardActive]} 
+        <TouchableOpacity
+          style={[styles.gridCard, ('sound' in profile) && styles.gridCardActive]}
           onPress={() => toggleProfile('sound')}
           activeOpacity={0.8}
         >
@@ -126,8 +126,8 @@ export default function OnboardingScreen({ onDone }: Props) {
           <Text style={styles.gridCardDesc}>Sensitivity to loud or sudden noises</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.gridCard, ('temp' in profile) && styles.gridCardActive]} 
+        <TouchableOpacity
+          style={[styles.gridCard, ('temp' in profile) && styles.gridCardActive]}
           onPress={() => toggleProfile('temp')}
           activeOpacity={0.8}
         >
@@ -203,7 +203,7 @@ export default function OnboardingScreen({ onDone }: Props) {
             <View key={idx} style={[styles.dot, step === idx && styles.dotActive]} />
           ))}
         </View>
-        
+
         <TouchableOpacity style={styles.nextBtn} onPress={handleNext} activeOpacity={0.85}>
           <Text style={styles.nextBtnText}>{step === 3 ? 'Complete' : 'Next'}</Text>
         </TouchableOpacity>
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.2xl,
+    paddingTop: spacing.xxl,
     paddingBottom: 100,
   },
   stepContainer: {
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   gridCard: {
     width: '45%',
     backgroundColor: colors.background,
-    borderRadius: radius.2xl,
+    borderRadius: radius.xl,
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',

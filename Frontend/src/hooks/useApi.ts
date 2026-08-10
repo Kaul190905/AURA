@@ -29,7 +29,7 @@ export function useApi<T>(
 
   useEffect(() => {
     fetch();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [fetch]);
 
   return { data, loading, error, refresh: fetch };

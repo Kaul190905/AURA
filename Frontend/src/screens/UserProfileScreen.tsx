@@ -29,7 +29,7 @@ export default function UserProfileScreen({ onBack }: Props) {
 
   const handlePickImage = () => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (response) => {
-      if (response.didCancel) return;
+      if (response.didCancel) {return;}
       if (response.errorMessage) {
         console.warn('ImagePicker Error: ', response.errorMessage);
         return;
@@ -62,7 +62,7 @@ export default function UserProfileScreen({ onBack }: Props) {
           </View>
         </TouchableOpacity>
         <Text style={styles.nameText}>{userName}</Text>
-        
+
         <View style={styles.detailsContainer}>
           {/* About Me */}
           <View style={styles.card}>
@@ -97,12 +97,12 @@ export default function UserProfileScreen({ onBack }: Props) {
               <AlertTriangle size={16} color={colors.primary} />
               <Text style={styles.label}>Emergency Caregiver</Text>
             </View>
-            
+
             <View style={styles.infoRow}>
               <Text style={styles.infoKey}>Name:</Text>
               <Text style={styles.infoValue}>{caregiver?.name || 'Not set'}</Text>
             </View>
-            
+
             <View style={styles.infoRow}>
               <Text style={styles.infoKey}>Phone:</Text>
               <Text style={styles.infoValue}>{caregiver?.phone || 'Not set'}</Text>

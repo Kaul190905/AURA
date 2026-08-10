@@ -18,7 +18,7 @@ export default function CaretakerProfileScreen() {
     setUserId, setAccessToken,
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
-  
+
   const [notifications, setNotifications] = useState(true);
 
   const containerStyle = darkMode ? { backgroundColor: '#000000' } : {};
@@ -30,7 +30,7 @@ export default function CaretakerProfileScreen() {
       <Header title="Settings" subtitle="Caregiver Profile" />
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <Accordion>
-          
+
           {/* Caregiver Profile */}
           <AccItem id="profile" title="Caregiver Profile" defaultOpen icon={<Users size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
@@ -87,15 +87,15 @@ export default function CaretakerProfileScreen() {
                 highContrast={highContrast}
                 darkMode={darkMode}
               />
-              
+
               <View style={styles.divider} />
-              
+
               <View style={styles.colorVisionSection}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <Palette size={16} color={colors.primary} />
                   <Text style={styles.colorVisionTitle}>Color Vision Support</Text>
                 </View>
-                
+
                 <View style={styles.radioGroup}>
                   {([
                     { id: 'default', label: 'Default' },
@@ -120,7 +120,7 @@ export default function CaretakerProfileScreen() {
                 {/* Live Preview Card */}
                 <View style={[styles.previewCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
                   <Text style={styles.previewTitle}>Live Preview</Text>
-                  
+
                   <View style={styles.previewRow}>
                     <View style={[styles.previewBadge, { backgroundColor: colors.muted }]}>
                       <View style={[styles.previewDot, { backgroundColor: colors.riskLow }]} />
@@ -131,7 +131,7 @@ export default function CaretakerProfileScreen() {
                       <Text style={[styles.previewBadgeText, { color: colors.foreground }]}>Warning</Text>
                     </View>
                   </View>
-                  
+
                   <View style={[styles.previewRiskCard, { backgroundColor: colors.muted }]}>
                     <View style={[styles.previewRiskRing, { borderColor: colors.riskHigh, backgroundColor: colors.background }]}>
                       <Text style={[styles.previewRiskScore, { color: colors.riskHigh }]}>72</Text>
@@ -149,13 +149,13 @@ export default function CaretakerProfileScreen() {
               </View>
             </View>
           </AccItem>
-          
+
           {/* Emergency Contacts */}
           <AccItem id="emergency" title="Emergency Contacts" icon={<Phone size={18} color={colors.primary} />}>
             <View style={{ gap: 12, marginTop: 8 }}>
               {[
                 { name: 'Dr. Smith', role: 'Doctor', phone: '555-0102' },
-                { name: 'City Hospital', role: 'Hospital', phone: '911' }
+                { name: 'City Hospital', role: 'Hospital', phone: '911' },
               ].map((contact, i) => (
                 <View key={i} style={[styles.navRow, cardStyle, { justifyContent: 'space-between', paddingVertical: 12 }]}>
                   <View>
@@ -232,7 +232,7 @@ export default function CaretakerProfileScreen() {
               </TouchableOpacity>
             </View>
           </AccItem>
-          
+
         </Accordion>
       </ScrollView>
     </View>
@@ -240,14 +240,14 @@ export default function CaretakerProfileScreen() {
 }
 
 function ToggleRow({
-  icon, label, value, onChange, highContrast, darkMode
+  icon, label, value, onChange, highContrast, darkMode,
 }: { icon: React.ReactNode; label: string; value: boolean; onChange: (v: boolean) => void; highContrast?: boolean, darkMode?: boolean }) {
   const styles = getStyles();
   const hcBorder = highContrast ? { borderColor: '#000', borderWidth: 2 } : {};
   const hcText = highContrast ? { color: '#000', fontWeight: 'bold' as const } : {};
   const dmBg = darkMode ? { backgroundColor: '#222' } : {};
   const dmText = darkMode ? { color: '#fff' } : {};
-  
+
   return (
     <TouchableOpacity onPress={() => onChange(!value)} style={[styles.toggleRow, dmBg, hcBorder]} activeOpacity={0.8}>
       <View style={[styles.toggleIcon, value && { backgroundColor: colors.muted }, hcBorder, dmBg]}>
@@ -317,7 +317,7 @@ const getStyles = () => StyleSheet.create({
   },
   radioItemActive: { ...neuInset },
   radioLabel: { fontSize: 13, color: colors.foreground, ...fonts.medium },
-  
+
   previewCard: {
     borderRadius: radius.lg, padding: 16, borderWidth: 1, gap: 12,
   },

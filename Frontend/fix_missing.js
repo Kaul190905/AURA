@@ -3,14 +3,14 @@
 const files = [
   'src/screens/CaretakerProfileScreen.tsx',
   'src/screens/PlansScreen.tsx',
-  'src/screens/SpeechDiaryScreen.tsx'
+  'src/screens/SpeechDiaryScreen.tsx',
 ];
 
 files.forEach(file => {
   let content = fs.readFileSync(file, 'utf8');
-  
+
   content = content.replace(/const styles\s*=\s*StyleSheet\.create/g, 'const getStyles = () => StyleSheet.create');
-  
+
   if (file.includes('CaretakerProfileScreen')) {
     content = content.replace('export default function CaretakerProfileScreen() {', 'export default function CaretakerProfileScreen() {\n  const styles = getStyles();');
     content = content.replace('function ToggleRow({', 'function ToggleRow({\n  icon, label, value, onChange, highContrast, darkMode\n}: any) {\n  const styles = getStyles();\n  const {');

@@ -7,7 +7,7 @@ const replacements = {
   'Waves': 'AudioWaveform',
   'MoreVertical': 'EllipsisVertical',
   'Filter': 'ListFilter',
-  'Edit2': 'Pen'
+  'Edit2': 'Pen',
 };
 function processDir(dir) {
   const files = fs.readdirSync(dir);

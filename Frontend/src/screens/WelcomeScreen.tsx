@@ -57,7 +57,7 @@ export default function WelcomeScreen({ onNext }: Props) {
       {/* Role Selection */}
       <View style={styles.roleContainer}>
         <Text style={styles.roleLabel}>Who is using AURA today?</Text>
-        
+
         <TouchableOpacity onPress={() => onNext('user')} style={[styles.roleCard, neuSm]} activeOpacity={0.85}>
           <View style={styles.roleIconUser}>
             <User color={colors.primary} size={28} />
@@ -67,7 +67,7 @@ export default function WelcomeScreen({ onNext }: Props) {
             <Text style={styles.roleDesc}>Continue to your personal sensory companion.</Text>
           </View>
         </TouchableOpacity>
-        
+
         <TouchableOpacity onPress={() => onNext('caregiver')} style={[styles.roleCard, neuSm]} activeOpacity={0.85}>
           <View style={[styles.roleIconCaregiver]}>
             <Heart color={colors.riskLow} size={28} />
@@ -197,5 +197,5 @@ const getStyles = () => StyleSheet.create({
     color: colors.mutedForeground,
     marginTop: 2,
     lineHeight: 16,
-  }
+  },
 });

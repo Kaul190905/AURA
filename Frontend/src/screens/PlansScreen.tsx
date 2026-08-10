@@ -25,22 +25,22 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
   const [notifsEnabled, setNotifsEnabled] = useState(true);
 
   const [routines, setRoutines] = useState<Routine[]>([
-    { 
-      id: '1', title: 'Morning Prep', time: '07:30 AM', active: true, 
+    {
+      id: '1', title: 'Morning Prep', time: '07:30 AM', active: true,
       tasks: [
         { id: 't1', text: 'Check bag', completed: true },
         { id: 't2', text: 'Noise-cancelling headphones', completed: false },
-        { id: 't3', text: 'Review schedule', completed: false }
-      ] 
+        { id: 't3', text: 'Review schedule', completed: false },
+      ],
     },
-    { 
-      id: '2', title: 'Evening Wind-Down', time: '08:00 PM', active: false, 
+    {
+      id: '2', title: 'Evening Wind-Down', time: '08:00 PM', active: false,
       tasks: [
         { id: 't4', text: 'Dim lights', completed: false },
         { id: 't5', text: 'Deep breathing', completed: false },
-        { id: 't6', text: 'Speech diary', completed: false }
-      ] 
-    }
+        { id: 't6', text: 'Speech diary', completed: false },
+      ],
+    },
   ]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -57,7 +57,7 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
       if (r.id === routineId) {
         return {
           ...r,
-          tasks: r.tasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t)
+          tasks: r.tasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t),
         };
       }
       return r;
@@ -69,13 +69,13 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
   };
 
   const handleAddRoutine = () => {
-    if (!newTitle.trim()) return;
+    if (!newTitle.trim()) {return;}
 
     const validTasks = newTasks.filter(t => t.trim().length > 0);
     const generatedTasks = validTasks.map((t, index) => ({
       id: Date.now().toString() + index.toString(),
       text: t.trim(),
-      completed: false
+      completed: false,
     }));
 
     const newRoutine: Routine = {
@@ -83,7 +83,7 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
       title: newTitle,
       time: newTime || '12:00 PM',
       active: true,
-      tasks: generatedTasks
+      tasks: generatedTasks,
     };
     setRoutines([...routines, newRoutine]);
     setNewTitle('');
@@ -101,14 +101,14 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
       } />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        
+
         <View style={[styles.settingRow, neuSm]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Bell size={18} color={colors.primary} />
             <Text style={styles.settingText}>Routine Reminders</Text>
           </View>
-          <Switch 
-             value={notifsEnabled} 
+          <Switch
+             value={notifsEnabled}
              onValueChange={setNotifsEnabled}
              trackColor={{ false: colors.border, true: colors.primary }}
              thumbColor="#fff"
@@ -129,8 +129,8 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
                   <Text style={styles.cardTime}>{r.time}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <Switch 
-                     value={r.active} 
+                  <Switch
+                     value={r.active}
                      onValueChange={() => toggleRoutineActive(r.id)}
                      trackColor={{ false: colors.border, true: colors.primary }}
                      thumbColor="#fff"
@@ -142,7 +142,7 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
                 </View>
               </View>
               <Text style={styles.cardTitle}>{r.title}</Text>
-              
+
               {/* Progress Bar */}
               <View style={styles.progressBarBg}>
                 <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
@@ -151,8 +151,8 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
 
               <View style={styles.tasksContainer}>
                 {r.tasks.map((t) => (
-                  <TouchableOpacity 
-                    key={t.id} 
+                  <TouchableOpacity
+                    key={t.id}
                     style={styles.taskRow}
                     activeOpacity={0.7}
                     onPress={() => toggleTaskCompleted(r.id, t.id)}
@@ -182,10 +182,10 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
                 <X size={20} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
-            
+
             <Text style={styles.inputLabel}>Routine Name</Text>
-            <TextInput 
-              style={styles.input} 
+            <TextInput
+              style={styles.input}
               placeholder="e.g. Afternoon Walk"
               placeholderTextColor={colors.mutedForeground}
               value={newTitle}
@@ -193,8 +193,8 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
             />
 
             <Text style={styles.inputLabel}>Time</Text>
-            <TextInput 
-              style={styles.input} 
+            <TextInput
+              style={styles.input}
               placeholder="e.g. 03:00 PM"
               placeholderTextColor={colors.mutedForeground}
               value={newTime}
@@ -207,7 +207,7 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
                 <Plus size={16} color={colors.primary} />
               </TouchableOpacity>
             </View>
-            
+
             <View style={{ maxHeight: 150 }}>
               <ScrollView showsVerticalScrollIndicator={false}>
                 {newTasks.map((t, index) => (
@@ -264,20 +264,20 @@ const getStyles = () => StyleSheet.create({
   taskRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   taskText: { fontSize: 14, color: colors.foreground },
   taskTextCompleted: { color: colors.mutedForeground, textDecorationLine: 'line-through' },
-  
+
   // Modal Styles
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.xl },
   modalCard: { backgroundColor: colors.background, padding: spacing.xl, borderRadius: radius.xl },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
   modalTitle: { fontSize: 18, ...fonts.bold, color: colors.foreground },
   inputLabel: { fontSize: 12, ...fonts.medium, color: colors.mutedForeground, marginBottom: 6 },
-  input: { 
-    backgroundColor: colors.muted, borderRadius: radius.md, padding: spacing.md, 
-    color: colors.foreground, marginBottom: spacing.md 
+  input: {
+    backgroundColor: colors.muted, borderRadius: radius.md, padding: spacing.md,
+    color: colors.foreground, marginBottom: spacing.md,
   },
-  saveBtn: { 
-    backgroundColor: colors.primary, padding: spacing.md, borderRadius: radius.lg, 
-    alignItems: 'center', marginTop: spacing.sm 
+  saveBtn: {
+    backgroundColor: colors.primary, padding: spacing.md, borderRadius: radius.lg,
+    alignItems: 'center', marginTop: spacing.sm,
   },
   saveBtnText: { color: colors.background, ...fonts.bold, fontSize: 14 },
 });

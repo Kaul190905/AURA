@@ -15,7 +15,7 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
   type SpeechEntry = { id: string; title: string; time: string; emotion: string; text: string; duration: string; uri?: string; };
   const [entries, setEntries] = useState<SpeechEntry[]>([
     { id: '1', title: 'Lunchtime stress', time: 'Today, 2:30 PM', emotion: 'Anxious', text: 'The cafeteria was too loud today...', duration: '0:45' },
-    { id: '2', title: 'Morning commute', time: 'Yesterday, 9:15 AM', emotion: 'Calm', text: 'Morning bus ride was peaceful.', duration: '1:12' }
+    { id: '2', title: 'Morning commute', time: 'Yesterday, 9:15 AM', emotion: 'Calm', text: 'Morning bus ride was peaceful.', duration: '1:12' },
   ]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -62,9 +62,9 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
 
   const handleStartRecording = async () => {
     const hasPermission = await checkPermissions();
-    if (!hasPermission) return;
+    if (!hasPermission) {return;}
     setIsRecording(true);
-    
+
     try {
       await audioRecorderPlayer.startRecorder();
       audioRecorderPlayer.addRecordBackListener((e) => {
@@ -98,7 +98,7 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
       emotion: 'Reflective',
       text: 'Recorded audio entry.',
       duration: recordTime,
-      uri: currentRecordingPath
+      uri: currentRecordingPath,
     };
     setEntries(prev => [newEntry, ...prev]);
     setIsNaming(false);
@@ -106,7 +106,7 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
   };
 
   const handleSaveEdit = () => {
-    if (!editingEntry) return;
+    if (!editingEntry) {return;}
     setEntries(prev => prev.map(e => e.id === editingEntry.id ? { ...e, title: editingEntry.title, text: editingEntry.text } : e));
     setEditingEntry(null);
   };
@@ -118,12 +118,12 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
       setPlayingId(null);
       return;
     }
-    
+
     if (playingId) {
       await audioRecorderPlayer.stopPlayer();
       audioRecorderPlayer.removePlayBackListener();
     }
-    
+
     if (e.uri) {
       setPlayingId(e.id);
       try {
@@ -142,19 +142,19 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
     }
   };
 
-  const filteredEntries = entries.filter(e => 
+  const filteredEntries = entries.filter(e =>
     e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    e.text.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    e.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
     e.emotion.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Header title="Speech Diary" onBack={onBack} />
-      
+
       <View style={styles.searchBar}>
         <Search size={16} color={colors.mutedForeground} />
-        <TextInput 
+        <TextInput
            style={styles.searchInput}
            placeholder="Search entries..."
            placeholderTextColor={colors.mutedForeground}
@@ -218,7 +218,7 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
             </View>
             <Text style={styles.recordingTitle}>Recording...</Text>
             <Text style={styles.recordingTime}>{recordTime}</Text>
-            
+
             <TouchableOpacity style={styles.stopBtn} onPress={handleStopRecording}>
               <Text style={styles.stopBtnText}>Stop & Name</Text>
             </TouchableOpacity>

@@ -29,15 +29,15 @@ export default function HistoryInsightsScreen() {
   const [apiLoading, setApiLoading] = useState(false);
 
   const fetchBackendData = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {return;}
     setApiLoading(true);
     try {
       const [trendResult, fcResult] = await Promise.allSettled([
         getRiskTrend(userId, range === '7d' ? 7 : 30),
         getOverloadForecast(userId),
       ]);
-      if (trendResult.status === 'fulfilled') setRiskTrend(trendResult.value);
-      if (fcResult.status === 'fulfilled') setForecast(fcResult.value);
+      if (trendResult.status === 'fulfilled') {setRiskTrend(trendResult.value);}
+      if (fcResult.status === 'fulfilled') {setForecast(fcResult.value);}
     } catch (e) {
       console.warn('[AURA] History API fetch failed:', e);
     } finally {
@@ -193,7 +193,7 @@ export default function HistoryInsightsScreen() {
             <View style={{ gap: 12, marginTop: 8 }}>
               {[
                 { name: 'Downtown Subway', risk: 'High', visits: 4 },
-                { name: 'Shopping Mall', risk: 'Medium', visits: 2 }
+                { name: 'Shopping Mall', risk: 'Medium', visits: 2 },
               ].map((loc, i) => (
                 <View key={i} style={[styles.eventRow, { justifyContent: 'space-between' }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>

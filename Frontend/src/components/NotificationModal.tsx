@@ -23,15 +23,15 @@ export function NotificationModal() {
   };
 
   const sortedNotifications = [...notifications].sort((a, b) => {
-    if (a.read === b.read) return new Date(b.time).getTime() - new Date(a.time).getTime();
+    if (a.read === b.read) {return new Date(b.time).getTime() - new Date(a.time).getTime();}
     return a.read ? 1 : -1;
   });
 
 
 
   const getIcon = (type: AppNotification['type']) => {
-    if (type === 'alert') return <Activity size={18} color={colors.riskHigh} />;
-    if (type === 'suggestion') return <BrainCircuit size={18} color={colors.primary} />;
+    if (type === 'alert') {return <Activity size={18} color={colors.riskHigh} />;}
+    if (type === 'suggestion') {return <BrainCircuit size={18} color={colors.primary} />;}
     return <Zap size={18} color={colors.mutedForeground} />;
   };
 
@@ -53,7 +53,7 @@ export function NotificationModal() {
               <X size={20} color={colors.foreground} />
             </TouchableOpacity>
           </View>
-          
+
           <TouchableOpacity onPress={markAllAsRead} style={styles.markReadBtn}>
             <Text style={styles.markReadText}>Mark all as read</Text>
           </TouchableOpacity>
@@ -183,5 +183,5 @@ const getStyles = () => StyleSheet.create({
     padding: 4,
     backgroundColor: `${colors.riskHigh}15`,
     borderRadius: 8,
-  }
+  },
 });

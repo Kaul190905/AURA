@@ -20,26 +20,26 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 // ── Auth helpers ───────────────────────────────────────────────────────────────
 export async function signUp(email: string, password: string, username: string) {
-  const { data, error } = await supabase.auth.signUp({ 
-    email, 
+  const { data, error } = await supabase.auth.signUp({
+    email,
     password,
     options: {
-      data: { name: username }
-    }
+      data: { name: username },
+    },
   });
-  if (error) throw error;
+  if (error) {throw error;}
   return data;
 }
 
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
+  if (error) {throw error;}
   return data;
 }
 
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  if (error) {throw error;}
 }
 
 
@@ -60,13 +60,13 @@ export async function signInWithGoogle() {
   try {
     await GoogleSignin.hasPlayServices();
     const userInfo = await GoogleSignin.signIn();
-    
+
     if (userInfo.data?.idToken) {
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: userInfo.data.idToken,
       });
-      if (error) throw error;
+      if (error) {throw error;}
       return data;
     } else {
       throw new Error('no ID token present!');

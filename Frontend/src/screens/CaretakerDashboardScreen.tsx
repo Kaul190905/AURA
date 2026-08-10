@@ -28,9 +28,9 @@ type CriticalAlert = {
 
 // Priority weight: Reset Mode (3) > High (2) > Medium (1)
 function alertPriority(a: CriticalAlert): number {
-  if (a.isCrisis) return 3;
-  if (a.riskLevel === 'high') return 2;
-  if (a.riskLevel === 'medium') return 1;
+  if (a.isCrisis) {return 3;}
+  if (a.riskLevel === 'high') {return 2;}
+  if (a.riskLevel === 'medium') {return 1;}
   return 0;
 }
 
@@ -82,7 +82,7 @@ export default function CaretakerDashboardScreen() {
 
     // 2. Students from mockStudents (teacher mode shared state)
     for (const s of mockStudents) {
-      if (!s.isCrisis && s.risk < 3) continue; // skip low risk
+      if (!s.isCrisis && s.risk < 3) {continue;} // skip low risk
       const level: CriticalAlert['riskLevel'] = s.isCrisis ? 'high' : (s.risk >= 5 ? 'high' : 'medium');
       alerts.push({
         id: s.id,

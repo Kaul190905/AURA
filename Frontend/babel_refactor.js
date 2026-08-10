@@ -8,10 +8,10 @@ function walk(dir) {
   list.forEach(file => {
     file = path.join(dir, file);
     const stat = fs.statSync(file);
-    if (stat && stat.isDirectory()) { 
+    if (stat && stat.isDirectory()) {
       results = results.concat(walk(file));
-    } else { 
-      if (file.endsWith('.tsx') || file.endsWith('.ts')) results.push(file);
+    } else {
+      if (file.endsWith('.tsx') || file.endsWith('.ts')) {results.push(file);}
     }
   });
   return results;
@@ -20,10 +20,10 @@ function walk(dir) {
 const files = walk('./src');
 
 files.forEach(file => {
-  if (file.includes('AppContext.ts') || file.includes('theme.ts') || file.includes('data.ts') || file.includes('utils.ts') || file.includes('types.ts')) return;
-  
+  if (file.includes('AppContext.ts') || file.includes('theme.ts') || file.includes('data.ts') || file.includes('utils.ts') || file.includes('types.ts')) {return;}
+
   let content = fs.readFileSync(file, 'utf8');
-  if (!content.includes('StyleSheet.create')) return;
+  if (!content.includes('StyleSheet.create')) {return;}
 
   const out = babel.transformSync(content, {
     presets: ['@babel/preset-typescript', '@babel/preset-react'],
@@ -40,7 +40,7 @@ files.forEach(file => {
                     // Turn it into: const useStyles = () => StyleSheet.create(...)
                     const arrowFunc = t.arrowFunctionExpression([], dec.init);
                     const newDec = t.variableDeclaration('const', [
-                      t.variableDeclarator(t.identifier('useStyles'), arrowFunc)
+                      t.variableDeclarator(t.identifier('useStyles'), arrowFunc),
                     ]);
                     path.replaceWith(newDec);
                   }
@@ -57,22 +57,22 @@ files.forEach(file => {
                     if (retPath.node.argument && (retPath.node.argument.type === 'JSXElement' || retPath.node.argument.type === 'JSXFragment')) {
                       returnsJSX = true;
                     }
-                  }
+                  },
                 });
                 if (returnsJSX || path.node.id?.name.endsWith('Screen')) {
                   const inject = t.variableDeclaration('const', [
                     t.variableDeclarator(
                       t.identifier('styles'),
                       t.callExpression(t.identifier('useStyles'), [])
-                    )
+                    ),
                   ]);
                   path.node.body.body.unshift(inject);
                 }
               }
-            }
-          }
+            },
+          },
         };
-      }
+      },
     ],
     filename: file,
   });

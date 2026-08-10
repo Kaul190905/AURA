@@ -3,7 +3,7 @@
 const settings = fs.readFileSync('src/screens/SettingsScreen.tsx', 'utf8');
 
 const jsxStart = settings.indexOf('<View style={styles.divider} />');
-const jsxEnd = settings.indexOf('</AccItem>', jsxStart) - 27; 
+const jsxEnd = settings.indexOf('</AccItem>', jsxStart) - 27;
 const colorVisionJSX = settings.substring(jsxStart, jsxEnd);
 
 const styleStart = settings.indexOf('colorVisionSection: {');

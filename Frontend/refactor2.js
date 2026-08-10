@@ -22,22 +22,22 @@ const files = [
   'src/screens/SpeechDiaryScreen.tsx',
   'src/screens/StrategyLibraryScreen.tsx',
   'src/screens/WearableScreen.tsx',
-  'src/screens/WelcomeScreen.tsx'
+  'src/screens/WelcomeScreen.tsx',
 ];
 
 files.forEach(file => {
   let content = fs.readFileSync(file, 'utf8');
-  if (file.includes('SettingsScreen.tsx')) return; // I already manually fixed this one!
+  if (file.includes('SettingsScreen.tsx')) {return;} // I already manually fixed this one!
 
-  if (!content.includes('StyleSheet.create')) return;
-  
+  if (!content.includes('StyleSheet.create')) {return;}
+
   // 1. Replace const styles = StyleSheet.create
   content = content.replace(/const styles\s*=\s*StyleSheet\.create/g, 'const getStyles = () => StyleSheet.create');
 
   // 2. Inject const styles = getStyles(); into components
   // We match function components (export function, export default function, function)
   // that have uppercase names, or start with 'function '.
-  
+
   // Function declaration:
   const funcRegex = /((?:export\s+(?:default\s+)?)?function\s+([A-Z][A-Za-z0-9_]*|[a-z][A-Za-z0-9_]*)\s*\([^)]*\)\s*\{)/g;
   content = content.replace(funcRegex, (match, p1, name) => {
