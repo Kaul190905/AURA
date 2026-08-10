@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, StyleSheet, TouchableOpacity, Text, Modal, Linking } from 'react-native';
-import { House, Library, TrendingUp, Bluetooth, Settings, Heart, User, AlertTriangle, CheckCircle2 } from 'lucide-react-native';
+import { House, Library, TrendingUp, Bluetooth, Settings, Heart, User, AlertTriangle, CheckCircle2, Navigation, Users } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { colors, fonts, applyColorVisionMode } from './src/theme';
@@ -34,7 +34,8 @@ import UserProfileScreen from './src/screens/UserProfileScreen';
 import PlansScreen from './src/screens/PlansScreen';
 import CaretakerGateScreen from './src/screens/CaretakerGateScreen';
 import CaretakerDashboardScreen from './src/screens/CaretakerDashboardScreen';
-import CaretakerAnalysisScreen from './src/screens/CaretakerAnalysisScreen';
+import CaretakerStudentsScreen from './src/screens/CaretakerStudentsScreen';
+import CaretakerTrackStudentScreen from './src/screens/CaretakerTrackStudentScreen';
 import CaretakerProfileScreen from './src/screens/CaretakerProfileScreen';
 import LiveAlertModal from './src/components/LiveAlertModal';
 
@@ -106,9 +107,9 @@ function CaretakerTabNavigator() {
         options={{ tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }}
       />
       <Tab.Screen
-        name="Analysis"
-        component={CaretakerAnalysisScreen}
-        options={{ tabBarIcon: ({ color, size }) => <TrendingUp color={color} size={size} /> }}
+        name="Students"
+        component={CaretakerStudentsScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Users color={color} size={size} /> }}
       />
       <Tab.Screen
         name="Profile"
@@ -116,6 +117,16 @@ function CaretakerTabNavigator() {
         options={{ tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }}
       />
     </Tab.Navigator>
+  );
+}
+
+const CaretakerStack = createStackNavigator();
+function CaretakerRoot() {
+  return (
+    <CaretakerStack.Navigator screenOptions={{ headerShown: false }}>
+      <CaretakerStack.Screen name="CaretakerTabs" component={CaretakerTabNavigator} />
+      <CaretakerStack.Screen name="TrackStudent" component={CaretakerTrackStudentScreen} />
+    </CaretakerStack.Navigator>
   );
 }
 
@@ -167,13 +178,16 @@ export default function App() {
   // ── Teacher Mode state ────────────────────────────────────────────────────
   const [teacherMode, setTeacherMode] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
-  const mockStudents = useMemo(() => [
-    { id: 's1', name: 'Aarav Kumar', location: 'Library', risk: 2, isCrisis: false, rollNumber: 'R101', className: '10A', recentActivity: 'Started deep breathing', lastUpdated: '2 mins ago' },
-    { id: 's2', name: 'Nisha Patel', location: 'Cafeteria', risk: 6, isCrisis: false, rollNumber: 'R102', className: '9B', recentActivity: 'Noise level increased', lastUpdated: 'Just now' },
-    { id: 's3', name: 'Rahul Sharma', location: 'Classroom B', risk: 9, isCrisis: true, rollNumber: 'R103', className: '11C', recentActivity: 'Manually activated Reset Mode', lastUpdated: '1 min ago' },
-    { id: 's4', name: 'Meera Iyer', location: 'Gym', risk: 3, isCrisis: false, rollNumber: 'R104', className: '8A', recentActivity: 'Battery at 15%', lastUpdated: '10 mins ago' },
-    { id: 's5', name: 'Arjun Singh', location: 'Playground', risk: 8, isCrisis: false, rollNumber: 'R105', className: '10B', recentActivity: 'Elevated heart rate', lastUpdated: 'Just now' },
-  ], []);
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
+  const [mockStudents, setMockStudents] = useState<AppState['mockStudents']>([
+    { id: 's1', name: 'Rahul Sharma', location: 'Science Lab', risk: 9, isCrisis: true, condition: 'High Noise', sensorValue: '92 dB', lastUpdated: '2 min ago', locationHistory: [{time: '2:40 PM', location: 'Science Lab'}, {time: '2:30 PM', location: 'Corridor - 2nd Floor'}, {time: '2:20 PM', location: 'Library'}, {time: '2:10 PM', location: 'Classroom B'}] },
+    { id: 's2', name: 'Nisha Patel', location: 'Cafeteria', risk: 6, isCrisis: false, condition: 'High Temperature', sensorValue: '39°C', lastUpdated: '4 min ago', locationHistory: [] },
+    { id: 's3', name: 'Aarav Kumar', location: 'Assembly Hall', risk: 7, isCrisis: false, condition: 'Crowded', sensorValue: 'High Stress', lastUpdated: '6 min ago', locationHistory: [] },
+    { id: 's4', name: 'Meera Iyer', location: 'Library', risk: 1, isCrisis: false, condition: 'Safe', sensorValue: '', lastUpdated: '1 min ago', locationHistory: [] },
+    { id: 's5', name: 'Arjun Singh', location: 'Classroom B', risk: 4, isCrisis: false, condition: 'Bright Light', sensorValue: '1200 lux', lastUpdated: '8 min ago', locationHistory: [] },
+    { id: 's6', name: 'Diya Verma', location: 'Playground', risk: 1, isCrisis: false, condition: 'Safe', sensorValue: '', lastUpdated: 'Just now', locationHistory: [] },
+    { id: 's7', name: 'Kabir Khan', location: 'Music Room', risk: 1, isCrisis: false, condition: 'Safe', sensorValue: '', lastUpdated: 'Just now', locationHistory: [] },
+  ]);
 
   // Handle Deep Links for Google OAuth Redirect
   useEffect(() => {
@@ -406,6 +420,7 @@ export default function App() {
       accessToken, setAccessToken,
       teacherMode, setTeacherMode,
       selectedStudent, setSelectedStudent,
+      recentlyViewedIds, setRecentlyViewedIds,
       mockStudents,
     };
 
@@ -445,7 +460,7 @@ export default function App() {
           {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setUserRole('caregiver'); setAppScreen('caretaker-home'); }} />}
           {userId && appScreen === 'caretaker-home' && (
             <View style={{ flex: 1 }}>
-              <CaretakerTabNavigator />
+              <CaretakerRoot />
             </View>
           )}
           {userId && (appScreen === 'home' || appScreen === 'settings') && (

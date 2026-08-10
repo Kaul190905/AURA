@@ -1,289 +1,194 @@
-import React, { useContext, useMemo, useEffect, useState } from 'react';
-import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
-} from 'react-native';
+import React, { useContext } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Activity, MapPin, Watch, ShieldAlert, Phone, Navigation, Bell, CheckCircle2, User, Users } from 'lucide-react-native';
-
+import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
-import { Accordion, AccItem } from '../components/Accordion';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
-import { riskColor, riskLabel, timeAgo } from '../utils';
+import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { riskColor } from '../utils';
 
-// ─── Critical Alert Data Shape ────────────────────────────────────────────────
-// Structured for future backend replacement — swap buildCriticalAlerts() with
-// an API call without any UI changes.
-export default function CaretakerDashboardScreen() {
-  const styles = getStyles();
-  const {
-    risk, isCrisisMode, notifications, setIsNotificationCenterOpen,
-    bleConnected, darkMode,
+export default function CaretakerDashboardScreen({ navigation }: any) {
+  const { 
+    mockStudents, recentlyViewedIds, setRecentlyViewedIds, 
+    darkMode, setIsNotificationCenterOpen
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
-  const containerStyle = darkMode ? { backgroundColor: '#000000' } : {};
-  const textStyle = darkMode ? { color: '#ffffff' } : {};
-  const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : {};
+  const bgStyle = darkMode ? { backgroundColor: '#000000' } : { backgroundColor: colors.background };
+  const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : { backgroundColor: '#fff' };
+  const textStyle = darkMode ? { color: '#fff' } : { color: colors.foreground };
+  const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-  const riskC = riskColor(risk.score);
+  // Calculate Overview Stats
+  const stats = {
+    total: mockStudents.length,
+    safe: mockStudents.filter(s => !s.isCrisis && s.risk < 5).length,
+    needAttention: mockStudents.filter(s => !s.isCrisis && s.risk >= 5 && s.risk < 9).length,
+    critical: mockStudents.filter(s => s.isCrisis || s.risk >= 9).length,
+  };
 
-  // Deriving Caretaker Status from risk
-  const userStatus = isCrisisMode ? 'Reset Mode Active' : (risk.score >= 5 ? 'Needs Attention' : 'Safe');
-  const userStatusDesc = isCrisisMode
-    ? 'User has activated emergency protocol and requested space.'
-    : (risk.score >= 5 ? 'Elevated sensory levels detected.' : 'User is currently stable.');
+  const criticalStudents = mockStudents.filter(s => s.isCrisis || s.risk >= 5).sort((a, b) => {
+    const pA = a.isCrisis ? 3 : (a.risk >= 9 ? 2 : 1);
+    const pB = b.isCrisis ? 3 : (b.risk >= 9 ? 2 : 1);
+    return pB - pA;
+  });
 
-  const mockLocation = 'Library';
+  const recentlyViewed = recentlyViewedIds.map(id => mockStudents.find(s => s.id === id)).filter(Boolean);
+
+  const openStudent = (id: string) => {
+    const newIds = [id, ...recentlyViewedIds.filter(pid => pid !== id)];
+    setRecentlyViewedIds(newIds.slice(0, 10));
+    navigation.navigate('TrackStudent', { studentId: id });
+  };
+
+  const getStatusText = (s: any) => {
+    if (s.isCrisis || s.risk >= 9) return 'CRITICAL';
+    if (s.risk >= 5) return 'HIGH';
+    return 'SAFE';
+  };
 
   return (
-    <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={styles.topLabel}>CAREGIVER VIEW</Text>
-            {!bleConnected && (
-              <View style={{ backgroundColor: colors.muted, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                <Text style={{ fontSize: 8, color: colors.mutedForeground, ...fonts.bold }}>OFFLINE</Text>
-              </View>
-            )}
+    <View style={[styles.container, bgStyle, { paddingTop: insets.top }]}>
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={[styles.superText, subTextStyle]}>CAREGIVER VIEW</Text>
+            <View style={styles.onlineBadge}><Text style={styles.onlineText}>ONLINE</Text></View>
           </View>
-          <Text style={[styles.greeting, textStyle]}>Caregiver Dashboard</Text>
+          <Text style={[styles.headerTitle, textStyle]}>Caregiver Dashboard</Text>
         </View>
-        <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-          <TouchableOpacity
-            style={[styles.sparkleBtn, cardStyle, neuSm]}
-            onPress={() => setIsNotificationCenterOpen(true)}
-            activeOpacity={0.8}
-          >
-            <Bell size={20} color={colors.primary} />
-            {unreadCount > 0 && <View style={styles.unreadBadge} />}
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.bellBtn} onPress={() => setIsNotificationCenterOpen(true)}>
+          <Bell size={24} color={colors.primary} />
+          <View style={styles.bellBadge} />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
-        <Accordion>
-          <AccItem id="risk-status" title="Current User Status" defaultOpen
-            icon={<ShieldAlert size={18} color={isCrisisMode ? colors.riskHigh : colors.primary} />}>
-            <View style={[styles.riskCard, cardStyle, neuSm, { marginTop: 8 }]}>
-              <View style={[styles.ringOuter, darkMode && { backgroundColor: '#333' }]}>
-                <View style={[styles.ringInner, cardStyle, { borderColor: riskC }]}>
-                  <Text style={[styles.riskScore, textStyle, { color: riskC }]}>{risk.score}</Text>
-                  <Text style={styles.riskLevelLabel}>{riskLabel(risk.level)}</Text>
-                </View>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
+        {/* Overview Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, textStyle]}>Overview</Text>
+          <View style={styles.overviewGrid}>
+            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Students', { filter: 'All' })}>
+              <Text style={[styles.statLabel, { color: colors.primary }]}>Total Users</Text>
+              <Users size={20} color={colors.primary} style={{ marginVertical: 4 }} />
+              <Text style={[styles.statValue, { color: colors.primary }]}>{stats.total}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Students', { filter: 'Safe' })}>
+              <Text style={[styles.statLabel, { color: colors.riskLow }]}>Safe</Text>
+              <Users size={20} color={colors.riskLow} style={{ marginVertical: 4 }} />
+              <Text style={[styles.statValue, { color: colors.riskLow }]}>{stats.safe}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Students', { filter: 'Need Attention' })}>
+              <Text style={[styles.statLabel, { color: colors.riskMed }]}>Need Attention</Text>
+              <Users size={20} color={colors.riskMed} style={{ marginVertical: 4 }} />
+              <Text style={[styles.statValue, { color: colors.riskMed }]}>{stats.needAttention}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Students', { filter: 'Critical' })}>
+              <Text style={[styles.statLabel, { color: colors.riskHigh }]}>Critical</Text>
+              <Users size={20} color={colors.riskHigh} style={{ marginVertical: 4 }} />
+              <Text style={[styles.statValue, { color: colors.riskHigh }]}>{stats.critical}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Critical Alerts Section */}
+        {criticalStudents.length > 0 && (
+          <View style={[styles.criticalContainer, cardStyle, neuSm]}>
+            <View style={styles.criticalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <AlertTriangle size={20} color={colors.riskHigh} />
+                <Text style={[styles.sectionTitle, { color: colors.riskHigh, marginBottom: 0 }]}>Critical Alerts</Text>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.riskSubLabel}>Current status</Text>
-                <Text style={[styles.riskLevelText, textStyle]}>{userStatus}</Text>
-                <Text style={[styles.riskFactor, textStyle]} numberOfLines={2}>{userStatusDesc}</Text>
+              <View style={[styles.criticalCountBadge, { backgroundColor: `${colors.riskHigh}15` }]}>
+                <Text style={[styles.criticalCountText, { color: colors.riskHigh }]}>{stats.critical + stats.needAttention}</Text>
               </View>
             </View>
-          </AccItem>
 
-          {/* Current Location */}
-          <AccItem id="location" title="Current Location"
-            icon={<MapPin size={18} color={isCrisisMode ? colors.riskHigh : colors.primary} />}>
-            {isCrisisMode ? (
-              <View style={[styles.emergencyContainer, cardStyle]}>
-                <View style={styles.emergencyHeader}>
-                  <ShieldAlert size={20} color={colors.riskHigh} />
-                  <Text style={styles.emergencyTitle}>Emergency Support Active</Text>
-                </View>
-                <Text style={styles.emergencySub}>Live Location Enabled</Text>
-                <View style={styles.coordsRow}>
-                  <Text style={[styles.coordText, textStyle]}>Lat: 37.7749</Text>
-                  <Text style={[styles.coordText, textStyle]}>Lng: -122.4194</Text>
-                </View>
-                <Text style={styles.lastUpdatedText}>Updated just now</Text>
-                <View style={styles.emergencyActions}>
-                  <TouchableOpacity style={styles.emergencyBtn} activeOpacity={0.8}>
-                    <Navigation size={14} color="#fff" />
-                    <Text style={styles.emergencyBtnText}>Open Navigation</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.emergencyBtn, cardStyle, { borderColor: darkMode ? '#555' : 'transparent', borderWidth: 1 }]} activeOpacity={0.8}>
-                    <Phone size={14} color={darkMode ? '#fff' : colors.foreground} />
-                    <Text style={[styles.emergencyBtnText, textStyle]}>Call User</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <View style={[styles.locationContainer, cardStyle, { borderRadius: radius.md, marginTop: 8 }]}>
-                <View style={styles.locationBadge}>
-                  <MapPin size={24} color={colors.primary} />
-                </View>
-                <Text style={[styles.locationText, textStyle]}>{mockLocation}</Text>
-              </View>
-            )}
-          </AccItem>
+            {criticalStudents.map(student => {
+              const rColor = riskColor(student.risk);
+              return (
+                <TouchableOpacity key={student.id} style={styles.alertItem} onPress={() => openStudent(student.id)}>
+                  <View style={[styles.avatarSm, { backgroundColor: `${rColor}20` }]}>
+                    <User size={20} color={rColor} />
+                  </View>
+                  <View style={styles.alertInfo}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={[styles.alertName, textStyle]}>{student.name}</Text>
+                      <View style={[styles.riskBadge, { backgroundColor: `${rColor}15` }]}>
+                        <Text style={[styles.riskBadgeText, { color: rColor }]}>{getStatusText(student)}</Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.alertCondition, textStyle]}>
+                      {student.condition} {student.sensorValue && `• ${student.sensorValue}`}
+                    </Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                      <Text style={[styles.alertLocation, subTextStyle]}>{student.location}</Text>
+                      <Text style={[styles.alertTime, subTextStyle]}>{student.lastUpdated}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
 
-          {/* Wearable Status */}
-          <AccItem id="wearable" title="Wearable Status" icon={<Watch size={18} color={colors.primary} />}>
-            <View style={{ gap: 8, marginTop: 8 }}>
-              <View style={[styles.factorItem, cardStyle]}>
-                <Text style={[styles.factorText, textStyle]}>Connection: <Text style={{ color: colors.primary, ...fonts.semibold }}>Connected</Text></Text>
-              </View>
-              <View style={[styles.factorItem, cardStyle]}>
-                <Text style={[styles.factorText, textStyle]}>Battery: 84%</Text>
-              </View>
-              <View style={[styles.factorItem, cardStyle]}>
-                <Text style={[styles.factorText, textStyle]}>Last Sync: Just now</Text>
-              </View>
-            </View>
-          </AccItem>
+            <TouchableOpacity style={styles.viewAllBtn} onPress={() => navigation.navigate('Students', { filter: 'Critical' })}>
+              <Text style={styles.viewAllText}>View All Alerts</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-          {/* Today Summary */}
-          <AccItem id="summary" title="Today's Summary" icon={<Activity size={18} color={colors.primary} />}>
-            <View style={{ gap: 8, marginTop: 8 }}>
-              <View style={[styles.factorItem, cardStyle]}>
-                <Text style={[styles.factorText, textStyle]}>High Risk Events: <Text style={{ ...fonts.bold }}>2</Text></Text>
-              </View>
-              <View style={[styles.factorItem, cardStyle]}>
-                <Text style={[styles.factorText, textStyle]}>Reset Sessions: <Text style={{ ...fonts.bold }}>1</Text></Text>
-              </View>
-              <View style={[styles.factorItem, cardStyle]}>
-                <Text style={[styles.factorText, textStyle]}>Suggestions Accepted: <Text style={{ ...fonts.bold }}>3</Text></Text>
-              </View>
-            </View>
-          </AccItem>
 
-        </Accordion>
+
       </ScrollView>
     </View>
   );
 }
 
-const getStyles = () => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  topBar: {
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  header: { 
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl, paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg, paddingVertical: spacing.md 
   },
-  topLabel: { fontSize: 10, letterSpacing: 2, color: colors.mutedForeground, ...fonts.medium },
-  greeting: { fontSize: 20, color: colors.foreground, ...fonts.bold },
-  sparkleBtn: {
-    width: 44, height: 44, borderRadius: radius.full,
-    backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center',
-  },
-  unreadBadge: {
-    position: 'absolute', top: 10, right: 10,
-    width: 8, height: 8, borderRadius: 4,
-    backgroundColor: colors.primary,
-  },
-
-  // ── Section header ─────────────────────────────────────────────────────────
-  sectionHeader: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    marginBottom: spacing.md, marginTop: spacing.sm,
-  },
-  sectionTitle: { fontSize: 17, color: colors.foreground, ...fonts.bold },
-  sectionSubtitle: { fontSize: 11, color: colors.mutedForeground, marginTop: 2 },
-  alertBadge: {
-    borderWidth: 1, borderRadius: radius.full,
-    paddingHorizontal: 8, paddingVertical: 2, alignSelf: 'flex-start',
-  },
-  alertBadgeText: { fontSize: 12, ...fonts.bold },
-
-  // ── Critical Alert Cards ───────────────────────────────────────────────────
-  alertCard: {
-    borderRadius: radius.lg, padding: spacing.lg,
-    marginBottom: spacing.md, backgroundColor: colors.background,
-  },
-  priorityBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    marginBottom: 10,
-  },
-  priorityBannerText: { fontSize: 13, color: colors.riskHigh, ...fonts.bold },
-  avatar: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.muted,
+  superText: { fontSize: 10, ...fonts.bold, letterSpacing: 0.5 },
+  onlineBadge: { backgroundColor: `${colors.primary}20`, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  onlineText: { color: colors.primary, fontSize: 9, ...fonts.bold },
+  headerTitle: { fontSize: 24, ...fonts.bold, marginTop: 4 },
+  bellBtn: { padding: 8, position: 'relative' },
+  bellBadge: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.riskHigh },
+  
+  scrollContent: { padding: spacing.lg, paddingBottom: 100, gap: spacing.lg },
+  
+  section: {},
+  sectionTitle: { fontSize: 16, ...fonts.bold, marginBottom: 12 },
+  
+  overviewGrid: { flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
+  statCard: { 
+    flex: 1, padding: 12, borderRadius: radius.lg, 
     alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2
   },
-  alertName: { fontSize: 16, ...fonts.bold, color: colors.foreground },
-  alertRole: { fontSize: 12, color: colors.mutedForeground, ...fonts.medium },
-  riskRing: {
-    width: 36, height: 36, borderRadius: 18, borderWidth: 3,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 2,
-  },
-  riskRingScore: { fontSize: 13, ...fonts.bold },
-  riskRingLabel: { fontSize: 8, ...fonts.bold, letterSpacing: 1 },
-  detailText: { fontSize: 12, color: colors.foreground, opacity: 0.85 },
-  triggeredText: { fontSize: 10, color: colors.mutedForeground, marginTop: 2 },
-  reasonBox: {
-    borderRadius: radius.sm, padding: 8, marginTop: 4,
-  },
-  reasonText: { fontSize: 12, color: colors.foreground, opacity: 0.75, lineHeight: 17 },
-  actionRow: { flexDirection: 'row', gap: spacing.sm },
-  actionBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    borderRadius: radius.lg, paddingVertical: 11,
-  },
-  actionBtnText: { color: '#fff', fontSize: 13, ...fonts.semibold },
-  actionBtnOutline: {
-    width: 40, height: 40, borderRadius: radius.md,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: colors.muted,
-  },
+  statLabel: { fontSize: 10, ...fonts.bold, textAlign: 'center', height: 28 },
+  statValue: { fontSize: 20, ...fonts.bold },
 
-  // ── Empty state ────────────────────────────────────────────────────────────
-  emptyCard: {
-    borderRadius: radius.lg, padding: spacing.xl,
-    alignItems: 'center', backgroundColor: colors.background,
-  },
-  emptyTitle: { fontSize: 16, ...fonts.bold, color: colors.foreground, textAlign: 'center' },
-  emptySubtitle: { fontSize: 12, color: colors.mutedForeground, marginTop: 4, textAlign: 'center' },
+  criticalContainer: { borderRadius: radius.xl, padding: spacing.md },
+  criticalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingHorizontal: 4 },
+  criticalCountBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 },
+  criticalCountText: { fontSize: 12, ...fonts.bold },
+  
+  alertItem: { flexDirection: 'row', marginBottom: 16, paddingHorizontal: 4 },
+  avatarSm: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  alertInfo: { flex: 1, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', paddingBottom: 16 },
+  alertName: { fontSize: 15, ...fonts.bold },
+  riskBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  riskBadgeText: { fontSize: 9, ...fonts.bold },
+  alertCondition: { fontSize: 13, ...fonts.medium, marginTop: 4 },
+  alertLocation: { fontSize: 12 },
+  alertTime: { fontSize: 11 },
+  
+  viewAllBtn: { alignItems: 'center', paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
+  viewAllText: { color: colors.primary, ...fonts.bold, fontSize: 14 },
 
-  // ── Risk card (inside accordion) ───────────────────────────────────────────
-  riskCard: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.lg,
-    borderRadius: radius.xl, padding: spacing.lg, backgroundColor: colors.background,
-  },
-  ringOuter: {
-    width: 90, height: 90, borderRadius: radius.full,
-    backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center',
-  },
-  ringInner: {
-    width: 72, height: 72, borderRadius: radius.full,
-    borderWidth: 5, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-  riskScore: { fontSize: 26, ...fonts.bold },
-  riskLevelLabel: { fontSize: 9, letterSpacing: 1.5, color: colors.mutedForeground, ...fonts.medium },
-  riskSubLabel: { fontSize: 11, color: colors.mutedForeground },
-  riskLevelText: { fontSize: 17, color: colors.foreground, textTransform: 'capitalize', ...fonts.bold },
-  riskFactor: { fontSize: 11, color: colors.foreground, opacity: 0.7, marginTop: 4, lineHeight: 16 },
 
-  factorItem: {
-    backgroundColor: colors.muted, borderRadius: radius.md,
-    paddingHorizontal: 12, paddingVertical: 12, marginBottom: 6,
-  },
-  factorText: { fontSize: 13, color: colors.foreground, opacity: 0.8 },
-
-  locationContainer: { alignItems: 'center', paddingVertical: spacing.lg },
-  locationBadge: {
-    width: 64, height: 64, borderRadius: 32,
-    backgroundColor: `${colors.primary}15`,
-    alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm,
-  },
-  locationText: { fontSize: 22, color: colors.foreground, ...fonts.bold },
-
-  emergencyContainer: {
-    backgroundColor: `${colors.riskHigh}15`, borderRadius: radius.md,
-    padding: spacing.md, borderWidth: 1, borderColor: `${colors.riskHigh}40`,
-  },
-  emergencyHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  emergencyTitle: { fontSize: 16, color: colors.riskHigh, ...fonts.bold },
-  emergencySub: { fontSize: 12, color: colors.riskHigh, opacity: 0.8, marginBottom: spacing.md },
-  coordsRow: { flexDirection: 'row', gap: spacing.lg, marginBottom: 4 },
-  coordText: { fontSize: 12, color: colors.foreground, ...fonts.medium },
-  lastUpdatedText: { fontSize: 10, color: colors.mutedForeground, marginBottom: spacing.md },
-  emergencyActions: { flexDirection: 'row', gap: spacing.sm },
-  emergencyBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: colors.riskHigh, borderRadius: radius.lg, paddingVertical: 12,
-  },
-  emergencyBtnText: { color: '#fff', fontSize: 13, ...fonts.semibold },
-
-  badge: { fontSize: 12, color: colors.mutedForeground, marginRight: 4 },
 });

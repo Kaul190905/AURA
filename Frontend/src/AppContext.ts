@@ -15,6 +15,7 @@ export type AppScreen =
   | 'login' | 'welcome' | 'profile' | 'home' | 'crisis'
   | 'recovery' | 'settings' | 'speech' | 'plans'
   | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
+  | 'caretaker-students' | 'caretaker-track-student'
   | 'user_profile';
 
 export type AppState = {
@@ -78,7 +79,28 @@ export type AppState = {
   setTeacherMode: (val: boolean) => void;
   selectedStudent: string | null;
   setSelectedStudent: (id: string | null) => void;
-  mockStudents: Array<{ id: string; name: string; location: string; risk: number; isCrisis: boolean; rollNumber?: string; className?: string; recentActivity?: string; lastUpdated?: string }>;
+  recentlyViewedIds: string[];
+  setRecentlyViewedIds: (ids: string[]) => void;
+  mockStudents: Array<{
+    id: string;
+    name: string;
+    location: string;
+    risk: number;
+    isCrisis: boolean;
+    rollNumber?: string;
+    className?: string;
+    recentActivity?: string;
+    lastUpdated?: string;
+    condition?: string;
+    sensorValue?: string;
+    latitude?: number;
+    longitude?: number;
+    wearableStatus?: string;
+    battery?: number;
+    trackingStatus?: 'Active' | 'Inactive';
+    profileImage?: string;
+    locationHistory?: Array<{ time: string; location: string }>;
+  }>;
 };
 
 export const AppContext = React.createContext<AppState>({} as AppState);
