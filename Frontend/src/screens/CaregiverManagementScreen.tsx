@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-scale-stylesheet';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { CaregiverResponse, getUserCaregivers, inviteCaregiver, revokeCaregiver, updateCaregiverPermissions } from '../services/caregiverApi';
 
 export default function CaregiverManagementScreen() {
