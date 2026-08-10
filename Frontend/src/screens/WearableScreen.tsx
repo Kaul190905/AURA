@@ -1,30 +1,104 @@
 import React, { useContext, useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, ActivityIndicator, Alert,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Bluetooth, Zap, Volume2, Sun, Heart, Shield } from 'lucide-react-native';
+import { Bluetooth, Zap, Volume2, Sun, Shield, RefreshCw } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { submitSensorData } from '../services/api';
+import { bleManagerService } from '../services/bleManagerService';
+import { Device } from 'react-native-ble-plx';
 
 export default function WearableScreen() {
   const styles = getStyles();
-  const { bleConnected, setBleConnected, noise, setNoise, temperature, setTemperature, goCrisis, userId } = useContext(AppContext);
+  const { bleConnected, setBleConnected, noise, setNoise, temperature, setTemperature, userId } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [pairing, setPairing] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [showScanModal, setShowScanModal] = useState(false);
 
-  const pair = () => {
+  const startScan = async () => {
+    const granted = await bleManagerService.requestPermissions();
+    if (!granted) {
+      Alert.alert('Permission Denied', 'Bluetooth and Location permissions are required to scan.');
+      return;
+    }
+    setDevices([]);
+    setScanning(true);
+    setShowScanModal(true);
+    bleManagerService.startDeviceScan(
+      (device) => {
+        if (device.name) {
+          setDevices((prev) => {
+            if (prev.some((d) => d.id === device.id)) return prev;
+            return [...prev, device];
+          });
+        }
+      },
+      (error) => {
+        console.error('[BLE] Scan error:', error);
+        setScanning(false);
+        Alert.alert('Scan Error', error.message || 'An error occurred during scanning.');
+      }
+    );
+
+    // Stop scanning after 15 seconds
+    setTimeout(() => {
+      bleManagerService.stopDeviceScan();
+      setScanning(false);
+    }, 15000);
+  };
+
+  const connectDevice = async (device: Device) => {
+    bleManagerService.stopDeviceScan();
+    setScanning(false);
     setPairing(true);
-    setTimeout(() => { setPairing(false); setBleConnected(true); }, 1400);
+    try {
+      await bleManagerService.connectToDevice(
+        device,
+        (rawData) => {
+          console.log('[BLE] Raw Data:', rawData);
+          try {
+            if (rawData.startsWith('{')) {
+              const parsed = JSON.parse(rawData);
+              if (parsed.noise !== undefined) setNoise(parsed.noise);
+              if (parsed.temp !== undefined) setTemperature(parsed.temp);
+            } else {
+              const noiseMatch = rawData.match(/(?:noise|N)[:=]\s*(\d+)/i);
+              const tempMatch = rawData.match(/(?:temp|T)[:=]\s*([\d.]+)/i);
+              if (noiseMatch) setNoise(parseInt(noiseMatch[1], 10));
+              if (tempMatch) setTemperature(parseFloat(tempMatch[1]));
+            }
+          } catch (e) {
+            console.warn('[BLE] Error parsing data:', rawData, e);
+          }
+        },
+        () => {
+          setBleConnected(false);
+        }
+      );
+      setBleConnected(true);
+      setShowScanModal(false);
+    } catch (e: any) {
+      console.error('[BLE] Connection failed:', e);
+      Alert.alert('Connection Failed', e.message || 'Could not connect to the selected device.');
+    } finally {
+      setPairing(false);
+    }
+  };
+
+  const disconnectDevice = async () => {
+    await bleManagerService.disconnect();
+    setBleConnected(false);
   };
 
   // Push sensor data to backend when BLE is connected
   useEffect(() => {
-    if (!bleConnected || !userId) {return;}
+    if (!bleConnected || !userId) { return; }
     submitSensorData({
       user_id: userId,
       noise,
@@ -50,7 +124,7 @@ export default function WearableScreen() {
           </Text>
         </View>
         <TouchableOpacity
-          onPress={bleConnected ? () => setBleConnected(false) : pair}
+          onPress={bleConnected ? disconnectDevice : startScan}
           disabled={pairing}
           style={[styles.pairBtn, !bleConnected && styles.pairBtnActive]}
           activeOpacity={0.85}
@@ -66,10 +140,14 @@ export default function WearableScreen() {
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Zap size={18} color={colors.primary} />
-              <Text style={styles.sectionTitle}>Simulated sensors</Text>
+              <Text style={styles.sectionTitle}>{bleConnected ? 'Real-time sensors' : 'Simulated sensors'}</Text>
             </View>
           </View>
-          <Text style={styles.sensorHint}>Move the sliders to see your House dashboard react in real time.</Text>
+          <Text style={styles.sensorHint}>
+            {bleConnected
+              ? 'Showing real-time data streaming from your AURA band.'
+              : 'Move the sliders to see your House dashboard react in real time (Simulation Mode).'}
+          </Text>
 
           {/* Noise slider */}
           <View style={[styles.sliderCard, { marginTop: 12 }]}>
@@ -85,10 +163,11 @@ export default function WearableScreen() {
             </View>
             <Slider
               minimumValue={40} maximumValue={100} step={1}
-              value={noise} onValueChange={(v) => setNoise(Math.round(v))}
+              value={noise} onValueChange={(v) => !bleConnected && setNoise(Math.round(v))}
+              disabled={bleConnected}
               minimumTrackTintColor={colors.primary}
               maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
+              thumbTintColor={bleConnected ? colors.muted : colors.primary}
               style={{ marginTop: 10 }}
             />
           </View>
@@ -107,10 +186,11 @@ export default function WearableScreen() {
             </View>
             <Slider
               minimumValue={30} maximumValue={110} step={1}
-              value={temperature} onValueChange={(v) => setTemperature(Math.round(v))}
+              value={temperature} onValueChange={(v) => !bleConnected && setTemperature(Math.round(v))}
+              disabled={bleConnected}
               minimumTrackTintColor={colors.primary}
               maximumTrackTintColor={colors.border}
-              thumbTintColor={colors.primary}
+              thumbTintColor={bleConnected ? colors.muted : colors.primary}
               style={{ marginTop: 10 }}
             />
           </View>
@@ -126,7 +206,7 @@ export default function WearableScreen() {
           <View style={styles.statsRow}>
             <View style={[styles.statCard, neuSm]}>
               <Text style={styles.statLabel}>BATTERY</Text>
-              <Text style={styles.statValue}>82%</Text>
+              <Text style={styles.statValue}>{bleConnected ? '82%' : '—'}</Text>
             </View>
             <View style={[styles.statCard, neuSm]}>
               <Text style={styles.statLabel}>SIGNAL</Text>
@@ -135,6 +215,65 @@ export default function WearableScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* BLE Scanner Modal */}
+      <Modal visible={showScanModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Scan for AURA Band</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  bleManagerService.stopDeviceScan();
+                  setScanning(false);
+                  setShowScanModal(false);
+                }}
+                style={styles.closeBtn}
+              >
+                <Text style={styles.closeBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+
+            {scanning ? (
+              <View style={styles.scanStatus}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.scanStatusText}>Scanning for nearby BLE devices...</Text>
+              </View>
+            ) : (
+              <View style={styles.scanStatus}>
+                <TouchableOpacity onPress={startScan} style={styles.rescanBtn}>
+                  <RefreshCw size={14} color={colors.primary} style={{ marginRight: 6 }} />
+                  <Text style={styles.rescanBtnText}>Scan Again</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <FlatList
+              data={devices}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ paddingVertical: 10 }}
+              ListEmptyComponent={
+                <Text style={styles.emptyListText}>
+                  {scanning ? 'No devices found yet...' : 'No devices found. Ensure the band is powered on.'}
+                </Text>
+              }
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => connectDevice(item)}
+                  style={styles.deviceItem}
+                >
+                  <Bluetooth size={18} color={colors.primary} style={{ marginRight: 12 }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.deviceItemName}>{item.name || 'Unnamed Device'}</Text>
+                    <Text style={styles.deviceItemId}>{item.id}</Text>
+                  </View>
+                  <Text style={styles.connectText}>Connect</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -175,14 +314,90 @@ const getStyles = () => StyleSheet.create({
   sliderCardHint: { fontSize: 10, color: colors.mutedForeground },
   sliderValue: { fontSize: 13, color: colors.foreground, ...fonts.semibold },
   sliderUnit: { fontSize: 10, color: colors.mutedForeground },
-  simulateBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: colors.primary, borderRadius: radius.xl, paddingVertical: 14, marginTop: 8,
-    elevation: 4, shadowColor: colors.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.35, shadowRadius: 4,
-  },
-  simulateBtnText: { color: '#fff', fontSize: 14, ...fonts.semibold },
   statsRow: { flexDirection: 'row', gap: 10, marginTop: 8 },
   statCard: { flex: 1, backgroundColor: colors.background, borderRadius: radius.lg, padding: 12 },
   statLabel: { fontSize: 9, letterSpacing: 2, color: colors.mutedForeground, ...fonts.medium },
   statValue: { fontSize: 15, color: colors.foreground, marginTop: 4, ...fonts.bold, textTransform: 'capitalize' },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    padding: spacing.lg,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  modalTitle: {
+    fontSize: 16,
+    color: colors.foreground,
+    ...fonts.bold,
+  },
+  closeBtn: {
+    padding: 6,
+  },
+  closeBtnText: {
+    color: colors.mutedForeground,
+    fontSize: 14,
+  },
+  scanStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
+  scanStatusText: {
+    marginLeft: 8,
+    fontSize: 12,
+    color: colors.mutedForeground,
+  },
+  rescanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+    backgroundColor: colors.muted,
+  },
+  rescanBtnText: {
+    fontSize: 12,
+    color: colors.primary,
+    ...fonts.semibold,
+  },
+  deviceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  deviceItemName: {
+    fontSize: 14,
+    color: colors.foreground,
+    ...fonts.semibold,
+  },
+  deviceItemId: {
+    fontSize: 11,
+    color: colors.mutedForeground,
+  },
+  connectText: {
+    color: colors.primary,
+    fontSize: 13,
+    ...fonts.semibold,
+  },
+  emptyListText: {
+    textAlign: 'center',
+    color: colors.mutedForeground,
+    marginVertical: 20,
+    fontSize: 13,
+  },
 });
