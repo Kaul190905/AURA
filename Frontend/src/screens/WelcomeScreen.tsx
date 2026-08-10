@@ -8,7 +8,7 @@ import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 
 interface Props {
-  onNext: (role: 'user' | 'caregiver') => void;
+  onNext: (role: 'user' | 'caretaker') => void;
 }
 
 export default function WelcomeScreen({ onNext }: Props) {
@@ -68,12 +68,12 @@ export default function WelcomeScreen({ onNext }: Props) {
           </View>
         </TouchableOpacity>
         
-        <TouchableOpacity onPress={() => onNext('caregiver')} style={[styles.roleCard, neuSm]} activeOpacity={0.85}>
+        <TouchableOpacity onPress={() => onNext('caretaker')} style={[styles.roleCard, neuSm]} activeOpacity={0.85}>
           <View style={[styles.roleIconCaregiver]}>
             <Heart color={colors.riskLow} size={28} />
           </View>
           <View style={styles.roleTextContainer}>
-            <Text style={styles.roleTitle}>I am a Caregiver</Text>
+            <Text style={styles.roleTitle}>I am a Caretaker</Text>
             <Text style={styles.roleDesc}>Monitor status and provide support.</Text>
           </View>
         </TouchableOpacity>

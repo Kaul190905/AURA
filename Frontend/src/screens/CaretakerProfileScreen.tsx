@@ -15,56 +15,61 @@ export default function CaretakerProfileScreen() {
   const {
     reduceMotion, setReduceMotion, navigateTo, highContrast, setHighContrast,
     darkMode, setDarkMode, colorVisionMode, setColorVisionMode,
-    setUserId, setAccessToken,
+    setUserId, setAccessToken, caretakerType, mockUsers, mockStudents,
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   
   const [notifications, setNotifications] = useState(true);
+  const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
+
+  React.useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUserEmail(user.email || 'No email found');
+        // Extract a friendly name from email (e.g. john.doe@... -> John Doe)
+        if (user.email) {
+          const prefix = user.email.split('@')[0];
+          const formattedName = prefix.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+          setUserName(formattedName);
+        }
+      }
+    });
+  }, []);
 
   const containerStyle = darkMode ? { backgroundColor: '#000000' } : {};
-  const textStyle = darkMode ? { color: '#ffffff' } : {};
   const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : {};
+  const textStyle = darkMode ? { color: '#ffffff' } : { color: colors.foreground };
+  const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
 
   return (
     <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
-      <Header title="Settings" subtitle="Caregiver Profile" />
+      <Header title="Settings" subtitle={caretakerType === 'teacher' ? 'Teacher Profile' : 'Personal Caretaker Profile'} />
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <Accordion>
           
           {/* Caregiver Profile */}
-          <AccItem id="profile" title="Caregiver Profile" defaultOpen icon={<Users size={18} color={colors.primary} />}>
+          <AccItem id="profile" title={caretakerType === 'teacher' ? 'Teacher Profile' : 'Personal Caretaker Profile'} defaultOpen icon={<Users size={18} color={colors.primary} />}>
             <View style={{ gap: 8, marginTop: 8 }}>
               <View style={[styles.navRow, cardStyle]}>
-                <Text style={[styles.navRowTitle, textStyle]}>Relationship</Text>
-                <Text style={styles.navRowValue}>Parent / Guardian</Text>
+                <Text style={[styles.navRowTitle, textStyle]}>Name</Text>
+                <Text style={styles.navRowValue}>{userName || 'Caretaker'}</Text>
               </View>
               <View style={[styles.navRow, cardStyle]}>
-                <Text style={[styles.navRowTitle, textStyle]}>Connected User</Text>
-                <Text style={styles.navRowValue}>Alex's Device</Text>
+                <Text style={[styles.navRowTitle, textStyle]}>Email</Text>
+                <Text style={styles.navRowValue}>{userEmail || 'Loading...'}</Text>
               </View>
-            </View>
-          </AccItem>
 
-          {/* Preferences */}
-          <AccItem id="prefs" title="Preferences"
-            icon={<Bell size={18} color={colors.primary} />}>
-            <View style={{ gap: 8, marginTop: 8 }}>
-              <ToggleRow
-                icon={<Bell size={16} color={colors.primary} />}
-                label="Notification Preferences"
-                value={notifications}
-                onChange={setNotifications}
-                highContrast={highContrast}
-                darkMode={darkMode}
-              />
-              <TouchableOpacity style={[styles.navRowTouchable, cardStyle]} activeOpacity={0.8}>
-                 <View style={styles.navRowLeft}>
-                   <Globe size={16} color={colors.primary} />
-                   <Text style={[styles.navRowTitle, textStyle, { marginLeft: 8 }]}>Language</Text>
-                 </View>
-                 <Text style={styles.navRowValue}>English (US)</Text>
-                 <ChevronRight size={16} color={colors.mutedForeground} />
-              </TouchableOpacity>
+              <View style={[styles.navRow, cardStyle]}>
+                <Text style={[styles.navRowTitle, textStyle]}>Monitoring</Text>
+                <Text style={styles.navRowValue}>{caretakerType === 'teacher' ? 'Students' : 'Users'}</Text>
+              </View>
+              {caretakerType === 'personal-caretaker' && (
+                <View style={[styles.navRow, cardStyle]}>
+                  <Text style={[styles.navRowTitle, textStyle]}>Managed Users</Text>
+                  <Text style={styles.navRowValue}>{mockUsers.length}</Text>
+                </View>
+              )}
             </View>
           </AccItem>
 
@@ -79,74 +84,8 @@ export default function CaretakerProfileScreen() {
                 highContrast={highContrast}
                 darkMode={darkMode}
               />
-              <ToggleRow
-                icon={<Wind size={16} color={colors.primary} />}
-                label="Reduce motion"
-                value={reduceMotion}
-                onChange={setReduceMotion}
-                highContrast={highContrast}
-                darkMode={darkMode}
-              />
-              
-              <View style={styles.divider} />
-              
-              <View style={styles.colorVisionSection}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <Palette size={16} color={colors.primary} />
-                  <Text style={styles.colorVisionTitle}>Color Vision Support</Text>
-                </View>
-                
-                <View style={styles.radioGroup}>
-                  {([
-                    { id: 'default', label: 'Default' },
-                    { id: 'protanopia', label: 'Protanopia' },
-                    { id: 'deuteranopia', label: 'Deuteranopia' },
-                    { id: 'tritanopia', label: 'Tritanopia' },
-                  ] as const).map(option => (
-                    <TouchableOpacity
-                      key={option.id}
-                      style={[styles.radioItem, colorVisionMode === option.id && styles.radioItemActive, colorVisionMode === option.id && { backgroundColor: colors.muted }]}
-                      onPress={() => setColorVisionMode(option.id)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={[styles.radioLabel, colorVisionMode === option.id && { color: colors.primary, ...fonts.bold }]}>
-                        {option.label}
-                      </Text>
-                      {colorVisionMode === option.id && <Check size={16} color={colors.primary} />}
-                    </TouchableOpacity>
-                  ))}
-                </View>
 
-                {/* Live Preview Card */}
-                <View style={[styles.previewCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                  <Text style={styles.previewTitle}>Live Preview</Text>
-                  
-                  <View style={styles.previewRow}>
-                    <View style={[styles.previewBadge, { backgroundColor: colors.muted }]}>
-                      <View style={[styles.previewDot, { backgroundColor: colors.riskLow }]} />
-                      <Text style={[styles.previewBadgeText, { color: colors.foreground }]}>Success</Text>
-                    </View>
-                    <View style={[styles.previewBadge, { backgroundColor: colors.muted }]}>
-                      <View style={[styles.previewDot, { backgroundColor: colors.riskMed }]} />
-                      <Text style={[styles.previewBadgeText, { color: colors.foreground }]}>Warning</Text>
-                    </View>
-                  </View>
-                  
-                  <View style={[styles.previewRiskCard, { backgroundColor: colors.muted }]}>
-                    <View style={[styles.previewRiskRing, { borderColor: colors.riskHigh, backgroundColor: colors.background }]}>
-                      <Text style={[styles.previewRiskScore, { color: colors.riskHigh }]}>72</Text>
-                    </View>
-                    <View>
-                      <Text style={[styles.previewRiskLabel, { color: colors.foreground }]}>High Risk</Text>
-                      <Text style={[styles.previewRiskSub, { color: colors.mutedForeground }]}>Example Level</Text>
-                    </View>
-                  </View>
 
-                  <TouchableOpacity style={[styles.previewButton, { backgroundColor: colors.primary }]} activeOpacity={1}>
-                    <Text style={[styles.previewButtonText, { color: colors.white }]}>Action Button</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
             </View>
           </AccItem>
           
@@ -176,7 +115,8 @@ export default function CaretakerProfileScreen() {
           </AccItem>
 
           {/* Connected User */}
-          <AccItem id="connectedUser" title="Connected User" icon={<Users size={18} color={colors.primary} />}>
+          {caretakerType === 'personal-caretaker' && (
+            <AccItem id="connectedUser" title="Connected User" icon={<Users size={18} color={colors.primary} />}>
             <View style={{ gap: 12, marginTop: 8 }}>
               <View style={[styles.navRow, cardStyle, { justifyContent: 'space-between', paddingVertical: 12 }]}>
                  <View>
@@ -193,10 +133,12 @@ export default function CaretakerProfileScreen() {
                 <Text style={[styles.navRowTitle, { color: colors.riskHigh }]}>Remove User</Text>
               </TouchableOpacity>
             </View>
-          </AccItem>
+            </AccItem>
+          )}
 
           {/* Device Information */}
-          <AccItem id="device" title="Device Information" icon={<Watch size={18} color={colors.primary} />}>
+          {caretakerType === 'teacher' && (
+            <AccItem id="device" title="Device Information" icon={<Watch size={18} color={colors.primary} />}>
             <View style={{ gap: 12, marginTop: 8 }}>
               <View style={[styles.navRow, cardStyle, { paddingVertical: 12 }]}>
                 <Smartphone size={16} color={colors.mutedForeground} />
@@ -211,29 +153,19 @@ export default function CaretakerProfileScreen() {
                 <Text style={[styles.navRowTitle, textStyle]}>Firmware: v1.4.2</Text>
               </View>
             </View>
-          </AccItem>
+            </AccItem>
+          )}
 
-          {/* Privacy */}
-          <AccItem id="privacy" title="Privacy" icon={<Shield size={18} color={colors.primary} />}>
-            <View style={{ gap: 8, marginTop: 8 }}>
-              <TouchableOpacity style={[styles.navRowTouchable, cardStyle]} activeOpacity={0.8}>
-                <Text style={[styles.navRowTitle, textStyle]}>Privacy Settings</Text>
-                <ChevronRight size={16} color={colors.mutedForeground} />
-              </TouchableOpacity>
-              <View style={styles.privacyCard}>
-                <Shield size={16} color={colors.primary} />
-                <Text style={styles.privacyText}>
-                  Your data stays on this device. Nothing is uploaded unless you share it with a caretaker.
-                </Text>
-              </View>
-              <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('login'); await supabase.auth.signOut(); }} style={styles.deleteBtn} activeOpacity={0.8}>
-                <LogOut size={14} color={colors.riskHigh} />
-                <Text style={styles.deleteBtnText}>Logout</Text>
-              </TouchableOpacity>
-            </View>
-          </AccItem>
+
           
         </Accordion>
+        
+        <View style={{ paddingHorizontal: spacing.xl, marginTop: spacing.xl }}>
+          <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('login'); await supabase.auth.signOut(); }} style={styles.deleteBtn} activeOpacity={0.8}>
+            <LogOut size={16} color={colors.riskHigh} />
+            <Text style={styles.deleteBtnText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );

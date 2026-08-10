@@ -1,14 +1,14 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
+import { Bell, AlertTriangle, Users, User, Bluetooth } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 import { riskColor } from '../utils';
 
-export default function CaretakerDashboardScreen({ navigation }: any) {
+export default function TeacherDashboardScreen({ navigation }: any) {
   const { 
-    mockUsers, recentlyViewedUserIds, setRecentlyViewedUserIds, 
+    mockStudents,
     darkMode, setIsNotificationCenterOpen
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
@@ -20,30 +20,32 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
 
   // Calculate Overview Stats
   const stats = {
-    total: mockUsers.length,
-    safe: mockUsers.filter(u => !u.isCrisis && u.risk < 5).length,
-    needAttention: mockUsers.filter(u => !u.isCrisis && u.risk >= 5 && u.risk < 9).length,
-    critical: mockUsers.filter(u => u.isCrisis || u.risk >= 9).length,
+    total: mockStudents.length,
+    safe: mockStudents.filter(s => !s.isCrisis && s.risk < 5).length,
+    needAttention: mockStudents.filter(s => !s.isCrisis && s.risk >= 5 && s.risk < 9).length,
+    critical: mockStudents.filter(s => s.isCrisis || s.risk >= 9).length,
   };
 
-  const criticalUsers = mockUsers.filter(u => u.isCrisis || u.risk >= 5).sort((a, b) => {
+  const criticalStudents = mockStudents.filter(s => s.isCrisis || s.risk >= 5).sort((a, b) => {
     const pA = a.isCrisis ? 3 : (a.risk >= 9 ? 2 : 1);
     const pB = b.isCrisis ? 3 : (b.risk >= 9 ? 2 : 1);
     return pB - pA;
   });
 
-  const recentlyViewed = recentlyViewedUserIds.map(id => mockUsers.find(u => u.id === id)).filter(Boolean);
-
-  const openUser = (id: string) => {
-    const newIds = [id, ...recentlyViewedUserIds.filter(pid => pid !== id)];
-    setRecentlyViewedUserIds(newIds.slice(0, 10));
-    navigation.navigate('TrackUser', { userId: id });
+  const openStudent = (id: string) => {
+    navigation.navigate('TrackStudent', { studentId: id });
   };
 
   const getStatusText = (s: any) => {
     if (s.isCrisis || s.risk >= 9) return 'CRITICAL';
     if (s.risk >= 5) return 'HIGH';
     return 'SAFE';
+  };
+
+  const getBleStatusColor = (status?: string) => {
+    if (status === 'Connected') return colors.primary;
+    if (status === 'Reconnecting') return colors.riskMed;
+    return colors.mutedForeground;
   };
 
   return (
@@ -53,10 +55,10 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
       <View style={styles.header}>
         <View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={[styles.superText, subTextStyle]}>CAREGIVER VIEW</Text>
+            <Text style={[styles.superText, subTextStyle]}>TEACHER VIEW</Text>
             <View style={styles.onlineBadge}><Text style={styles.onlineText}>ONLINE</Text></View>
           </View>
-          <Text style={[styles.headerTitle, textStyle]}>Caregiver Dashboard</Text>
+          <Text style={[styles.headerTitle, textStyle]}>Teacher Dashboard</Text>
         </View>
         <TouchableOpacity style={styles.bellBtn} onPress={() => setIsNotificationCenterOpen(true)}>
           <Bell size={24} color={colors.primary} />
@@ -70,22 +72,22 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, textStyle]}>Overview</Text>
           <View style={styles.overviewGrid}>
-            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Users', { filter: 'All' })}>
-              <Text style={[styles.statLabel, { color: colors.primary }]}>Total Users</Text>
+            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Students', { filter: 'All' })}>
+              <Text style={[styles.statLabel, { color: colors.primary }]}>Total Students</Text>
               <Users size={20} color={colors.primary} style={{ marginVertical: 4 }} />
               <Text style={[styles.statValue, { color: colors.primary }]}>{stats.total}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Users', { filter: 'Safe' })}>
+            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Students', { filter: 'Safe' })}>
               <Text style={[styles.statLabel, { color: colors.riskLow }]}>Safe</Text>
               <Users size={20} color={colors.riskLow} style={{ marginVertical: 4 }} />
               <Text style={[styles.statValue, { color: colors.riskLow }]}>{stats.safe}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Users', { filter: 'Need Attention' })}>
+            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Students', { filter: 'Need Attention' })}>
               <Text style={[styles.statLabel, { color: colors.riskMed }]}>Need Attention</Text>
               <Users size={20} color={colors.riskMed} style={{ marginVertical: 4 }} />
               <Text style={[styles.statValue, { color: colors.riskMed }]}>{stats.needAttention}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Users', { filter: 'Critical' })}>
+            <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Students', { filter: 'Critical' })}>
               <Text style={[styles.statLabel, { color: colors.riskHigh }]}>Critical</Text>
               <Users size={20} color={colors.riskHigh} style={{ marginVertical: 4 }} />
               <Text style={[styles.statValue, { color: colors.riskHigh }]}>{stats.critical}</Text>
@@ -94,52 +96,54 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
         </View>
 
         {/* Critical Alerts Section */}
-        {criticalUsers.length > 0 && (
+        {criticalStudents.length > 0 && (
           <View style={[styles.criticalContainer, neuSm, cardStyle]}>
             <View style={styles.criticalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <AlertTriangle size={20} color={colors.riskHigh} />
-                <Text style={[styles.sectionTitle, { color: colors.riskHigh, marginBottom: 0 }]}>Critical Users</Text>
+                <Text style={[styles.sectionTitle, { color: colors.riskHigh, marginBottom: 0 }]}>Critical Students</Text>
               </View>
               <View style={[styles.criticalCountBadge, { backgroundColor: `${colors.riskHigh}15` }]}>
                 <Text style={[styles.criticalCountText, { color: colors.riskHigh }]}>{stats.critical + stats.needAttention}</Text>
               </View>
             </View>
 
-            {criticalUsers.map(user => {
-              const rColor = riskColor(user.risk);
+            {criticalStudents.map(student => {
+              const rColor = riskColor(student.risk);
               return (
-                <TouchableOpacity key={user.id} style={styles.alertItem} onPress={() => openUser(user.id)}>
+                <TouchableOpacity key={student.id} style={styles.alertItem} onPress={() => openStudent(student.id)}>
                   <View style={[styles.avatarSm, { backgroundColor: `${rColor}20` }]}>
                     <User size={20} color={rColor} />
                   </View>
                   <View style={[styles.alertInfo, { borderBottomColor: darkMode ? '#333' : '#f0f0f0' }]}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={[styles.alertName, textStyle]}>{user.name}</Text>
+                      <Text style={[styles.alertName, textStyle]}>{student.name}</Text>
                       <View style={[styles.riskBadge, { backgroundColor: `${rColor}15` }]}>
-                        <Text style={[styles.riskBadgeText, { color: rColor }]}>{getStatusText(user)}</Text>
+                        <Text style={[styles.riskBadgeText, { color: rColor }]}>{getStatusText(student)}</Text>
                       </View>
                     </View>
                     <Text style={[styles.alertCondition, textStyle]}>
-                      {user.condition} {user.sensorValue && `• ${user.sensorValue}`}
+                      {student.condition} {student.sensorValue && `• ${student.sensorValue}`}
                     </Text>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                      <Text style={[styles.alertLocation, subTextStyle]}>📍 {user.phoneLocation}</Text>
-                      <Text style={[styles.alertTime, subTextStyle]}>{user.lastUpdated}</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Bluetooth size={12} color={getBleStatusColor(student.bluetoothStatus)} />
+                        <Text style={[styles.alertBleStatus, { color: getBleStatusColor(student.bluetoothStatus) }]}>
+                          Bluetooth {student.bluetoothStatus || 'Disconnected'}
+                        </Text>
+                      </View>
+                      <Text style={[styles.alertTime, subTextStyle]}>Updated {student.lastUpdated}</Text>
                     </View>
                   </View>
                 </TouchableOpacity>
               );
             })}
 
-            <TouchableOpacity style={[styles.viewAllBtn, { borderTopColor: darkMode ? '#333' : '#f0f0f0' }]} onPress={() => navigation.navigate('Users', { filter: 'Critical' })}>
+            <TouchableOpacity style={[styles.viewAllBtn, { borderTopColor: darkMode ? '#333' : '#f0f0f0' }]} onPress={() => navigation.navigate('Students', { filter: 'Critical' })}>
               <Text style={styles.viewAllText}>View All Alerts</Text>
             </TouchableOpacity>
           </View>
         )}
-
-
-
       </ScrollView>
     </View>
   );
@@ -184,11 +188,9 @@ const styles = StyleSheet.create({
   riskBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   riskBadgeText: { fontSize: 9, ...fonts.bold },
   alertCondition: { fontSize: 13, ...fonts.medium, marginTop: 4 },
-  alertLocation: { fontSize: 12 },
+  alertBleStatus: { fontSize: 11, ...fonts.bold },
   alertTime: { fontSize: 11 },
   
   viewAllBtn: { alignItems: 'center', paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
   viewAllText: { color: colors.primary, ...fonts.bold, fontSize: 14 },
-
-
 });

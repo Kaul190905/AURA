@@ -14,13 +14,13 @@ export type AppNotification = {
 export type AppScreen =
   | 'login' | 'welcome' | 'profile' | 'home' | 'crisis'
   | 'recovery' | 'settings' | 'speech' | 'plans'
-  | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
-  | 'caretaker-students' | 'caretaker-track-student'
+  | 'caretaker-gate' | 'monitoring-mode' | 'caretaker' | 'caretaker-home'
+  | 'teacher-home' | 'caretaker-students' | 'caretaker-track-student'
   | 'user_profile';
 
 export type AppState = {
-  userRole: 'user' | 'caregiver' | null;
-  setUserRole: (role: 'user' | 'caregiver' | null) => void;
+  primaryRole: 'user' | 'caretaker' | null;
+  setPrimaryRole: (role: 'user' | 'caretaker' | null) => void;
   isCrisisMode: boolean;
   setIsCrisisMode: (isCrisis: boolean) => void;
   crisisRiskBefore: number | null;
@@ -74,9 +74,9 @@ export type AppState = {
   /** Current Supabase JWT — null until signed in */
   accessToken: string | null;
   setAccessToken: (token: string | null) => void;
-  // ── Teacher Mode ────────────────────────────────────────────────────────
-  teacherMode: boolean;
-  setTeacherMode: (val: boolean) => void;
+  // ── Monitoring Modes ────────────────────────────────────────────────────
+  caretakerType: 'teacher' | 'personal-caretaker' | null;
+  setCaretakerType: (mode: 'teacher' | 'personal-caretaker' | null) => void;
   selectedStudent: string | null;
   setSelectedStudent: (id: string | null) => void;
   recentlyViewedIds: string[];
@@ -99,8 +99,24 @@ export type AppState = {
     battery?: number;
     trackingStatus?: 'Active' | 'Inactive';
     profileImage?: string;
+    bluetoothStatus?: 'Connected' | 'Reconnecting' | 'Disconnected';
     locationHistory?: Array<{ time: string; location: string }>;
   }>;
+  recentlyViewedUserIds: string[];
+  setRecentlyViewedUserIds: (ids: string[]) => void;
+  mockUsers: Array<{
+    id: string;
+    name: string;
+    risk: number;
+    isCrisis: boolean;
+    condition?: string;
+    sensorValue?: string;
+    phoneLocation?: string;
+    locationSharingStatus?: 'Active' | 'Paused' | 'Unavailable';
+    lastUpdated?: string;
+    profileImage?: string;
+  }>;
+  setMockUsers: (users: AppState['mockUsers']) => void;
 };
 
 export const AppContext = React.createContext<AppState>({} as AppState);

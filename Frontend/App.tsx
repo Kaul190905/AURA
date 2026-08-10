@@ -34,8 +34,12 @@ import UserProfileScreen from './src/screens/UserProfileScreen';
 import PlansScreen from './src/screens/PlansScreen';
 import CaretakerGateScreen from './src/screens/CaretakerGateScreen';
 import CaretakerDashboardScreen from './src/screens/CaretakerDashboardScreen';
-import CaretakerStudentsScreen from './src/screens/CaretakerStudentsScreen';
-import CaretakerTrackStudentScreen from './src/screens/CaretakerTrackStudentScreen';
+import CaretakerUsersScreen from './src/screens/CaretakerUsersScreen';
+import CaretakerTrackUserScreen from './src/screens/CaretakerTrackUserScreen';
+import MonitoringModeScreen from './src/screens/MonitoringModeScreen';
+import TeacherDashboardScreen from './src/screens/TeacherDashboardScreen';
+import TeacherStudentsScreen from './src/screens/TeacherStudentsScreen';
+import TeacherStudentDetailsScreen from './src/screens/TeacherStudentDetailsScreen';
 import CaretakerProfileScreen from './src/screens/CaretakerProfileScreen';
 import LiveAlertModal from './src/components/LiveAlertModal';
 
@@ -86,6 +90,50 @@ function TabNavigator({ goCrisis, initialRouteName = 'House' }: { goCrisis: () =
   );
 }
 
+// ── Teacher Tab Navigator ──────────────────────────────────────────────────
+function TeacherTabNavigator() {
+  const { darkMode } = React.useContext(AppContext);
+  const bg = darkMode ? '#000000' : colors.background;
+  const border = darkMode ? '#1c1c1e' : colors.border;
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: [styles.tabBar, { backgroundColor: bg, borderTopColor: border }],
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.mutedForeground,
+        tabBarLabelStyle: styles.tabLabel,
+      }}
+    >
+      <Tab.Screen
+        name="Dashboard"
+        component={TeacherDashboardScreen}
+        options={{ tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }}
+      />
+      <Tab.Screen
+        name="Students"
+        component={TeacherStudentsScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Users color={color} size={size} /> }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={CaretakerProfileScreen}
+        options={{ tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+const TeacherStack = createStackNavigator();
+function TeacherRoot() {
+  return (
+    <TeacherStack.Navigator screenOptions={{ headerShown: false }}>
+      <TeacherStack.Screen name="TeacherTabs" component={TeacherTabNavigator} />
+      <TeacherStack.Screen name="TrackStudent" component={TeacherStudentDetailsScreen} />
+    </TeacherStack.Navigator>
+  );
+}
+
 // ── Caretaker Tab Navigator ──────────────────────────────────────────────────
 function CaretakerTabNavigator() {
   const { darkMode } = React.useContext(AppContext);
@@ -107,8 +155,8 @@ function CaretakerTabNavigator() {
         options={{ tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }}
       />
       <Tab.Screen
-        name="Students"
-        component={CaretakerStudentsScreen}
+        name="Users"
+        component={CaretakerUsersScreen}
         options={{ tabBarIcon: ({ color, size }) => <Users color={color} size={size} /> }}
       />
       <Tab.Screen
@@ -125,7 +173,7 @@ function CaretakerRoot() {
   return (
     <CaretakerStack.Navigator screenOptions={{ headerShown: false }}>
       <CaretakerStack.Screen name="CaretakerTabs" component={CaretakerTabNavigator} />
-      <CaretakerStack.Screen name="TrackStudent" component={CaretakerTrackStudentScreen} />
+      <CaretakerStack.Screen name="TrackUser" component={CaretakerTrackUserScreen} />
     </CaretakerStack.Navigator>
   );
 }
@@ -133,7 +181,7 @@ function CaretakerRoot() {
 // ── Root App ──────────────────────────────────────────────────────────────────
 export default function App() {
   const [appScreen, setAppScreen] = useState<AppScreen>('welcome');
-  const [userRole, setUserRole] = useState<'user' | 'caregiver' | null>(null);
+  const [primaryRole, setPrimaryRole] = useState<'user' | 'caretaker' | null>(null);
   const [isCrisisMode, setIsCrisisMode] = useState(false);
   const [crisisRiskBefore, setCrisisRiskBefore] = useState<number | null>(null);
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
@@ -175,18 +223,23 @@ export default function App() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
 
-  // ── Teacher Mode state ────────────────────────────────────────────────────
-  const [teacherMode, setTeacherMode] = useState(false);
+  // ── Monitoring Modes state ────────────────────────────────────────────────────
+  const [caretakerType, setCaretakerType] = useState<'teacher' | 'personal-caretaker' | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
   const [mockStudents, setMockStudents] = useState<AppState['mockStudents']>([
-    { id: 's1', name: 'Rahul Sharma', location: 'Science Lab', risk: 9, isCrisis: true, condition: 'High Noise', sensorValue: '92 dB', lastUpdated: '2 min ago', locationHistory: [{time: '2:40 PM', location: 'Science Lab'}, {time: '2:30 PM', location: 'Corridor - 2nd Floor'}, {time: '2:20 PM', location: 'Library'}, {time: '2:10 PM', location: 'Classroom B'}] },
-    { id: 's2', name: 'Nisha Patel', location: 'Cafeteria', risk: 6, isCrisis: false, condition: 'High Temperature', sensorValue: '39°C', lastUpdated: '4 min ago', locationHistory: [] },
-    { id: 's3', name: 'Aarav Kumar', location: 'Assembly Hall', risk: 7, isCrisis: false, condition: 'Crowded', sensorValue: 'High Stress', lastUpdated: '6 min ago', locationHistory: [] },
-    { id: 's4', name: 'Meera Iyer', location: 'Library', risk: 1, isCrisis: false, condition: 'Safe', sensorValue: '', lastUpdated: '1 min ago', locationHistory: [] },
-    { id: 's5', name: 'Arjun Singh', location: 'Classroom B', risk: 4, isCrisis: false, condition: 'Bright Light', sensorValue: '1200 lux', lastUpdated: '8 min ago', locationHistory: [] },
-    { id: 's6', name: 'Diya Verma', location: 'Playground', risk: 1, isCrisis: false, condition: 'Safe', sensorValue: '', lastUpdated: 'Just now', locationHistory: [] },
-    { id: 's7', name: 'Kabir Khan', location: 'Music Room', risk: 1, isCrisis: false, condition: 'Safe', sensorValue: '', lastUpdated: 'Just now', locationHistory: [] },
+    { id: 's1', name: 'Rahul Sharma', location: 'Science Lab', risk: 9, isCrisis: true, condition: 'High Noise', sensorValue: '92 dB', bluetoothStatus: 'Connected', lastUpdated: '10 sec ago' },
+    { id: 's2', name: 'Nisha Patel', location: 'Cafeteria', risk: 6, isCrisis: false, condition: 'High Temperature', sensorValue: '39°C', bluetoothStatus: 'Connected', lastUpdated: '15 sec ago' },
+    { id: 's3', name: 'Aarav Kumar', location: 'Assembly Hall', risk: 7, isCrisis: false, condition: 'Crowded', sensorValue: 'High Stress', bluetoothStatus: 'Connected', lastUpdated: '30 sec ago' },
+    { id: 's4', name: 'Meera Iyer', location: 'Library', risk: 1, isCrisis: false, condition: 'Safe', bluetoothStatus: 'Disconnected', lastUpdated: '4 min ago' },
+    { id: 's5', name: 'Arjun Singh', location: 'Classroom B', risk: 4, isCrisis: false, condition: 'Bright Light', sensorValue: '1200 lux', bluetoothStatus: 'Connected', lastUpdated: '8 min ago' },
+  ]);
+
+  const [recentlyViewedUserIds, setRecentlyViewedUserIds] = useState<string[]>([]);
+  const [mockUsers, setMockUsers] = useState<AppState['mockUsers']>([
+    { id: 'u1', name: 'Rahul', risk: 9, isCrisis: true, condition: 'High Noise', sensorValue: '92 dB', phoneLocation: 'School Campus', locationSharingStatus: 'Active', lastUpdated: '2 min ago' },
+    { id: 'u2', name: 'Nisha', risk: 1, isCrisis: false, condition: 'Safe', phoneLocation: 'Home', locationSharingStatus: 'Active', lastUpdated: 'Just now' },
+    { id: 'u3', name: 'Aarav', risk: 6, isCrisis: false, condition: 'High Temperature', sensorValue: '39°C', phoneLocation: 'Library', locationSharingStatus: 'Paused', lastUpdated: '15 min ago' },
   ]);
 
   // Handle Deep Links for Google OAuth Redirect
@@ -221,11 +274,18 @@ export default function App() {
       const roleSelected = user?.user_metadata?.roleSelected;
       
       if (roleSelected && storedRole === 'user') {
-        setUserRole('user');
+        setPrimaryRole('user');
         setAppScreen('home');
-      } else if (roleSelected && storedRole === 'caregiver') {
-        setUserRole('caregiver');
-        setAppScreen('caretaker-home');
+      } else if (roleSelected && storedRole === 'caretaker') {
+        setPrimaryRole('caretaker');
+        // Restore monitoring mode from user metadata if previously selected
+        const savedMode = user?.user_metadata?.caretakerType;
+        if (savedMode === 'teacher' || savedMode === 'personal-caretaker') {
+          setCaretakerType(savedMode);
+          setAppScreen(savedMode === 'teacher' ? 'teacher-home' : 'caretaker-home');
+        } else {
+          setAppScreen('monitoring-mode');
+        }
       } else {
         setAppScreen('welcome');
       }
@@ -245,7 +305,7 @@ export default function App() {
       setAccessToken(session?.access_token ?? null);
       if (!session) {
         setAppScreen('welcome');
-        setUserRole(null);
+        setPrimaryRole(null);
       } else if (_event === 'SIGNED_IN' && session.user) {
         await handleAuth(session.user);
       }
@@ -402,7 +462,7 @@ export default function App() {
   };
 
     const appState: AppState = {
-      userRole, setUserRole,
+      primaryRole, setPrimaryRole,
       isCrisisMode, setIsCrisisMode,
       crisisRiskBefore, setCrisisRiskBefore,
       notifications, setNotifications,
@@ -418,10 +478,12 @@ export default function App() {
       profilePhoto, setProfilePhoto: handleSetProfilePhoto,
       userId, setUserId,
       accessToken, setAccessToken,
-      teacherMode, setTeacherMode,
+      caretakerType, setCaretakerType,
       selectedStudent, setSelectedStudent,
       recentlyViewedIds, setRecentlyViewedIds,
       mockStudents,
+      recentlyViewedUserIds, setRecentlyViewedUserIds,
+      mockUsers, setMockUsers,
     };
 
 
@@ -429,7 +491,7 @@ export default function App() {
     <AppContext.Provider value={appState}>
       <SafeAreaProvider>
         <NavigationContainer 
-          key={colorVisionMode}
+          key={`${colorVisionMode}-${appScreen}`}
           onStateChange={(state) => {
             if (!state) return;
             const currentRoute = state.routes[state.index];
@@ -448,8 +510,8 @@ export default function App() {
           )}
           {!sessionLoading && userId && appScreen === 'welcome' && <WelcomeScreen onNext={async (role) => {
             await supabase.auth.updateUser({ data: { role, roleSelected: true } });
-            setUserRole(role);
-            setAppScreen(role === 'caregiver' ? 'caretaker-home' : 'profile');
+            setPrimaryRole(role);
+            setAppScreen(role === 'caretaker' ? 'monitoring-mode' : 'profile');
           }} />}
           {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('settings')} onBack={() => setAppScreen('settings')} />}
 
@@ -457,10 +519,16 @@ export default function App() {
           {userId && appScreen === 'speech' && <SpeechDiaryScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'user_profile' && <UserProfileScreen onBack={() => setAppScreen('home')} />}
-          {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setUserRole('caregiver'); setAppScreen('caretaker-home'); }} />}
+          {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setPrimaryRole('caretaker'); setAppScreen('monitoring-mode'); }} />}
+          {userId && appScreen === 'monitoring-mode' && <MonitoringModeScreen />}
           {userId && appScreen === 'caretaker-home' && (
             <View style={{ flex: 1 }}>
               <CaretakerRoot />
+            </View>
+          )}
+          {userId && appScreen === 'teacher-home' && (
+            <View style={{ flex: 1 }}>
+              <TeacherRoot />
             </View>
           )}
           {userId && (appScreen === 'home' || appScreen === 'settings') && (

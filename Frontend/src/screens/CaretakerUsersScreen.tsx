@@ -1,23 +1,21 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Search, Filter, User, ChevronRight, ArrowLeft } from 'lucide-react-native';
+import { Search, Filter, User, ChevronRight, ArrowLeft, Plus } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 import { riskColor } from '../utils';
 
 type FilterType = 'All' | 'Safe' | 'Need Attention' | 'Critical';
 
-export default function CaretakerStudentsScreen({ navigation, route }: any) {
-  const { mockStudents, darkMode, recentlyViewedIds, setRecentlyViewedIds } = useContext(AppContext);
+export default function CaretakerUsersScreen({ navigation, route }: any) {
+  const { mockUsers, setMockUsers, darkMode, recentlyViewedUserIds, setRecentlyViewedUserIds } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   
-  // Try to get initial filter from route params, default to 'All'
   const initialFilter = route?.params?.filter || 'All';
   const [activeFilter, setActiveFilter] = useState<FilterType>(initialFilter);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Update filter if navigating from another screen (e.g. Dashboard) with new params
   useEffect(() => {
     if (route?.params?.filter) {
       setActiveFilter(route.params.filter as FilterType);
@@ -29,63 +27,66 @@ export default function CaretakerStudentsScreen({ navigation, route }: any) {
   const textStyle = darkMode ? { color: '#fff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
 
-  // Calculate counts for filters
   const counts = {
-    All: mockStudents.length,
-    Safe: mockStudents.filter(s => !s.isCrisis && s.risk < 5).length,
-    'Need Attention': mockStudents.filter(s => !s.isCrisis && s.risk >= 5 && s.risk < 9).length,
-    Critical: mockStudents.filter(s => s.isCrisis || s.risk >= 9).length,
+    All: mockUsers.length,
+    Safe: mockUsers.filter(u => !u.isCrisis && u.risk < 5).length,
+    'Need Attention': mockUsers.filter(u => !u.isCrisis && u.risk >= 5 && u.risk < 9).length,
+    Critical: mockUsers.filter(u => u.isCrisis || u.risk >= 9).length,
   };
 
-  // Apply filters
-  const filteredStudents = mockStudents.filter(s => {
-    // Search
-    const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (s.rollNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (s.className || '').toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredUsers = mockUsers.filter(u => {
+    const matchesSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
 
-    // Type filter
-    if (activeFilter === 'Safe') return !s.isCrisis && s.risk < 5;
-    if (activeFilter === 'Need Attention') return !s.isCrisis && s.risk >= 5 && s.risk < 9;
-    if (activeFilter === 'Critical') return s.isCrisis || s.risk >= 9;
+    if (activeFilter === 'Safe') return !u.isCrisis && u.risk < 5;
+    if (activeFilter === 'Need Attention') return !u.isCrisis && u.risk >= 5 && u.risk < 9;
+    if (activeFilter === 'Critical') return u.isCrisis || u.risk >= 9;
     return true; // All
   });
 
-  const getStatusText = (s: any) => {
-    if (s.isCrisis) return 'CRITICAL';
-    if (s.risk >= 9) return 'CRITICAL';
-    if (s.risk >= 5) return 'HIGH';
-    if (s.risk >= 3) return 'MEDIUM';
+  const getStatusText = (u: any) => {
+    if (u.isCrisis) return 'CRITICAL';
+    if (u.risk >= 9) return 'CRITICAL';
+    if (u.risk >= 5) return 'HIGH';
+    if (u.risk >= 3) return 'MEDIUM';
     return 'SAFE';
   };
 
-  const openStudent = (id: string) => {
-    const newIds = [id, ...recentlyViewedIds.filter(pid => pid !== id)];
-    setRecentlyViewedIds(newIds.slice(0, 10));
-    navigation.navigate('TrackStudent', { studentId: id });
+  const openUser = (id: string) => {
+    const newIds = [id, ...recentlyViewedUserIds.filter(pid => pid !== id)];
+    setRecentlyViewedUserIds(newIds.slice(0, 10));
+    navigation.navigate('TrackUser', { userId: id });
+  };
+
+  const handleAddUser = () => {
+    const newUser = {
+      id: `u${mockUsers.length + 1}`,
+      name: `New User ${mockUsers.length + 1}`,
+      risk: 1,
+      isCrisis: false,
+      condition: 'Safe',
+      phoneLocation: 'Unknown',
+      locationSharingStatus: 'Paused' as const,
+      lastUpdated: 'Just now',
+    };
+    setMockUsers([...mockUsers, newUser]);
   };
 
   return (
     <View style={[styles.container, bgStyle, { paddingTop: insets.top }]}>
       
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={styles.iconBtn}>
           <ArrowLeft size={24} color={textStyle.color} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, textStyle]}>All Students</Text>
+        <Text style={[styles.headerTitle, textStyle]}>Users</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Search size={20} color={textStyle.color} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Filter size={20} color={textStyle.color} />
+          <TouchableOpacity style={styles.iconBtn} onPress={handleAddUser}>
+            <Plus size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Filter Chips */}
       <View style={styles.filtersContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersScroll}>
           {(['All', 'Safe', 'Need Attention', 'Critical'] as FilterType[]).map(f => {
@@ -118,12 +119,11 @@ export default function CaretakerStudentsScreen({ navigation, route }: any) {
       </View>
 
       <View style={styles.content}>
-        {/* Optional explicit search bar if not relying just on header icon */}
         <View style={[styles.searchBar, cardStyle]}>
           <Search size={20} color={colors.mutedForeground} />
           <TextInput
             style={[styles.searchInput, textStyle]}
-            placeholder="Search name, class, ID..."
+            placeholder="Search users..."
             placeholderTextColor={colors.mutedForeground}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -131,47 +131,47 @@ export default function CaretakerStudentsScreen({ navigation, route }: any) {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-          {filteredStudents.map(student => {
-            const rColor = riskColor(student.risk);
-            const statusLabel = getStatusText(student);
+          {filteredUsers.map(user => {
+            const rColor = riskColor(user.risk);
+            const statusLabel = getStatusText(user);
 
             return (
               <TouchableOpacity
-                key={student.id}
+                key={user.id}
                 style={[styles.studentRow, cardStyle]}
                 activeOpacity={0.7}
-                onPress={() => openStudent(student.id)}
+                onPress={() => openUser(user.id)}
               >
                 <View style={[styles.avatar, { backgroundColor: `${rColor}20` }]}>
                   <User size={24} color={rColor} />
                 </View>
                 <View style={styles.rowInfo}>
                   <View style={styles.rowHeader}>
-                    <Text style={[styles.studentName, textStyle]}>{student.name}</Text>
+                    <Text style={[styles.studentName, textStyle]}>{user.name}</Text>
                     <View style={[styles.riskBadge, { backgroundColor: `${rColor}15` }]}>
                       <Text style={[styles.riskBadgeText, { color: rColor }]}>{statusLabel}</Text>
                     </View>
                   </View>
                   
-                  <Text style={[styles.studentLocation, subTextStyle]}>{student.location}</Text>
+                  <Text style={[styles.studentLocation, subTextStyle]}>📍 {user.phoneLocation}</Text>
                   
-                  {student.condition && (
+                  {user.condition && (
                     <Text style={[styles.studentCondition, textStyle]}>
-                      {student.condition} {student.sensorValue && `• ${student.sensorValue}`}
+                      {user.condition} {user.sensorValue && `• ${user.sensorValue}`}
                     </Text>
                   )}
                 </View>
 
                 <View style={styles.rowRight}>
-                  <Text style={[styles.timeText, subTextStyle]}>{student.lastUpdated}</Text>
+                  <Text style={[styles.timeText, subTextStyle]}>{user.lastUpdated}</Text>
                   <ChevronRight size={20} color={colors.mutedForeground} style={{ marginTop: 8 }} />
                 </View>
               </TouchableOpacity>
             );
           })}
-          {filteredStudents.length === 0 && (
+          {filteredUsers.length === 0 && (
             <View style={{ alignItems: 'center', marginTop: 40 }}>
-              <Text style={[subTextStyle, { fontSize: 16 }]}>No students match the criteria.</Text>
+              <Text style={[subTextStyle, { fontSize: 16 }]}>No users match the criteria.</Text>
             </View>
           )}
         </ScrollView>
