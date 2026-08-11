@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, User, Phone, Mail, Calendar, Zap, AlertTriangle, Camera } from 'lucide-react-native';
+import { ArrowLeft, User, Phone, Mail, Calendar, Zap, AlertTriangle, Camera, Edit2, Check } from 'lucide-react-native';
 import { colors, fonts, radius, spacing, neuSm } from '../theme';
 import { supabase } from '../services/supabaseClient';
 import { AppContext } from '../AppContext';
@@ -13,6 +13,20 @@ export default function UserProfileScreen({ onBack }: Props) {
   const insets = useSafeAreaInsets();
   const { caregiver, dob, primaryTrigger, profilePhoto, setProfilePhoto } = React.useContext(AppContext);
   const [userName, setUserName] = useState<string>('User');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [updatingName, setUpdatingName] = useState(false);
+
+  const handleUpdateName = async () => {
+    if (!userName.trim()) return;
+    setUpdatingName(true);
+    try {
+      await supabase.auth.updateUser({ data: { name: userName.trim() } });
+      setIsEditingName(false);
+    } catch (e) {
+      console.error(e);
+    }
+    setUpdatingName(false);
+  };
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -61,7 +75,33 @@ export default function UserProfileScreen({ onBack }: Props) {
             <Camera size={16} color="#fff" />
           </View>
         </TouchableOpacity>
-        <Text style={styles.nameText}>{userName}</Text>
+        <View style={styles.nameRow}>
+          {isEditingName ? (
+            <TextInput
+              style={styles.nameInput}
+              value={userName}
+              onChangeText={setUserName}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={handleUpdateName}
+            />
+          ) : (
+            <Text style={styles.nameText}>{userName}</Text>
+          )}
+          {isEditingName ? (
+            updatingName ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <TouchableOpacity onPress={handleUpdateName} style={styles.editBtn}>
+                <Check size={20} color={colors.primary} />
+              </TouchableOpacity>
+            )
+          ) : (
+            <TouchableOpacity onPress={() => setIsEditingName(true)} style={styles.editBtn}>
+              <Edit2 size={18} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          )}
+        </View>
 
         <View style={styles.detailsContainer}>
           {/* About Me */}
@@ -156,9 +196,27 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.background,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    gap: 8,
+  },
+  nameInput: {
+    fontSize: 24,
+    color: colors.foreground,
+    ...fonts.bold,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary,
+    padding: 0,
+    minWidth: 150,
+    textAlign: 'center',
+  },
   nameText: {
     fontSize: 24, color: colors.foreground, ...fonts.bold,
-    marginBottom: spacing.xl,
+  },
+  editBtn: {
+    padding: 4,
   },
   detailsContainer: {
     width: '100%',

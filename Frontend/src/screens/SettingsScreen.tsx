@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator,
+  View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Users, Eye, Shield, ChevronRight, Watch, LogOut, Check, User } from 'lucide-react-native';
@@ -36,7 +36,7 @@ export default function SettingsScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Header title="Settings" subtitle="Personalize AURA" />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.scrollContent}>
         
         {/* Profile Section */}
         <View style={styles.sectionContainer}>
@@ -45,25 +45,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Profile & Account</Text>
           </View>
           <View style={styles.sectionCard}>
-            <View style={styles.navRowPadded}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Change Username"
-                placeholderTextColor={colors.mutedForeground}
-                value={newName}
-                onChangeText={setNewName}
-                returnKeyType="done"
-                onSubmitEditing={handleUpdateName}
-              />
-              {updatingName ? (
-                 <ActivityIndicator size="small" color={colors.primary} />
-              ) : (
-                <TouchableOpacity onPress={handleUpdateName} hitSlop={10}>
-                  {nameSuccess ? <Check size={18} color={colors.riskLow} /> : <Text style={{ color: colors.primary, ...fonts.bold }}>Save</Text>}
-                </TouchableOpacity>
-              )}
-            </View>
-            <View style={styles.divider} />
+
             <TouchableOpacity onPress={() => navigateTo('user_profile')} style={styles.navRow} activeOpacity={0.7}>
               <View style={styles.navRowInner}>
                 <User size={16} color={colors.primary} />
@@ -131,7 +113,7 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-      </ScrollView>
+      </View>
     </View>
   );
 }
