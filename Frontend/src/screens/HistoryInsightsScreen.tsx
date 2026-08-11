@@ -15,10 +15,11 @@ import {
   RiskTrendResponse, OverloadForecastResponse,
 } from '../services/api';
 
-export default function HistoryInsightsScreen() {
+export default function HistoryInsightsScreen({ route }: any) {
   const styles = getStyles();
-  const { history, userId } = useContext(AppContext);
+  const { history, userId: contextUserId } = useContext(AppContext);
   const insets = useSafeAreaInsets();
+  const userId = route?.params?.userId || contextUserId;
   const [range, setRange] = useState<'7d' | '30d'>('7d');
   const cutoff = Date.now() - (range === '7d' ? 7 : 30) * 86400000;
   const filtered = history.filter((h) => h.time >= cutoff);

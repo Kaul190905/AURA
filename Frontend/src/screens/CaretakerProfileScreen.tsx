@@ -13,7 +13,8 @@ export default function CaretakerProfileScreen({ navigation }: any) {
   const styles = getStyles();
   const {
     darkMode, setDarkMode, highContrast,
-    setUserId, setAccessToken, caretakerType, navigateTo,
+    setUserId, setAccessToken, navigateTo,
+    recentlyViewedUserIds, mockUsers
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   
@@ -34,9 +35,12 @@ export default function CaretakerProfileScreen({ navigation }: any) {
   const textStyle = darkMode ? { color: '#ffffff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
 
+  const activeUserId = recentlyViewedUserIds[0] || 'u1';
+  const activeUser = mockUsers.find(u => u.id === activeUserId) || mockUsers[0];
+
   return (
     <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
-      <Header title="Settings" subtitle={caretakerType === 'teacher' ? 'Teacher Profile' : 'Personal Caretaker Profile'} />
+      <Header title="Settings" />
       <ScrollView contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: spacing.xl, paddingTop: spacing.md }}>
         
         {/* Profile Card */}
@@ -70,24 +74,6 @@ export default function CaretakerProfileScreen({ navigation }: any) {
           </View>
           <ChevronRight size={20} color={colors.mutedForeground} />
         </TouchableOpacity>
-
-        {/* Connected User Card (Only for Personal Caretaker) */}
-        {caretakerType === 'personal-caretaker' && (
-          <TouchableOpacity 
-            style={[styles.menuCard, neuSm, cardStyle]} 
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('ConnectedUserDetails')}
-          >
-            <View style={[styles.iconBox, { backgroundColor: `${colors.primary}20` }]}>
-              <Users size={22} color={colors.primary} />
-            </View>
-            <View style={styles.menuTextContainer}>
-              <Text style={[styles.menuTitle, textStyle]}>Connected User</Text>
-              <Text style={[styles.menuSubtitle, subTextStyle]}>View condition and inputs</Text>
-            </View>
-            <ChevronRight size={20} color={colors.mutedForeground} />
-          </TouchableOpacity>
-        )}
 
         <Text style={[styles.sectionHeader, textStyle]}>Preferences</Text>
 
