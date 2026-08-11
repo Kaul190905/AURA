@@ -26,10 +26,14 @@ class RecommendationResponse(RecommendationBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+class RecommendationItem(BaseModel):
+    title: str
+    description: str
+
 class PersonalizedRecommendationResponse(BaseModel):
     """On-demand recommendation response, optionally AI-phrased."""
     user_id: UUID
     risk_score: float
     risk_level: str
-    recommendations: List[str]
+    recommendations: List[RecommendationItem]
     method: str

@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TrendingUp, Zap, AudioWaveform, MapPin } from 'lucide-react-native';
+import { TrendingUp, Zap, AudioWaveform, MapPin, ChevronLeft } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
@@ -14,13 +14,14 @@ import {
   RiskTrendResponse, OverloadForecastResponse,
 } from '../services/api';
 
-export default function HistoryInsightsScreen() {
+export default function HistoryInsightsScreen({ navigation }: any) {
   const styles = getStyles();
   const { history, userId } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [range, setRange] = useState<'7d' | '30d'>('7d');
   const cutoff = Date.now() - (range === '7d' ? 7 : 30) * 86400000;
   const filtered = history.filter((h) => h.time >= cutoff);
+  const recentEvents = filtered.slice(0, 3); // Only show top 3 on summary
 
   // ── Backend data ────────────────────────────────────────────────────────────
   const [riskTrend, setRiskTrend] = useState<RiskTrendResponse | null>(null);
@@ -181,16 +182,18 @@ export default function HistoryInsightsScreen() {
               <AudioWaveform size={18} color={colors.primary} />
               <Text style={styles.sectionTitle}>Past events</Text>
             </View>
-            <Text style={styles.badge}>{filtered.length}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('PastEvents')}>
+              <Text style={styles.viewAllText}>View all ({filtered.length})</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.sectionCard}>
-            {filtered.length === 0 ? (
+            {recentEvents.length === 0 ? (
               <View style={styles.emptyCard}>
                 <Text style={styles.emptyText}>No events in this range.</Text>
               </View>
             ) : (
               <View style={{ gap: 8 }}>
-                {filtered.map((h, i) => {
+                {recentEvents.map((h, i) => {
                   const c = riskColor(h.score);
                   return (
                     <React.Fragment key={h.id}>
@@ -205,7 +208,7 @@ export default function HistoryInsightsScreen() {
                         </View>
                         <Text style={[styles.eventScore, { color: c }]}>{h.score}</Text>
                       </View>
-                      {i < filtered.length - 1 && <View style={styles.divider} />}
+                      {i < recentEvents.length - 1 && <View style={styles.divider} />}
                     </React.Fragment>
                   );
                 })}
@@ -214,39 +217,31 @@ export default function HistoryInsightsScreen() {
           </View>
         </View>
 
-        {/* Most Dangerous Locations */}
+        {/* High Risk Locations */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <MapPin size={18} color={colors.primary} />
-              <Text style={styles.sectionTitle}>High-Risk Locations</Text>
+              <Text style={styles.sectionTitle}>High-risk locations</Text>
             </View>
+            <TouchableOpacity onPress={() => navigation.navigate('Locations')}>
+              <Text style={styles.viewAllText}>View details</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.sectionCard}>
-            <View style={{ gap: 12 }}>
-              {[
-                { name: 'Downtown Subway', risk: 'High', visits: 4 },
-                { name: 'Shopping Mall', risk: 'Medium', visits: 2 },
-              ].map((loc, i, arr) => (
-                <React.Fragment key={i}>
-                  <View style={[styles.navRow, { justifyContent: 'space-between' }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <MapPin size={18} color={colors.riskHigh} />
-                      <View>
-                        <Text style={[styles.eventTitle, fonts.bold]}>{loc.name}</Text>
-                        <Text style={styles.eventDate}>{loc.visits} visits this week</Text>
-                      </View>
-                    </View>
-                    <View style={styles.riskBadge}>
-                      <Text style={styles.riskBadgeText}>{loc.risk}</Text>
-                    </View>
-                  </View>
-                  {i < arr.length - 1 && <View style={styles.divider} />}
-                </React.Fragment>
-              ))}
-            </View>
+             <View style={styles.navRow}>
+                <View style={styles.iconContainer}>
+                  <MapPin size={20} color={colors.riskHigh} />
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={styles.eventTitle}>Downtown Transit Center</Text>
+                  <Text style={styles.eventDate}>Highest risk area</Text>
+                </View>
+                <ChevronLeft size={16} color={colors.mutedForeground} style={{ transform: [{ rotate: '180deg' }] }} />
+             </View>
           </View>
         </View>
+
       </ScrollView>
     </View>
   );
@@ -311,4 +306,13 @@ const getStyles = () => StyleSheet.create({
     borderRadius: radius.sm, backgroundColor: `${colors.primary}20`,
   },
   riskBadgeText: { fontSize: 11, color: colors.primary, ...fonts.bold },
+  viewAllText: { fontSize: 13, color: colors.primary, ...fonts.semibold },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    backgroundColor: colors.riskHigh + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

@@ -59,7 +59,7 @@ export default function SettingsScreen() {
               <ChevronRight size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
             <View style={styles.divider} />
-            <TouchableOpacity onPress={() => navigateTo('caregiver_management')} style={styles.navRow} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => console.log('Caregiver Management coming soon')} style={styles.navRow} activeOpacity={0.7}>
               <Text style={styles.navRowText}>Caregiver Management</Text>
               <ChevronRight size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
@@ -78,7 +78,7 @@ export default function SettingsScreen() {
           </View>
           <View style={styles.sectionCard}>
             
-            <TouchableOpacity onPress={() => navigateTo('settings_accessibility')} style={styles.navRow} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => console.log('Accessibility coming soon')} style={styles.navRow} activeOpacity={0.7}>
               <View style={styles.navRowInnerLg}>
                 <View style={styles.iconContainer}>
                   <Eye size={18} color={colors.primary} />
@@ -89,7 +89,7 @@ export default function SettingsScreen() {
             </TouchableOpacity>
             <View style={styles.divider} />
             
-            <TouchableOpacity onPress={() => navigateTo('settings_device')} style={styles.navRow} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => console.log('Device info coming soon')} style={styles.navRow} activeOpacity={0.7}>
               <View style={styles.navRowInnerLg}>
                 <View style={styles.iconContainer}>
                   <Watch size={18} color={colors.primary} />
@@ -100,7 +100,7 @@ export default function SettingsScreen() {
             </TouchableOpacity>
             <View style={styles.divider} />
 
-            <TouchableOpacity onPress={() => navigateTo('settings_privacy')} style={styles.navRow} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => console.log('Privacy coming soon')} style={styles.navRow} activeOpacity={0.7}>
               <View style={styles.navRowInnerLg}>
                 <View style={styles.iconContainer}>
                   <Shield size={18} color={colors.primary} />

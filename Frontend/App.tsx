@@ -10,12 +10,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { colors, fonts, applyColorVisionMode } from './src/theme';
 import { TriggerKey, HistoryEvent, Strategy, Accommodation } from './src/types';
-import { DEFAULT_STRATEGIES, seedHistory } from './src/data';
 import { computeRisk } from './src/utils';
 
 // Backend services
 import { supabase } from './src/services/supabaseClient';
-import { submitSensorData, logOverloadEvent } from './src/services/api';
+import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEvents, getAlerts } from './src/services/api';
 import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
 
 
@@ -27,6 +26,8 @@ import HomeScreen from './src/screens/HomeScreen';
 import CrisisModeScreen from './src/screens/CrisisModeScreen';
 import StrategyLibraryScreen from './src/screens/StrategyLibraryScreen';
 import HistoryInsightsScreen from './src/screens/HistoryInsightsScreen';
+import PastEventsScreen from './src/screens/PastEventsScreen';
+import LocationsScreen from './src/screens/LocationsScreen';
 import WearableScreen from './src/screens/WearableScreen';
 import RecoverySummaryScreen from './src/screens/RecoverySummaryScreen';
 import { NotificationModal } from './src/components/NotificationModal';
@@ -87,7 +88,7 @@ function TabNavigator({ initialRouteName = 'House' }: { initialRouteName?: strin
       />
       <MainTab.Screen
         name="Insights"
-        component={HistoryInsightsScreen}
+        component={InsightsRoot}
         options={{ tabBarIcon: renderTrendingUpIcon }}
       />
       <MainTab.Screen
@@ -145,6 +146,18 @@ function TeacherRoot() {
       <TeacherStack.Screen name="TeacherTabs" component={TeacherTabNavigator} />
       <TeacherStack.Screen name="TrackStudent" component={TeacherStudentDetailsScreen} />
     </TeacherStack.Navigator>
+  );
+}
+
+// ── Insights Stack Navigator ──────────────────────────────────────────────────
+const InsightsStack = createStackNavigator();
+function InsightsRoot() {
+  return (
+    <InsightsStack.Navigator screenOptions={{ headerShown: false }}>
+      <InsightsStack.Screen name="InsightsMain" component={HistoryInsightsScreen} />
+      <InsightsStack.Screen name="PastEvents" component={PastEventsScreen} />
+      <InsightsStack.Screen name="Locations" component={LocationsScreen} />
+    </InsightsStack.Navigator>
   );
 }
 
@@ -212,12 +225,7 @@ export default function App() {
   const [crisisRiskBefore, setCrisisRiskBefore] = useState<number | null>(null);
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
   const [caregiver, setCaregiver] = useState({ name: '', relationship: '', phone: '', email: '' });
-  const [notifications, setNotifications] = useState<AppNotification[]>([
-    { id: '1', title: 'High Noise Detected', description: 'Environment exceeded 85dB.', time: Date.now() - 3600000, read: false, type: 'alert' },
-    { id: '2', title: 'Risk Level Increased', description: 'Sensory overload risk is High.', time: Date.now() - 7200000, read: true, type: 'alert' },
-    { id: '3', title: 'Suggestion Accepted', description: 'User started Deep Breathing.', time: Date.now() - 86400000, read: true, type: 'suggestion' },
-    { id: '4', title: 'Wearable Battery Low', description: 'Device is at 15%.', time: Date.now() - 172800000, read: true, type: 'system' },
-  ]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   const [profile, setProfile] = useState<Partial<Record<TriggerKey, number>>>({ sound: 4, temp: 2 });
   const [dob, setDob] = useState('');
@@ -226,12 +234,9 @@ export default function App() {
   const [heartRate, setHeartRate] = useState(72);
   const [selfReport, setSelfReport] = useState(3);
   const [bleConnected, setBleConnected] = useState(false);
-  const [strategies, setStrategies] = useState<Strategy[]>(DEFAULT_STRATEGIES);
-  const [history, setHistory] = useState<HistoryEvent[]>(seedHistory());
-  const [accommodations, setAccommodations] = useState<Accommodation[]>([
-    { id: 'a1', time: Date.now() - 2 * 86400000, text: 'Allowed headphones during math class' },
-    { id: 'a2', time: Date.now() - 5 * 86400000, text: 'Moved seat away from the window' },
-  ]);
+  const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [history, setHistory] = useState<HistoryEvent[]>([]);
+  const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
   const [highContrast, setHighContrast] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -244,11 +249,73 @@ export default function App() {
   const [sosConfirmOpen, setSosConfirmOpen] = useState(false);
   const [sosSent, setSosSent] = useState(false);
   const [currentTab, setCurrentTab] = useState('House');
-
+  
   // ── Auth / Backend state ────────────────────────────────────────────────────
   const [userId, setUserId] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
+
+  // ── Global Data Hydration ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!userId) {
+      // Clear data on logout
+      setStrategies([]);
+      setHistory([]);
+      setNotifications([]);
+      return;
+    }
+
+    const loadInitialData = async () => {
+      try {
+        const [recsRes, historyRes, alertsRes] = await Promise.allSettled([
+          getRecommendations(userId),
+          getOverloadEvents(userId),
+          getAlerts(userId)
+        ]);
+
+        if (recsRes.status === 'fulfilled' && recsRes.value.recommendations) {
+          const fetchedStrats: Strategy[] = recsRes.value.recommendations.map((r, i) => ({
+            id: `api-strat-${i}`,
+            title: r.title,
+            note: r.description,
+            trigger: 'sound',
+            helped: 0,
+            tried: 0,
+            custom: false
+          }));
+          setStrategies(prev => [...prev.filter(s => s.custom), ...fetchedStrats]);
+        }
+
+        if (historyRes.status === 'fulfilled') {
+          const fetchedHistory: HistoryEvent[] = historyRes.value.map(e => ({
+            id: e.id,
+            time: new Date(e.created_at).getTime(),
+            trigger: e.trigger_metric as TriggerKey,
+            action: 'crisis',
+            score: e.trigger_value,
+            note: `Duration: ${e.duration_seconds}s`
+          }));
+          setHistory(fetchedHistory);
+        }
+
+        if (alertsRes.status === 'fulfilled') {
+          const fetchedNotifications: AppNotification[] = alertsRes.value.map(a => ({
+            id: a.id,
+            title: a.severity === 'critical' ? 'Critical Alert' : 'Alert',
+            description: a.message,
+            time: new Date(a.created_at).getTime(),
+            read: a.confirmed ?? false,
+            type: 'alert'
+          }));
+          setNotifications(fetchedNotifications);
+        }
+      } catch (err) {
+        console.warn('[AURA] Error hydrating initial data:', err);
+      }
+    };
+
+    loadInitialData();
+  }, [userId]);
 
   // ── Monitoring Modes state ────────────────────────────────────────────────────
   const [caretakerType, setCaretakerType] = useState<'teacher' | 'personal-caretaker' | null>(null);

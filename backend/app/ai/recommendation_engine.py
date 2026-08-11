@@ -11,7 +11,7 @@ class IRecommendationEngine(ABC):
     """
 
     @abstractmethod
-    async def generate_recommendations(self, user_id: UUID, context: Dict[str, Any]) -> List[str]:
+    async def generate_recommendations(self, user_id: UUID, context: Dict[str, Any]) -> List[Dict[str, str]]:
         """
         Generate a list of recommendations based on user context and recent data.
         context expects: {"risk_score": float, "sensor_data": dict, "preferences": dict}
@@ -50,7 +50,7 @@ class RecommendationEngine(IRecommendationEngine):
         except json.JSONDecodeError:
             return []
 
-    async def generate_recommendations(self, user_id: UUID, context: Dict[str, Any]) -> List[str]:
+    async def generate_recommendations(self, user_id: UUID, context: Dict[str, Any]) -> List[Dict[str, str]]:
         recommendations = []
         
         risk_score = context.get("risk_score", 0)
