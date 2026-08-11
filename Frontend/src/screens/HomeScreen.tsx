@@ -27,7 +27,7 @@ export default function HomeScreen() {
   const {
     risk, selfReport, setSelfReport, setIsNotificationCenterOpen,
     notifications, bleConnected, navigateTo, triggerSos,
-    noise, temperature,
+    noise, temperature, heartRate,
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
@@ -128,7 +128,7 @@ export default function HomeScreen() {
                   <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#00C48C' }} />
                   <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>BPM</Text>
                 </View>
-                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>72 bpm</Text>
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{heartRate} bpm</Text>
               </View>
 
               <View style={{ marginBottom: 12 }}>
@@ -157,7 +157,7 @@ export default function HomeScreen() {
               <Heart size={16} color="#FF4D4F" />
               <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Heart rate</Text>
             </View>
-            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>72 <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>bpm</Text></Text>
+            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{heartRate} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>bpm</Text></Text>
 
             <View style={{ flex: 1, justifyContent: 'flex-end', marginTop: 6 }}>
               <Svg height="80" width="100%" viewBox="0 0 100 50" preserveAspectRatio="none">
@@ -278,10 +278,9 @@ export default function HomeScreen() {
                 <View style={[styles.sensorIconWrap, { backgroundColor: `${colors.riskHigh}15` }]}>
                   <Activity size={22} color={colors.riskHigh} />
                 </View>
-                <Text style={styles.sensorValue}>--</Text>
+                <Text style={styles.sensorValue}>{heartRate}</Text>
                 <Text style={styles.sensorUnit}>BPM</Text>
                 <Text style={styles.sensorLabel}>Heart Rate</Text>
-                <Text style={styles.sensorUnavailable}>Sensor unavailable</Text>
               </View>
 
               {/* Temperature */}

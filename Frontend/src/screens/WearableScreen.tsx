@@ -14,7 +14,7 @@ import { Device } from 'react-native-ble-plx';
 
 export default function WearableScreen() {
   const styles = getStyles();
-  const { bleConnected, setBleConnected, noise, setNoise, temperature, setTemperature, userId } = useContext(AppContext);
+  const { bleConnected, setBleConnected, noise, setNoise, temperature, setTemperature, heartRate, setHeartRate, userId } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [pairing, setPairing] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -67,11 +67,14 @@ export default function WearableScreen() {
               const parsed = JSON.parse(rawData);
               if (parsed.noise !== undefined) setNoise(parsed.noise);
               if (parsed.temp !== undefined) setTemperature(parsed.temp);
+              if (parsed.bpm !== undefined) setHeartRate(parsed.bpm);
             } else {
               const noiseMatch = rawData.match(/(?:noise|N)[:=]\s*(\d+)/i);
               const tempMatch = rawData.match(/(?:temp|T)[:=]\s*([\d.]+)/i);
+              const bpmMatch = rawData.match(/(?:bpm|H)[:=]\s*(\d+)/i);
               if (noiseMatch) setNoise(parseInt(noiseMatch[1], 10));
               if (tempMatch) setTemperature(parseFloat(tempMatch[1]));
+              if (bpmMatch) setHeartRate(parseInt(bpmMatch[1], 10));
             }
           } catch (e) {
             console.warn('[BLE] Error parsing data:', rawData, e);
@@ -103,10 +106,10 @@ export default function WearableScreen() {
       user_id: userId,
       noise,
       temperature,
-      heart_rate: null,
+      heart_rate: heartRate,
       blood_oxygen: null,
     }).catch((e) => console.warn('[AURA] Wearable sensor push failed:', e));
-  }, [bleConnected, userId, noise, temperature]);
+  }, [bleConnected, userId, noise, temperature, heartRate]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>

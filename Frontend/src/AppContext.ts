@@ -15,12 +15,12 @@ export type AppScreen =
   | 'login' | 'welcome' | 'profile' | 'home' | 'crisis'
   | 'recovery' | 'settings' | 'speech' | 'plans'
   | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
-  | 'user_profile' | 'onboarding' | 'caregiver_management'
-  | 'settings_accessibility' | 'settings_privacy' | 'settings_device';
+  | 'teacher-home' | 'caretaker-students' | 'caretaker-track-student'
+  | 'user_profile';
 
 export type AppState = {
-  userRole: 'user' | 'caregiver' | null;
-  setUserRole: (role: 'user' | 'caregiver' | null) => void;
+  primaryRole: 'user' | 'caretaker' | null;
+  setPrimaryRole: (role: 'user' | 'caretaker' | null) => void;
   isCrisisMode: boolean;
   setIsCrisisMode: (isCrisis: boolean) => void;
   crisisRiskBefore: number | null;
@@ -40,6 +40,8 @@ export type AppState = {
   setNoise: (n: number) => void;
   temperature: number;
   setTemperature: (v: number) => void;
+  heartRate: number;
+  setHeartRate: (v: number) => void;
   selfReport: number;
   setSelfReport: (n: number) => void;
   bleConnected: boolean;
@@ -75,12 +77,49 @@ export type AppState = {
   /** Current Supabase JWT — null until signed in */
   accessToken: string | null;
   setAccessToken: (token: string | null) => void;
-  // ── Teacher Mode ────────────────────────────────────────────────────────
-  teacherMode: boolean;
-  setTeacherMode: (val: boolean) => void;
+  // ── Monitoring Modes ────────────────────────────────────────────────────
+  caretakerType: 'teacher' | 'personal-caretaker' | null;
+  setCaretakerType: (mode: 'teacher' | 'personal-caretaker' | null) => void;
   selectedStudent: string | null;
   setSelectedStudent: (id: string | null) => void;
-  mockStudents: Array<{ id: string; name: string; location: string; risk: number; isCrisis: boolean; rollNumber?: string; className?: string; recentActivity?: string; lastUpdated?: string }>;
+  recentlyViewedIds: string[];
+  setRecentlyViewedIds: (ids: string[]) => void;
+  mockStudents: Array<{
+    id: string;
+    name: string;
+    location: string;
+    risk: number;
+    isCrisis: boolean;
+    rollNumber?: string;
+    className?: string;
+    recentActivity?: string;
+    lastUpdated?: string;
+    condition?: string;
+    sensorValue?: string;
+    latitude?: number;
+    longitude?: number;
+    wearableStatus?: string;
+    battery?: number;
+    trackingStatus?: 'Active' | 'Inactive';
+    profileImage?: string;
+    bluetoothStatus?: 'Connected' | 'Reconnecting' | 'Disconnected';
+    locationHistory?: Array<{ time: string; location: string }>;
+  }>;
+  recentlyViewedUserIds: string[];
+  setRecentlyViewedUserIds: (ids: string[]) => void;
+  mockUsers: Array<{
+    id: string;
+    name: string;
+    risk: number;
+    isCrisis: boolean;
+    condition?: string;
+    sensorValue?: string;
+    phoneLocation?: string;
+    locationSharingStatus?: 'Active' | 'Paused' | 'Unavailable';
+    lastUpdated?: string;
+    profileImage?: string;
+  }>;
+  setMockUsers: (users: AppState['mockUsers']) => void;
 };
 
 export const AppContext = React.createContext<AppState>({} as AppState);
