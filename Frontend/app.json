@@ -14,5 +14,8 @@
   },
   "android": {
     "package": "com.aura.mobile"
-  }
+  },
+  "plugins": [
+    "react-native-ble-plx"
+  ]
 }

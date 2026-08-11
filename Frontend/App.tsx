@@ -28,6 +28,9 @@ import StrategyLibraryScreen from './src/screens/StrategyLibraryScreen';
 import HistoryInsightsScreen from './src/screens/HistoryInsightsScreen';
 import WearableScreen from './src/screens/WearableScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import SettingsAccessibilityScreen from './src/screens/SettingsAccessibilityScreen';
+import SettingsPrivacyScreen from './src/screens/SettingsPrivacyScreen';
+import SettingsDeviceScreen from './src/screens/SettingsDeviceScreen';
 import RecoverySummaryScreen from './src/screens/RecoverySummaryScreen';
 import { NotificationModal } from './src/components/NotificationModal';
 import SpeechDiaryScreen from './src/screens/SpeechDiaryScreen';
@@ -451,6 +454,9 @@ export default function App() {
                <CaregiverManagementScreen />
              </View>
           )}
+          {userId && appScreen === 'settings_accessibility' && <SettingsAccessibilityScreen />}
+          {userId && appScreen === 'settings_privacy' && <SettingsPrivacyScreen />}
+          {userId && appScreen === 'settings_device' && <SettingsDeviceScreen />}
           {userId && appScreen === 'caretaker-home' && (
             <View style={{ flex: 1 }}>
               <CaretakerTabNavigator />

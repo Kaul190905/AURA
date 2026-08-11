@@ -32,7 +32,6 @@ react {
     //   skip the bundling of the JS bundle and the assets. By default is just 'debug'.
     //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
     // debuggableVariants = ["liteDebug", "prodDebug"]
-    debuggableVariants = [] // Embed JS bundle in debug APK (no Metro needed)
 
     /* Bundling */
     //   A list containing the node command and its flags. Default is just 'node'.

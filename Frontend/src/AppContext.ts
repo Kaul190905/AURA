@@ -15,7 +15,8 @@ export type AppScreen =
   | 'login' | 'welcome' | 'profile' | 'home' | 'crisis'
   | 'recovery' | 'settings' | 'speech' | 'plans'
   | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
-  | 'user_profile' | 'onboarding' | 'caregiver_management';
+  | 'user_profile' | 'onboarding' | 'caregiver_management'
+  | 'settings_accessibility' | 'settings_privacy' | 'settings_device';
 
 export type AppState = {
   userRole: 'user' | 'caregiver' | null;

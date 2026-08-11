@@ -2,24 +2,16 @@ import React, { useContext, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator,
 } from 'react-native';
-import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Users, Zap, Eye, Shield, Trash2, ChevronRight, Watch, Battery, Smartphone, LogOut, Check, Palette, User } from 'lucide-react-native';
+import { Users, Eye, Shield, ChevronRight, Watch, LogOut, Check, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { Accordion, AccItem } from '../components/Accordion';
-import { colors, neuSm, neuInset, radius, spacing, fonts } from '../theme';
+import { colors, neuSm, radius, fonts } from '../theme';
 import { supabase } from '../services/supabaseClient';
 
 export default function SettingsScreen() {
   const styles = getStyles();
-  const {
-    colorVisionMode, setColorVisionMode,
-    sensitivity, setSensitivity,
-    navigateTo,
-    history,
-    setUserId, setAccessToken,
-  } = useContext(AppContext);
+  const { navigateTo, setUserId, setAccessToken } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
   const [newName, setNewName] = useState('');
@@ -41,279 +33,143 @@ export default function SettingsScreen() {
     setUpdatingName(false);
   };
 
-  const resetData = () => {
-    // Reset history by navigating to profile
-    navigateTo('profile');
-  };
-
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Header title="Settings" subtitle="Personalize AURA" />
-      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-        <Accordion>
-          {/* Profile */}
-          <AccItem id="profile" title="Profile" defaultOpen icon={<Users size={18} color={colors.primary} />}>
-            <View style={{ gap: 8, marginTop: 8 }}>
-              <View style={[styles.navRow, { paddingVertical: 12 }]}>
-                <TextInput
-                  style={{ flex: 1, color: colors.foreground, ...fonts.medium, padding: 0 }}
-                  placeholder="Change Username"
-                  placeholderTextColor={colors.mutedForeground}
-                  value={newName}
-                  onChangeText={setNewName}
-                  returnKeyType="done"
-                  onSubmitEditing={handleUpdateName}
-                />
-                {updatingName ? (
-                   <ActivityIndicator size="small" color={colors.primary} />
-                ) : (
-                  <TouchableOpacity onPress={handleUpdateName} hitSlop={10}>
-                    {nameSuccess ? <Check size={18} color={colors.riskLow} /> : <Text style={{ color: colors.primary, ...fonts.bold }}>Save</Text>}
-                  </TouchableOpacity>
-                )}
-              </View>
-              <TouchableOpacity onPress={() => navigateTo('user_profile')} style={styles.navRow} activeOpacity={0.8}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <User size={16} color={colors.primary} />
-                  <Text style={styles.navRowText}>View profile page</Text>
-                </View>
-                <ChevronRight size={16} color={colors.mutedForeground} />
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => navigateTo('profile')} style={styles.navRow} activeOpacity={0.8}>
-                <Text style={styles.navRowText}>Edit sensory profile</Text>
-                <ChevronRight size={16} color={colors.mutedForeground} />
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => navigateTo('caregiver_management')} style={styles.navRow} activeOpacity={0.8}>
-                <Text style={styles.navRowText}>Caregiver Management</Text>
-                <ChevronRight size={16} color={colors.mutedForeground} />
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('login'); await supabase.auth.signOut(); }} style={styles.navRow} activeOpacity={0.8}>
-                <Text style={styles.navRowText}>Logout</Text>
-                <LogOut size={16} color={colors.mutedForeground} />
-              </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        
+        {/* Profile Section */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <Users size={20} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Profile & Account</Text>
+          </View>
+          <View style={styles.sectionCard}>
+            <View style={styles.navRowPadded}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Change Username"
+                placeholderTextColor={colors.mutedForeground}
+                value={newName}
+                onChangeText={setNewName}
+                returnKeyType="done"
+                onSubmitEditing={handleUpdateName}
+              />
+              {updatingName ? (
+                 <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <TouchableOpacity onPress={handleUpdateName} hitSlop={10}>
+                  {nameSuccess ? <Check size={18} color={colors.riskLow} /> : <Text style={{ color: colors.primary, ...fonts.bold }}>Save</Text>}
+                </TouchableOpacity>
+              )}
             </View>
-          </AccItem>
+            <View style={styles.divider} />
+            <TouchableOpacity onPress={() => navigateTo('user_profile')} style={styles.navRow} activeOpacity={0.7}>
+              <View style={styles.navRowInner}>
+                <User size={16} color={colors.primary} />
+                <Text style={styles.navRowText}>View profile page</Text>
+              </View>
+              <ChevronRight size={16} color={colors.mutedForeground} />
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity onPress={() => navigateTo('profile')} style={styles.navRow} activeOpacity={0.7}>
+              <Text style={styles.navRowText}>Edit sensory profile</Text>
+              <ChevronRight size={16} color={colors.mutedForeground} />
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity onPress={() => navigateTo('caregiver_management')} style={styles.navRow} activeOpacity={0.7}>
+              <Text style={styles.navRowText}>Caregiver Management</Text>
+              <ChevronRight size={16} color={colors.mutedForeground} />
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity onPress={async () => { setUserId(null); setAccessToken(null); navigateTo('login'); await supabase.auth.signOut(); }} style={styles.navRow} activeOpacity={0.7}>
+              <Text style={styles.navRowText}>Logout</Text>
+              <LogOut size={16} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          </View>
+        </View>
 
-
-          {/* Accessibility */}
-          <AccItem id="a11y" title="Accessibility" icon={<Eye size={18} color={colors.primary} />}>
-            <View style={{ gap: 8, marginTop: 8 }}>
-
-              <View style={styles.colorVisionSection}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <Palette size={16} color={colors.primary} />
-                  <Text style={styles.colorVisionTitle}>Color Vision Support</Text>
+        {/* Categories Section */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Preferences & Device</Text>
+          </View>
+          <View style={styles.sectionCard}>
+            
+            <TouchableOpacity onPress={() => navigateTo('settings_accessibility')} style={styles.navRow} activeOpacity={0.7}>
+              <View style={styles.navRowInnerLg}>
+                <View style={styles.iconContainer}>
+                  <Eye size={18} color={colors.primary} />
                 </View>
-
-                <View style={styles.radioGroup}>
-                  {([
-                    { id: 'default', label: 'Default' },
-                    { id: 'protanopia', label: 'Protanopia' },
-                    { id: 'deuteranopia', label: 'Deuteranopia' },
-                    { id: 'tritanopia', label: 'Tritanopia' },
-                  ] as const).map(option => (
-                    <TouchableOpacity
-                      key={option.id}
-                      style={[styles.radioItem, colorVisionMode === option.id && styles.radioItemActive, colorVisionMode === option.id && { backgroundColor: colors.muted }]}
-                      onPress={() => setColorVisionMode(option.id)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={[styles.radioLabel, colorVisionMode === option.id && { color: colors.primary, ...fonts.bold }]}>
-                        {option.label}
-                      </Text>
-                      {colorVisionMode === option.id && <Check size={16} color={colors.primary} />}
-                    </TouchableOpacity>
-                  ))}
+                <Text style={styles.navRowTextLg}>Accessibility</Text>
+              </View>
+              <ChevronRight size={18} color={colors.mutedForeground} />
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            
+            <TouchableOpacity onPress={() => navigateTo('settings_device')} style={styles.navRow} activeOpacity={0.7}>
+              <View style={styles.navRowInnerLg}>
+                <View style={styles.iconContainer}>
+                  <Watch size={18} color={colors.primary} />
                 </View>
+                <Text style={styles.navRowTextLg}>Device Information</Text>
+              </View>
+              <ChevronRight size={18} color={colors.mutedForeground} />
+            </TouchableOpacity>
+            <View style={styles.divider} />
 
-                {/* Live Preview Card */}
-                <View style={[styles.previewCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                  <Text style={styles.previewTitle}>Live Preview</Text>
-
-                  <View style={styles.previewRow}>
-                    <View style={[styles.previewBadge, { backgroundColor: colors.muted }]}>
-                      <View style={[styles.previewDot, { backgroundColor: colors.riskLow }]} />
-                      <Text style={[styles.previewBadgeText, { color: colors.foreground }]}>Success</Text>
-                    </View>
-                    <View style={[styles.previewBadge, { backgroundColor: colors.muted }]}>
-                      <View style={[styles.previewDot, { backgroundColor: colors.riskMed }]} />
-                      <Text style={[styles.previewBadgeText, { color: colors.foreground }]}>Warning</Text>
-                    </View>
-                  </View>
-
-                  <View style={[styles.previewRiskCard, { backgroundColor: colors.muted }]}>
-                    <View style={[styles.previewRiskRing, { borderColor: colors.riskHigh, backgroundColor: colors.background }]}>
-                      <Text style={[styles.previewRiskScore, { color: colors.riskHigh }]}>72</Text>
-                    </View>
-                    <View>
-                      <Text style={[styles.previewRiskLabel, { color: colors.foreground }]}>High Risk</Text>
-                      <Text style={[styles.previewRiskSub, { color: colors.mutedForeground }]}>Example Level</Text>
-                    </View>
-                  </View>
-
-
+            <TouchableOpacity onPress={() => navigateTo('settings_privacy')} style={styles.navRow} activeOpacity={0.7}>
+              <View style={styles.navRowInnerLg}>
+                <View style={styles.iconContainer}>
+                  <Shield size={18} color={colors.primary} />
                 </View>
+                <Text style={styles.navRowTextLg}>Privacy & Data</Text>
               </View>
-            </View>
-          </AccItem>
+              <ChevronRight size={18} color={colors.mutedForeground} />
+            </TouchableOpacity>
 
-          {/* Privacy */}
-          <AccItem id="privacy" title="Privacy" icon={<Shield size={18} color={colors.primary} />}>
-            <View style={{ gap: 8, marginTop: 8 }}>
-              <View style={styles.privacyCard}>
-                <Shield size={16} color={colors.primary} />
-                <Text style={styles.privacyText}>
-                  Your data stays on this device. Nothing is uploaded unless you share it with a caretaker.
-                </Text>
-              </View>
-              <TouchableOpacity onPress={resetData} style={styles.deleteBtn} activeOpacity={0.8}>
-                <Trash2 size={14} color={colors.riskHigh} />
-                <Text style={styles.deleteBtnText}>Delete all my data</Text>
-              </TouchableOpacity>
-            </View>
-          </AccItem>
+          </View>
+        </View>
 
-
-
-          {/* Device Information */}
-          <AccItem id="device" title="Device Information" icon={<Watch size={18} color={colors.primary} />}>
-            <View style={{ gap: 12, marginTop: 8 }}>
-              <View style={styles.navRow}>
-                <Smartphone size={16} color={colors.mutedForeground} />
-                <Text style={styles.navRowText}>AURA Band Pro</Text>
-              </View>
-              <View style={styles.navRow}>
-                <Battery size={16} color={colors.mutedForeground} />
-                <Text style={styles.navRowText}>Battery: 84%</Text>
-              </View>
-              <View style={styles.navRow}>
-                <Zap size={16} color={colors.mutedForeground} />
-                <Text style={styles.navRowText}>Firmware: v1.4.2</Text>
-              </View>
-              <View style={styles.navRow}>
-                <Smartphone size={16} color={colors.mutedForeground} />
-                <Text style={styles.navRowText}>App Version: v{require('../../package.json').version}</Text>
-              </View>
-
-              <View style={styles.colorVisionSection}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <Zap size={16} color={colors.primary} />
-                  <Text style={styles.colorVisionTitle}>Vibration Pattern</Text>
-                </View>
-                <View style={styles.radioGroup}>
-                  <TouchableOpacity
-                    style={[styles.radioItem, sensitivity === 1 && styles.radioItemActive, sensitivity === 1 && { backgroundColor: colors.muted }]}
-                    onPress={() => setSensitivity(1)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.radioLabel, sensitivity === 1 && { color: colors.primary, ...fonts.bold }]}>
-                      Short Vibration
-                    </Text>
-                    {sensitivity === 1 && <Check size={16} color={colors.primary} />}
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.radioItem, sensitivity === 2 && styles.radioItemActive, sensitivity === 2 && { backgroundColor: colors.muted }]}
-                    onPress={() => setSensitivity(2)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.radioLabel, sensitivity === 2 && { color: colors.primary, ...fonts.bold }]}>
-                      Long Vibration
-                    </Text>
-                    {sensitivity === 2 && <Check size={16} color={colors.primary} />}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </AccItem>
-        </Accordion>
       </ScrollView>
     </View>
   );
 }
 
-
-
 const getStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  
+  sectionContainer: { marginBottom: 28, paddingHorizontal: 16 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12, paddingHorizontal: 4 },
+  sectionTitle: { fontSize: 18, color: colors.foreground, ...fonts.bold },
+  sectionCard: { 
+    backgroundColor: colors.background, 
+    borderRadius: radius.xl, 
+    padding: 16, 
+    ...neuSm,
+    borderWidth: 1,
+    borderColor: colors.border + '80'
+  },
+
   navRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: colors.background, borderRadius: radius.lg, padding: 12, ...neuSm,
+    paddingVertical: 8,
   },
-  navRowText: { fontSize: 13, color: colors.foreground, ...fonts.medium },
-  badge: { fontSize: 12, color: colors.mutedForeground, marginRight: 4 },
-  sliderHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sliderTitle: { fontSize: 13, color: colors.foreground, ...fonts.medium },
-  sliderVal: { fontSize: 13, color: colors.mutedForeground },
-  sliderHint: { fontSize: 10, color: colors.mutedForeground, marginTop: 4 },
-  toggleRow: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    backgroundColor: colors.background, borderRadius: radius.lg, padding: 12, ...neuSm,
+  iconContainer: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: colors.muted,
+    alignItems: 'center', justifyContent: 'center'
   },
-  toggleIcon: {
-    width: 34, height: 34, borderRadius: radius.full,
-    backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...neuSm,
-  },
-  toggleLabel: { flex: 1, fontSize: 13, color: colors.foreground, ...fonts.medium },
-  toggleTrack: {
-    width: 46, height: 26, borderRadius: radius.full,
-    backgroundColor: colors.muted, justifyContent: 'center', paddingHorizontal: 3,
-  },
-  toggleThumb: {
-    width: 20, height: 20, borderRadius: radius.full,
-    backgroundColor: colors.mutedForeground, ...neuSm,
-  },
-  toggleThumbOn: {
-    backgroundColor: colors.primary,
-    transform: [{ translateX: 20 }],
-  },
-  privacyCard: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    backgroundColor: colors.muted, borderRadius: radius.md, padding: 12,
-  },
-  privacyText: { flex: 1, fontSize: 12, color: colors.foreground, opacity: 0.8, lineHeight: 18 },
-  deleteBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: colors.riskHighSoft, borderRadius: radius.lg, padding: 12,
-  },
-  deleteBtnText: { fontSize: 13, color: colors.riskHigh, ...fonts.semibold },
+  navRowText: { fontSize: 14, color: colors.foreground, ...fonts.medium },
+  navRowTextLg: { fontSize: 15, color: colors.foreground, ...fonts.semibold },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 8 },
-  colorVisionSection: { marginTop: 4 },
-  colorVisionTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold },
-  radioGroup: { gap: 8, marginBottom: 16 },
-  radioItem: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: colors.background, borderRadius: radius.md, padding: 12, ...neuSm,
-  },
-  radioItemActive: { ...neuInset },
-  radioLabel: { fontSize: 13, color: colors.foreground, ...fonts.medium },
 
-  previewCard: {
-    borderRadius: radius.lg, padding: 16, borderWidth: 1, gap: 12,
+  scrollContent: { paddingBottom: 80, paddingTop: 16 },
+  navRowPadded: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 12,
   },
-  previewTitle: { fontSize: 12, color: colors.mutedForeground, ...fonts.medium, textTransform: 'uppercase', letterSpacing: 1 },
-  previewRow: { flexDirection: 'row', gap: 12 },
-  previewBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.full,
-  },
-  previewDot: { width: 8, height: 8, borderRadius: 4 },
-  previewBadgeText: { fontSize: 11, ...fonts.medium },
-  previewRiskCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderRadius: radius.md, padding: 12,
-  },
-  previewRiskRing: {
-    width: 44, height: 44, borderRadius: 22, borderWidth: 3,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  previewRiskScore: { fontSize: 16, ...fonts.bold },
-  previewRiskLabel: { fontSize: 14, ...fonts.bold },
-  previewRiskSub: { fontSize: 11 },
-  previewButton: {
-    borderRadius: radius.md, padding: 12, alignItems: 'center', justifyContent: 'center',
-  },
-  previewButtonText: { fontSize: 13, ...fonts.bold },
+  textInput: { flex: 1, color: colors.foreground, ...fonts.medium, padding: 0 },
+  navRowInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  navRowInnerLg: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 });
