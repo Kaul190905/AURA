@@ -18,6 +18,7 @@ import { supabase } from './src/services/supabaseClient';
 import { submitSensorData, logOverloadEvent, getRecommendations } from './src/services/api';
 import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
 
+
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
@@ -36,22 +37,27 @@ import CaretakerGateScreen from './src/screens/CaretakerGateScreen';
 import CaretakerDashboardScreen from './src/screens/CaretakerDashboardScreen';
 import CaretakerUsersScreen from './src/screens/CaretakerUsersScreen';
 import CaretakerTrackUserScreen from './src/screens/CaretakerTrackUserScreen';
-import MonitoringModeScreen from './src/screens/MonitoringModeScreen';
+
 import TeacherDashboardScreen from './src/screens/TeacherDashboardScreen';
 import TeacherStudentsScreen from './src/screens/TeacherStudentsScreen';
 import TeacherStudentDetailsScreen from './src/screens/TeacherStudentDetailsScreen';
 import CaretakerProfileScreen from './src/screens/CaretakerProfileScreen';
+import ProfileDetailsScreen from './src/screens/ProfileDetailsScreen';
+import EmergencyContactsScreen from './src/screens/EmergencyContactsScreen';
+import ConnectedUserDetailsScreen from './src/screens/ConnectedUserDetailsScreen';
 import LiveAlertModal from './src/components/LiveAlertModal';
 
 import { AppContext, AppNotification, AppScreen, AppState } from './src/AppContext';
 
-const Tab = createBottomTabNavigator();
+const MainTab = createBottomTabNavigator();
+const TeacherTab = createBottomTabNavigator();
+const CaretakerTab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 // ── Tab Navigator (main app) ──────────────────────────────────────────────────
 function TabNavigator({ goCrisis, initialRouteName = 'House' }: { goCrisis: () => void, initialRouteName?: string }) {
   return (
-    <Tab.Navigator
+    <MainTab.Navigator
       initialRouteName={initialRouteName}
       screenOptions={{
         headerShown: false,
@@ -61,32 +67,32 @@ function TabNavigator({ goCrisis, initialRouteName = 'House' }: { goCrisis: () =
         tabBarLabelStyle: styles.tabLabel,
       }}
     >
-      <Tab.Screen
+      <MainTab.Screen
         name="House"
         component={HomeScreen}
         options={{ tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }}
       />
-      <Tab.Screen
+      <MainTab.Screen
         name="Library"
         component={StrategyLibraryScreen}
         options={{ tabBarIcon: ({ color, size }) => <Library color={color} size={size} /> }}
       />
-      <Tab.Screen
+      <MainTab.Screen
         name="Insights"
         component={HistoryInsightsScreen}
         options={{ tabBarIcon: ({ color, size }) => <TrendingUp color={color} size={size} /> }}
       />
-      <Tab.Screen
+      <MainTab.Screen
         name="Device"
         component={WearableScreen}
         options={{ tabBarIcon: ({ color, size }) => <Bluetooth color={color} size={size} /> }}
       />
-      <Tab.Screen
+      <MainTab.Screen
         name="Settings"
         component={SettingsScreen}
         options={{ tabBarIcon: ({ color, size }) => <Settings color={color} size={size} /> }}
       />
-      </Tab.Navigator>
+      </MainTab.Navigator>
   );
 }
 
@@ -96,7 +102,7 @@ function TeacherTabNavigator() {
   const bg = darkMode ? '#000000' : colors.background;
   const border = darkMode ? '#1c1c1e' : colors.border;
   return (
-    <Tab.Navigator
+    <TeacherTab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: [styles.tabBar, { backgroundColor: bg, borderTopColor: border }],
@@ -105,22 +111,22 @@ function TeacherTabNavigator() {
         tabBarLabelStyle: styles.tabLabel,
       }}
     >
-      <Tab.Screen
+      <TeacherTab.Screen
         name="Dashboard"
         component={TeacherDashboardScreen}
         options={{ tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }}
       />
-      <Tab.Screen
+      <TeacherTab.Screen
         name="Students"
         component={TeacherStudentsScreen}
         options={{ tabBarIcon: ({ color, size }) => <Users color={color} size={size} /> }}
       />
-      <Tab.Screen
+      <TeacherTab.Screen
         name="Profile"
-        component={CaretakerProfileScreen}
+        component={ProfileStackNavigator}
         options={{ tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }}
       />
-    </Tab.Navigator>
+    </TeacherTab.Navigator>
   );
 }
 
@@ -140,7 +146,7 @@ function CaretakerTabNavigator() {
   const bg = darkMode ? '#000000' : colors.background;
   const border = darkMode ? '#1c1c1e' : colors.border;
   return (
-    <Tab.Navigator
+    <CaretakerTab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: [styles.tabBar, { backgroundColor: bg, borderTopColor: border }],
@@ -149,22 +155,22 @@ function CaretakerTabNavigator() {
         tabBarLabelStyle: styles.tabLabel,
       }}
     >
-      <Tab.Screen
+      <CaretakerTab.Screen
         name="Dashboard"
         component={CaretakerDashboardScreen}
         options={{ tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }}
       />
-      <Tab.Screen
+      <CaretakerTab.Screen
         name="Users"
         component={CaretakerUsersScreen}
         options={{ tabBarIcon: ({ color, size }) => <Users color={color} size={size} /> }}
       />
-      <Tab.Screen
+      <CaretakerTab.Screen
         name="Profile"
-        component={CaretakerProfileScreen}
+        component={ProfileStackNavigator}
         options={{ tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }}
       />
-    </Tab.Navigator>
+    </CaretakerTab.Navigator>
   );
 }
 
@@ -179,8 +185,20 @@ function CaretakerRoot() {
 }
 
 // ── Root App ──────────────────────────────────────────────────────────────────
+const ProfileStack = createStackNavigator();
+function ProfileStackNavigator() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="ProfileMenu" component={CaretakerProfileScreen} />
+      <ProfileStack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
+      <ProfileStack.Screen name="EmergencyContacts" component={EmergencyContactsScreen} />
+      <ProfileStack.Screen name="ConnectedUserDetails" component={ConnectedUserDetailsScreen} />
+    </ProfileStack.Navigator>
+  );
+}
+
 export default function App() {
-  const [appScreen, setAppScreen] = useState<AppScreen>('welcome');
+  const [appScreen, setAppScreen] = useState<AppScreen>('login');
   const [primaryRole, setPrimaryRole] = useState<'user' | 'caretaker' | null>(null);
   const [isCrisisMode, setIsCrisisMode] = useState(false);
   const [crisisRiskBefore, setCrisisRiskBefore] = useState<number | null>(null);
@@ -271,22 +289,16 @@ export default function App() {
   useEffect(() => {
     const handleAuth = async (user: any) => {
       const storedRole = user?.user_metadata?.role;
-      const roleSelected = user?.user_metadata?.roleSelected;
-      
-      if (roleSelected && storedRole === 'user') {
+      if (storedRole === 'user') {
         setPrimaryRole('user');
         setAppScreen('home');
-      } else if (roleSelected && storedRole === 'caretaker') {
+      } else if (storedRole === 'caretaker') {
         setPrimaryRole('caretaker');
-        // Restore monitoring mode from user metadata if previously selected
-        const savedMode = user?.user_metadata?.caretakerType;
-        if (savedMode === 'teacher' || savedMode === 'personal-caretaker') {
-          setCaretakerType(savedMode);
-          setAppScreen(savedMode === 'teacher' ? 'teacher-home' : 'caretaker-home');
-        } else {
-          setAppScreen('monitoring-mode');
-        }
+        // Default to personal-caretaker under the hood to satisfy existing state needs
+        setCaretakerType('personal-caretaker');
+        setAppScreen('caretaker-home');
       } else {
+        // No role saved yet (new account)
         setAppScreen('welcome');
       }
     };
@@ -304,7 +316,7 @@ export default function App() {
       setUserId(session?.user.id ?? null);
       setAccessToken(session?.access_token ?? null);
       if (!session) {
-        setAppScreen('welcome');
+        setAppScreen('login');
         setPrimaryRole(null);
       } else if (_event === 'SIGNED_IN' && session.user) {
         await handleAuth(session.user);
@@ -402,7 +414,7 @@ export default function App() {
 
 
   useEffect(() => {
-    if (risk.score >= 3 && alertShownForScore === null && appScreen !== 'welcome' && appScreen !== 'profile' && !isCrisisMode) {
+    if (risk.score >= 3 && alertShownForScore === null && appScreen !== 'login' && appScreen !== 'welcome' && appScreen !== 'profile' && !isCrisisMode) {
       setAlertOpen(true);
       setAlertShownForScore(risk.score);
     }
@@ -508,11 +520,22 @@ export default function App() {
           {!sessionLoading && !userId && (
             <LoginScreen onSuccess={() => {}} />
           )}
-          {!sessionLoading && userId && appScreen === 'welcome' && <WelcomeScreen onNext={async (role) => {
-            await supabase.auth.updateUser({ data: { role, roleSelected: true } });
-            setPrimaryRole(role);
-            setAppScreen(role === 'caretaker' ? 'monitoring-mode' : 'profile');
-          }} />}
+
+          {!sessionLoading && userId && appScreen === 'welcome' && (
+            <WelcomeScreen 
+              onNext={async (role) => {
+                await supabase.auth.updateUser({ data: { role } });
+                setPrimaryRole(role);
+                if (role === 'user') {
+                  setAppScreen('home');
+                } else {
+                  setCaretakerType('personal-caretaker');
+                  setAppScreen('caretaker-home');
+                }
+              }} 
+            />
+          )}
+
           {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('settings')} onBack={() => setAppScreen('settings')} />}
 
           {userId && appScreen === 'recovery' && <RecoverySummaryScreen onDone={() => setAppScreen('home')} />}
@@ -520,7 +543,7 @@ export default function App() {
           {userId && appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'user_profile' && <UserProfileScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setPrimaryRole('caretaker'); setAppScreen('monitoring-mode'); }} />}
-          {userId && appScreen === 'monitoring-mode' && <MonitoringModeScreen />}
+
           {userId && appScreen === 'caretaker-home' && (
             <View style={{ flex: 1 }}>
               <CaretakerRoot />
