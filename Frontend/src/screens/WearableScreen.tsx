@@ -113,7 +113,9 @@ export default function WearableScreen() {
       <Header title="Wearable" subtitle="AURA band" />
 
       {/* Connection card */}
-      <View style={[styles.connectCard, neuSm]}>
+      <View style={styles.sectionContainer}>
+      <View style={styles.sectionCard}>
+        <View style={styles.connectRow}>
         <View style={[styles.bleIcon, bleConnected && { backgroundColor: colors.muted }]}>
           <Bluetooth size={22} color={colors.primary} />
         </View>
@@ -133,9 +135,12 @@ export default function WearableScreen() {
             {bleConnected ? 'Disconnect' : pairing ? '…' : 'Pair'}
           </Text>
         </TouchableOpacity>
+        </View>
+      </View>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+        <View style={styles.sectionContainer}>
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -195,7 +200,9 @@ export default function WearableScreen() {
             />
           </View>
         </View>
+        </View>
 
+        <View style={styles.sectionContainer}>
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -213,6 +220,7 @@ export default function WearableScreen() {
               <Text style={styles.statValue}>{bleConnected ? 'Strong' : '—'}</Text>
             </View>
           </View>
+        </View>
         </View>
       </ScrollView>
 
@@ -280,16 +288,23 @@ export default function WearableScreen() {
 
 const getStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  sectionContainer: { marginBottom: 28, paddingHorizontal: 16 },
   sectionCard: {
-    backgroundColor: colors.background, borderRadius: radius.xl, padding: spacing.lg,
-    marginHorizontal: spacing.lg, marginBottom: spacing.md, ...neuSm,
+    backgroundColor: colors.background,
+    borderRadius: radius.xl,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border + '80',
+    shadowColor: colors.primary,
+    shadowOffset: { width: -2, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   sectionTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold },
-  connectCard: {
+  connectRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    marginHorizontal: spacing.lg, marginBottom: spacing.md,
-    borderRadius: radius.xl, padding: spacing.lg, backgroundColor: colors.background,
   },
   bleIcon: {
     width: 48, height: 48, borderRadius: radius.full,

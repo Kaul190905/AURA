@@ -114,7 +114,8 @@ export default function StrategyLibraryScreen() {
       )}
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-        <View style={[styles.caregiverCard, { marginHorizontal: spacing.lg, marginBottom: spacing.md }]}>
+        <View style={styles.sectionContainer}>
+        <View style={styles.sectionCard}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <User size={20} color={colors.primary} />
@@ -178,12 +179,14 @@ export default function StrategyLibraryScreen() {
             <Text style={{ fontSize: 13, color: colors.mutedForeground }}>No caregiver added yet.</Text>
           )}
         </View>
+        </View>
 
           {TRIGGERS.map((t) => {
             const list = grouped.get(t.key) ?? [];
             const Icon = TRIGGER_ICONS[t.key];
             return (
-              <View key={t.key} style={[styles.caregiverCard, { marginHorizontal: spacing.lg, marginBottom: spacing.md }]}>
+              <View key={t.key} style={styles.sectionContainer}>
+              <View style={styles.sectionCard}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Icon size={18} color={colors.primary} />
@@ -230,6 +233,7 @@ export default function StrategyLibraryScreen() {
                     ))}
                   </View>
                 )}
+              </View>
               </View>
             );
           })}
@@ -319,9 +323,14 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.muted, borderRadius: radius.xl, padding: spacing.lg,
   },
   addCardTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold, marginBottom: 10 },
-  caregiverCard: {
-    backgroundColor: colors.background, borderRadius: radius.xl, padding: spacing.lg,
+  sectionContainer: { marginBottom: 28, paddingHorizontal: 16 },
+  sectionCard: {
+    backgroundColor: colors.background, 
+    borderRadius: radius.xl, 
+    padding: 16, 
     ...neuSm,
+    borderWidth: 1,
+    borderColor: colors.border + '80'
   },
   caregiverTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold },
   input: {
@@ -350,8 +359,8 @@ const getStyles = () => StyleSheet.create({
   badge: { fontSize: 12, color: colors.mutedForeground, marginRight: 4 },
   emptyText: { fontSize: 12, color: colors.mutedForeground },
   strategyCard: {
-    flexDirection: 'row', alignItems: 'flex-start',
-    backgroundColor: colors.muted, borderRadius: radius.md, padding: 12,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
   strategyTitle: { fontSize: 13, color: colors.foreground, ...fonts.medium },
   strategyNote: { fontSize: 11, color: colors.mutedForeground, marginTop: 2 },

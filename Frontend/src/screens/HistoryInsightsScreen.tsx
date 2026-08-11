@@ -7,7 +7,6 @@ import { TrendingUp, Zap, AudioWaveform, MapPin } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { Accordion, AccItem } from '../components/Accordion';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { riskColor, timeAgo } from '../utils';
 import {
@@ -114,9 +113,16 @@ export default function HistoryInsightsScreen() {
       )}
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-        <Accordion>
-          <AccItem id="avg" title="Average risk" defaultOpen icon={<TrendingUp size={18} color={colors.primary} />}>
-            <View style={{ marginTop: 8 }}>
+        {/* Average risk */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <TrendingUp size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Average risk</Text>
+            </View>
+          </View>
+          <View style={styles.sectionCard}>
+            <View style={{ alignItems: 'center', marginVertical: 8 }}>
               <LineChart
                 data={perDay}
                 height={120}
@@ -135,12 +141,20 @@ export default function HistoryInsightsScreen() {
                 maxValue={10}
               />
             </View>
-          </AccItem>
+          </View>
+        </View>
 
-          <AccItem id="top" title="Top triggers"
-            icon={<Zap size={18} color={colors.primary} />}
-            badge={<Text style={styles.badge}>{triggerBreakdown.length}</Text>}>
-            <View style={{ marginTop: 8 }}>
+        {/* Top triggers */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Zap size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Top triggers</Text>
+            </View>
+            <Text style={styles.badge}>{triggerBreakdown.length}</Text>
+          </View>
+          <View style={styles.sectionCard}>
+            <View style={{ alignItems: 'center', marginVertical: 8 }}>
               {triggerBreakdown.length > 0 ? (
                 <BarChart
                   data={triggerBreakdown}
@@ -157,60 +171,82 @@ export default function HistoryInsightsScreen() {
                 <Text style={styles.emptyText}>No events in this range.</Text>
               )}
             </View>
-          </AccItem>
+          </View>
+        </View>
 
-          <AccItem id="events" title="Past events"
-            icon={<AudioWaveform size={18} color={colors.primary} />}
-            badge={<Text style={styles.badge}>{filtered.length}</Text>}>
+        {/* Past events */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <AudioWaveform size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Past events</Text>
+            </View>
+            <Text style={styles.badge}>{filtered.length}</Text>
+          </View>
+          <View style={styles.sectionCard}>
             {filtered.length === 0 ? (
               <View style={styles.emptyCard}>
                 <Text style={styles.emptyText}>No events in this range.</Text>
               </View>
             ) : (
               <View style={{ gap: 8 }}>
-                {filtered.map((h) => {
+                {filtered.map((h, i) => {
                   const c = riskColor(h.score);
                   return (
-                    <View key={h.id} style={styles.eventRow}>
-                      <View style={[styles.eventDot, { borderColor: c }]} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.eventTitle}>
-                          {h.trigger} · <Text style={styles.eventAction}>{h.action}</Text>
-                        </Text>
-                        <Text style={styles.eventDate}>{new Date(h.time).toLocaleString()}</Text>
-                        {h.note && <Text style={styles.eventNote}>"{h.note}"</Text>}
+                    <React.Fragment key={h.id}>
+                      <View style={styles.navRow}>
+                        <View style={[styles.eventDot, { borderColor: c }]} />
+                        <View style={{ flex: 1, marginLeft: 12 }}>
+                          <Text style={styles.eventTitle}>
+                            {h.trigger} · <Text style={styles.eventAction}>{h.action}</Text>
+                          </Text>
+                          <Text style={styles.eventDate}>{new Date(h.time).toLocaleString()}</Text>
+                          {h.note && <Text style={styles.eventNote}>"{h.note}"</Text>}
+                        </View>
+                        <Text style={[styles.eventScore, { color: c }]}>{h.score}</Text>
                       </View>
-                      <Text style={[styles.eventScore, { color: c }]}>{h.score}</Text>
-                    </View>
+                      {i < filtered.length - 1 && <View style={styles.divider} />}
+                    </React.Fragment>
                   );
                 })}
               </View>
             )}
-          </AccItem>
+          </View>
+        </View>
 
-          {/* Most Dangerous Locations */}
-          <AccItem id="locations" title="High-Risk Locations" icon={<MapPin size={18} color={colors.primary} />}>
-            <View style={{ gap: 12, marginTop: 8 }}>
+        {/* Most Dangerous Locations */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <MapPin size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>High-Risk Locations</Text>
+            </View>
+          </View>
+          <View style={styles.sectionCard}>
+            <View style={{ gap: 12 }}>
               {[
                 { name: 'Downtown Subway', risk: 'High', visits: 4 },
                 { name: 'Shopping Mall', risk: 'Medium', visits: 2 },
-              ].map((loc, i) => (
-                <View key={i} style={[styles.eventRow, { justifyContent: 'space-between' }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <MapPin size={18} color={colors.riskHigh} />
-                    <View>
-                      <Text style={[styles.eventTitle, fonts.bold]}>{loc.name}</Text>
-                      <Text style={styles.eventDate}>{loc.visits} visits this week</Text>
+              ].map((loc, i, arr) => (
+                <React.Fragment key={i}>
+                  <View style={[styles.navRow, { justifyContent: 'space-between' }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <MapPin size={18} color={colors.riskHigh} />
+                      <View>
+                        <Text style={[styles.eventTitle, fonts.bold]}>{loc.name}</Text>
+                        <Text style={styles.eventDate}>{loc.visits} visits this week</Text>
+                      </View>
+                    </View>
+                    <View style={styles.riskBadge}>
+                      <Text style={styles.riskBadgeText}>{loc.risk}</Text>
                     </View>
                   </View>
-                  <View style={styles.riskBadge}>
-                    <Text style={styles.riskBadgeText}>{loc.risk}</Text>
-                  </View>
-                </View>
+                  {i < arr.length - 1 && <View style={styles.divider} />}
+                </React.Fragment>
               ))}
             </View>
-          </AccItem>
-        </Accordion>
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
@@ -241,19 +277,38 @@ const getStyles = () => StyleSheet.create({
   },
   forecastTitle: { fontSize: 13, color: colors.foreground, ...fonts.bold },
   forecastDesc: { fontSize: 12, color: colors.mutedForeground, marginTop: 2 },
+  sectionContainer: { marginBottom: 28, paddingHorizontal: 16 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  sectionTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold },
+  sectionCard: {
+    backgroundColor: colors.background,
+    borderRadius: radius.xl,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border + '80',
+    shadowColor: colors.primary,
+    shadowOffset: { width: -2, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  navRow: {
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 4,
+  },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 12, opacity: 0.5 },
   eventRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     backgroundColor: colors.muted, borderRadius: radius.md, padding: 10,
   },
-  eventDot: { width: 28, height: 28, borderRadius: radius.full, borderWidth: 3, backgroundColor: colors.background },
-  eventTitle: { fontSize: 12, color: colors.foreground, textTransform: 'capitalize', ...fonts.medium },
+  eventDot: { width: 14, height: 14, borderRadius: radius.full, borderWidth: 3, backgroundColor: colors.background },
+  eventTitle: { fontSize: 13, color: colors.foreground, textTransform: 'capitalize', ...fonts.semibold },
   eventAction: { color: colors.mutedForeground },
-  eventDate: { fontSize: 10, color: colors.mutedForeground, marginTop: 1 },
-  eventNote: { fontSize: 10, color: colors.foreground, opacity: 0.7, marginTop: 2, fontStyle: 'italic' },
-  eventScore: { fontSize: 14, ...fonts.semibold },
+  eventDate: { fontSize: 11, color: colors.mutedForeground, marginTop: 1 },
+  eventNote: { fontSize: 11, color: colors.foreground, opacity: 0.8, marginTop: 4, fontStyle: 'italic' },
+  eventScore: { fontSize: 16, ...fonts.bold },
   riskBadge: {
     paddingHorizontal: 8, paddingVertical: 4,
     borderRadius: radius.sm, backgroundColor: `${colors.primary}20`,
   },
-  riskBadgeText: { fontSize: 10, color: colors.primary, ...fonts.semibold },
+  riskBadgeText: { fontSize: 11, color: colors.primary, ...fonts.bold },
 });

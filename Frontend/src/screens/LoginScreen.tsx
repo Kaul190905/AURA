@@ -126,26 +126,27 @@ export default function LoginScreen({ onSuccess }: Props) {
           </Text>
 
           {/* Card */}
-          <View style={styles.card}>
-            {/* Tab switcher */}
-            <View style={styles.tabRow}>
-              <TouchableOpacity
-                style={[styles.tab, !isSignup && styles.tabActive]}
-                onPress={() => { setMode('signin'); setError(null); setSuccessMsg(null); }}
-              >
-                <Text style={[styles.tabText, !isSignup && styles.tabTextActive]}>
-                  Sign In
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tab, isSignup && styles.tabActive]}
-                onPress={() => { setMode('signup'); setError(null); setSuccessMsg(null); }}
-              >
-                <Text style={[styles.tabText, isSignup && styles.tabTextActive]}>
-                  Create Account
-                </Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionCard}>
+              {/* Tab switcher */}
+              <View style={styles.tabRow}>
+                <TouchableOpacity
+                  style={[styles.tab, !isSignup && styles.tabActive]}
+                  onPress={() => { setMode('signin'); setError(null); setSuccessMsg(null); }}
+                >
+                  <Text style={[styles.tabText, !isSignup && styles.tabTextActive]}>
+                    Sign In
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.tab, isSignup && styles.tabActive]}
+                  onPress={() => { setMode('signup'); setError(null); setSuccessMsg(null); }}
+                >
+                  <Text style={[styles.tabText, isSignup && styles.tabTextActive]}>
+                    Create Account
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
             {isSignup && (
               <View style={styles.fieldGroup}>
@@ -258,6 +259,7 @@ export default function LoginScreen({ onSuccess }: Props) {
               <Globe size={18} color={colors.foreground} />
               <Text style={styles.googleBtnText}>Continue with Google</Text>
             </TouchableOpacity>
+            </View>
           </View>
 
           <Text style={styles.footerText}>
@@ -316,27 +318,25 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: -spacing.sm,
   },
-  card: {
-    width: '100%',
+  sectionContainer: { width: '100%', marginBottom: 28 },
+  sectionCard: {
     backgroundColor: colors.background,
     borderRadius: radius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
+    padding: 16,
     borderWidth: 1,
-    borderColor: colors.border,
-    marginTop: spacing.sm,
-    elevation: 4,
-    shadowColor: '#A3B1C6',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    borderColor: colors.border + '80',
+    shadowColor: colors.primary,
+    shadowOffset: { width: -2, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   tabRow: {
     flexDirection: 'row',
     backgroundColor: colors.muted,
-    borderRadius: radius.lg,
+    borderRadius: radius.full,
     padding: 4,
-    gap: 4,
+    marginBottom: spacing.xl,
   },
   tab: {
     flex: 1,

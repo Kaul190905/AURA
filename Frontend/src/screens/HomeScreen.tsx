@@ -95,11 +95,11 @@ export default function HomeScreen() {
 
       <View style={{ flex: 1 }}>
         {/* Live Details Dashboard */}
-        <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}>
+        <View style={styles.sectionContainer}>
         <Text style={[styles.sectionTitle, { marginBottom: 16, marginLeft: 4 }]}>Live Details</Text>
 
         {/* Top Card: Concentric Rings */}
-        <View style={styles.dashboardCard}>
+        <View style={styles.sectionCard}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
 
             {/* Rings */}
@@ -152,7 +152,7 @@ export default function HomeScreen() {
 
         <View style={{ flexDirection: 'row', gap: 16, marginTop: 16 }}>
           {/* Bottom Left: Heart Rate Line Chart */}
-          <View style={[styles.dashboardCard, { flex: 1, padding: 16, height: 160 }]}>
+          <View style={[styles.sectionCard, { flex: 1, height: 160, marginBottom: 0 }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Heart size={16} color="#FF4D4F" />
               <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Heart rate</Text>
@@ -174,7 +174,7 @@ export default function HomeScreen() {
           </View>
 
           {/* Bottom Right: Noise Level Bar Chart */}
-          <View style={[styles.dashboardCard, { flex: 1, padding: 16, height: 160 }]}>
+          <View style={[styles.sectionCard, { flex: 1, height: 160, marginBottom: 0 }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Volume2 size={16} color="#00C48C" />
               <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Noise level</Text>
@@ -198,6 +198,7 @@ export default function HomeScreen() {
 
       {/* Accordion sections */}
         {/* Check in */}
+        <View style={styles.sectionContainer}>
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -221,8 +222,10 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.sliderHint}>Sliding updates your risk score live.</Text>
         </View>
+        </View>
 
         {/* Factors */}
+        <View style={styles.sectionContainer}>
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -241,7 +244,7 @@ export default function HomeScreen() {
             ))
           )}
         </View>
-
+        </View>
 
       </View>
 
@@ -313,9 +316,14 @@ export default function HomeScreen() {
 
 const getStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  dashboardCard: {
-    backgroundColor: colors.background, borderRadius: 20, padding: 20,
+  sectionContainer: { marginBottom: 28, paddingHorizontal: 16 },
+  sectionCard: {
+    backgroundColor: colors.background, 
+    borderRadius: radius.xl, 
+    padding: 16, 
     ...neuSm,
+    borderWidth: 1,
+    borderColor: colors.border + '80',
   },
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -354,10 +362,6 @@ const getStyles = () => StyleSheet.create({
   sliderRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
   sliderLabel: { fontSize: 10, color: colors.mutedForeground, letterSpacing: 1, ...fonts.medium },
   sliderHint: { fontSize: 11, color: colors.mutedForeground, textAlign: 'center', marginTop: 6 },
-  sectionCard: {
-    backgroundColor: colors.background, borderRadius: radius.xl, padding: spacing.lg,
-    marginHorizontal: spacing.lg, marginBottom: spacing.md, ...neuSm,
-  },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   sectionTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold },
   badge: { fontSize: 12, color: colors.mutedForeground },
