@@ -6,7 +6,7 @@ import {
 import Svg, { Circle, Path, Rect, Defs, LinearGradient, Stop, G } from 'react-native-svg';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heart, Zap, Bell, Mic, CalendarDays, ChevronRight, X, Activity, Thermometer, Volume2 } from 'lucide-react-native';
+import { Heart, Zap, Bell, X, Activity, Thermometer, Volume2 } from 'lucide-react-native';
 
 import { AppContext } from '../AppContext';
 
@@ -26,7 +26,7 @@ export default function HomeScreen() {
   const styles = getStyles();
   const {
     risk, selfReport, setSelfReport, setIsNotificationCenterOpen,
-    notifications, bleConnected, navigateTo, triggerSos,
+    notifications, bleConnected, triggerSos,
     noise, temperature, heartRate,
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();

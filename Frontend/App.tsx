@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, StyleSheet, TouchableOpacity, Text, Modal, Linking } from 'react-native';
-import { House, Library, TrendingUp, Bluetooth, Settings, Heart, User, AlertTriangle, CheckCircle2, Navigation, Users } from 'lucide-react-native';
+import { House, Library, TrendingUp, Bluetooth, Settings, User, AlertTriangle, CheckCircle2, Users } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { colors, fonts, applyColorVisionMode } from './src/theme';
@@ -22,16 +22,7 @@ import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
-import OnboardingScreen from './src/screens/OnboardingScreen';
-import HomeScreen from './src/screens/HomeScreen';
-import CrisisModeScreen from './src/screens/CrisisModeScreen';
-import StrategyLibraryScreen from './src/screens/StrategyLibraryScreen';
-import HistoryInsightsScreen from './src/screens/HistoryInsightsScreen';
-import WearableScreen from './src/screens/WearableScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
-import SettingsAccessibilityScreen from './src/screens/SettingsAccessibilityScreen';
-import SettingsPrivacyScreen from './src/screens/SettingsPrivacyScreen';
-import SettingsDeviceScreen from './src/screens/SettingsDeviceScreen';
 import RecoverySummaryScreen from './src/screens/RecoverySummaryScreen';
 import { NotificationModal } from './src/components/NotificationModal';
 import SpeechDiaryScreen from './src/screens/SpeechDiaryScreen';
@@ -56,7 +47,15 @@ import { AppContext, AppNotification, AppScreen, AppState } from './src/AppConte
 const MainTab = createBottomTabNavigator();
 const TeacherTab = createBottomTabNavigator();
 const CaretakerTab = createBottomTabNavigator();
-const Stack = createStackNavigator();
+
+// ── Shared Icons ──────────────────────────────────────────────────────────────
+const renderHouseIcon = ({ color, size }: any) => <House color={color} size={size} />;
+const renderLibraryIcon = ({ color, size }: any) => <Library color={color} size={size} />;
+const renderTrendingUpIcon = ({ color, size }: any) => <TrendingUp color={color} size={size} />;
+const renderBluetoothIcon = ({ color, size }: any) => <Bluetooth color={color} size={size} />;
+const renderSettingsIcon = ({ color, size }: any) => <Settings color={color} size={size} />;
+const renderUsersIcon = ({ color, size }: any) => <Users color={color} size={size} />;
+const renderUserIcon = ({ color, size }: any) => <User color={color} size={size} />;
 
 // ── Tab Navigator (main app) ──────────────────────────────────────────────────
 function TabNavigator({ initialRouteName = 'House' }: { initialRouteName?: string }) {
@@ -74,27 +73,27 @@ function TabNavigator({ initialRouteName = 'House' }: { initialRouteName?: strin
       <MainTab.Screen
         name="House"
         component={HomeScreen}
-        options={{ tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }}
+        options={{ tabBarIcon: renderHouseIcon }}
       />
       <MainTab.Screen
         name="Library"
         component={StrategyLibraryScreen}
-        options={{ tabBarIcon: ({ color, size }) => <Library color={color} size={size} /> }}
+        options={{ tabBarIcon: renderLibraryIcon }}
       />
       <MainTab.Screen
         name="Insights"
         component={HistoryInsightsScreen}
-        options={{ tabBarIcon: ({ color, size }) => <TrendingUp color={color} size={size} /> }}
+        options={{ tabBarIcon: renderTrendingUpIcon }}
       />
       <MainTab.Screen
         name="Device"
         component={WearableScreen}
-        options={{ tabBarIcon: ({ color, size }) => <Bluetooth color={color} size={size} /> }}
+        options={{ tabBarIcon: renderBluetoothIcon }}
       />
       <MainTab.Screen
         name="Settings"
         component={SettingsScreen}
-        options={{ tabBarIcon: ({ color, size }) => <Settings color={color} size={size} /> }}
+        options={{ tabBarIcon: renderSettingsIcon }}
       />
     </MainTab.Navigator>
   );
@@ -118,17 +117,17 @@ function TeacherTabNavigator() {
       <TeacherTab.Screen
         name="Dashboard"
         component={TeacherDashboardScreen}
-        options={{ tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }}
+        options={{ tabBarIcon: renderHouseIcon }}
       />
       <TeacherTab.Screen
         name="Students"
         component={TeacherStudentsScreen}
-        options={{ tabBarIcon: ({ color, size }) => <Users color={color} size={size} /> }}
+        options={{ tabBarIcon: renderUsersIcon }}
       />
       <TeacherTab.Screen
         name="Profile"
         component={ProfileStackNavigator}
-        options={{ tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }}
+        options={{ tabBarIcon: renderUserIcon }}
       />
     </TeacherTab.Navigator>
   );
@@ -162,17 +161,17 @@ function CaretakerTabNavigator() {
       <CaretakerTab.Screen
         name="Dashboard"
         component={CaretakerDashboardScreen}
-        options={{ tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }}
+        options={{ tabBarIcon: renderHouseIcon }}
       />
       <CaretakerTab.Screen
         name="Users"
         component={CaretakerUsersScreen}
-        options={{ tabBarIcon: ({ color, size }) => <Users color={color} size={size} /> }}
+        options={{ tabBarIcon: renderUsersIcon }}
       />
       <CaretakerTab.Screen
         name="Profile"
         component={ProfileStackNavigator}
-        options={{ tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }}
+        options={{ tabBarIcon: renderUserIcon }}
       />
     </CaretakerTab.Navigator>
   );
@@ -250,7 +249,7 @@ export default function App() {
   const [caretakerType, setCaretakerType] = useState<'teacher' | 'personal-caretaker' | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
-  const [mockStudents, setMockStudents] = useState<AppState['mockStudents']>([
+  const [mockStudents, _setMockStudents] = useState<AppState['mockStudents']>([
     { id: 's1', name: 'Rahul Sharma', location: 'Science Lab', risk: 9, isCrisis: true, condition: 'High Noise', sensorValue: '92 dB', bluetoothStatus: 'Connected', lastUpdated: '10 sec ago' },
     { id: 's2', name: 'Nisha Patel', location: 'Cafeteria', risk: 6, isCrisis: false, condition: 'High Temperature', sensorValue: '39°C', bluetoothStatus: 'Connected', lastUpdated: '15 sec ago' },
     { id: 's3', name: 'Aarav Kumar', location: 'Assembly Hall', risk: 7, isCrisis: false, condition: 'Crowded', sensorValue: 'High Stress', bluetoothStatus: 'Connected', lastUpdated: '30 sec ago' },
@@ -271,11 +270,11 @@ export default function App() {
       if (!url) { return; }
       // Supabase returns tokens as hash fragments (#access_token=...), replace with ? so searchParams can parse them
       const parsedUrl = new URL(url.replace('#', '?'));
-      const accessToken = parsedUrl.searchParams.get('access_token');
+      const urlAccessToken = parsedUrl.searchParams.get('access_token');
       const refreshToken = parsedUrl.searchParams.get('refresh_token');
-      if (accessToken && refreshToken) {
+      if (urlAccessToken && refreshToken) {
         supabase.auth.setSession({
-          access_token: accessToken,
+          access_token: urlAccessToken,
           refresh_token: refreshToken,
         });
       }
@@ -356,7 +355,7 @@ export default function App() {
     push();
     const timer = setInterval(push, SENSOR_PUSH_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [userId, noise, temperature]);
+  }, [userId, noise, temperature, heartRate]);
 
   const risk = useMemo(() => computeRisk(noise, temperature, selfReport, profile), [noise, temperature, selfReport, profile]);
 
@@ -547,20 +546,20 @@ export default function App() {
           {userId && appScreen === 'speech' && <SpeechDiaryScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'user_profile' && <UserProfileScreen onBack={() => setAppScreen('home')} />}
-          {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setPrimaryRole('caretaker'); setAppScreen('monitoring-mode'); }} />}
+          {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setPrimaryRole('caretaker'); setAppScreen('caretaker-home'); }} />}
 
           {userId && appScreen === 'caretaker-home' && (
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <CaretakerRoot />
             </View>
           )}
           {userId && appScreen === 'teacher-home' && (
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <TeacherRoot />
             </View>
           )}
           {userId && (appScreen === 'home' || appScreen === 'settings') && (
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <TabNavigator initialRouteName={appScreen === 'settings' ? 'Settings' : 'House'} />
               {currentTab !== 'House' && (
                 <TouchableOpacity
@@ -583,8 +582,8 @@ export default function App() {
         {/* ── SOS Confirmation Modal ───────────────────────────────────────── */}
         <Modal visible={sosConfirmOpen} transparent animationType="fade" onRequestClose={() => setSosConfirmOpen(false)}>
           <View style={styles.popupOverlay}>
-            <View style={[styles.popupCard, { paddingBottom: 32 }]}>
-              <View style={{ alignItems: 'center', marginBottom: 16 }}>
+            <View style={[styles.popupCard, styles.sosConfirmCard]}>
+              <View style={styles.sosConfirmIcon}>
                 <AlertTriangle size={32} color={colors.riskHigh} />
               </View>
               <Text style={styles.popupTitle}>Send Emergency Alert?</Text>
@@ -592,7 +591,7 @@ export default function App() {
                 Are you sure you want to send an SOS alert to your contacts and caretaker?
               </Text>
 
-              <View style={{ flexDirection: 'row', gap: 12, marginTop: 24, width: '100%' }}>
+              <View style={styles.sosConfirmActions}>
                 <TouchableOpacity onPress={() => setSosConfirmOpen(false)} style={[styles.modalBtn, { backgroundColor: colors.muted }]} activeOpacity={0.8}>
                   <Text style={[styles.modalBtnText, { color: colors.foreground }]}>No</Text>
                 </TouchableOpacity>
@@ -649,6 +648,10 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  flex1: { flex: 1 },
+  sosConfirmCard: { paddingBottom: 32 },
+  sosConfirmIcon: { alignItems: 'center', marginBottom: 16 },
+  sosConfirmActions: { flexDirection: 'row', gap: 12, marginTop: 24, width: '100%' },
   tabBar: {
     backgroundColor: colors.background,
     borderTopColor: colors.border,

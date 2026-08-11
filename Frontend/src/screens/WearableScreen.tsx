@@ -34,7 +34,7 @@ export default function WearableScreen() {
       (device) => {
         if (device.name) {
           setDevices((prev) => {
-            if (prev.some((d) => d.id === device.id)) return prev;
+            if (prev.some((d) => d.id === device.id)) { return prev; }
             return [...prev, device];
           });
         }
@@ -65,16 +65,16 @@ export default function WearableScreen() {
           try {
             if (rawData.startsWith('{')) {
               const parsed = JSON.parse(rawData);
-              if (parsed.noise !== undefined) setNoise(parsed.noise);
-              if (parsed.temp !== undefined) setTemperature(parsed.temp);
-              if (parsed.bpm !== undefined) setHeartRate(parsed.bpm);
+              if (parsed.noise !== undefined) { setNoise(parsed.noise); }
+              if (parsed.temp !== undefined) { setTemperature(parsed.temp); }
+              if (parsed.bpm !== undefined) { setHeartRate(parsed.bpm); }
             } else {
               const noiseMatch = rawData.match(/(?:noise|N)[:=]\s*(\d+)/i);
               const tempMatch = rawData.match(/(?:temp|T)[:=]\s*([\d.]+)/i);
               const bpmMatch = rawData.match(/(?:bpm|H)[:=]\s*(\d+)/i);
-              if (noiseMatch) setNoise(parseInt(noiseMatch[1], 10));
-              if (tempMatch) setTemperature(parseFloat(tempMatch[1]));
-              if (bpmMatch) setHeartRate(parseInt(bpmMatch[1], 10));
+              if (noiseMatch) { setNoise(parseInt(noiseMatch[1], 10)); }
+              if (tempMatch) { setTemperature(parseFloat(tempMatch[1])); }
+              if (bpmMatch) { setHeartRate(parseInt(bpmMatch[1], 10)); }
             }
           } catch (e) {
             console.warn('[BLE] Error parsing data:', rawData, e);

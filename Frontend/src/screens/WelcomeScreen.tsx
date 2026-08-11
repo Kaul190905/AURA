@@ -28,7 +28,7 @@ export default function WelcomeScreen({ onNext }: Props) {
         Animated.timing(breathe, { toValue: 0.85, duration: 4000, useNativeDriver: true }),
       ])
     ).start();
-  }, [reduceMotion]);
+  }, [reduceMotion, breathe]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}>
@@ -68,7 +68,7 @@ export default function WelcomeScreen({ onNext }: Props) {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => onNext('caregiver')} style={[styles.roleCard, neuSm]} activeOpacity={0.85}>
+        <TouchableOpacity onPress={() => onNext('caretaker')} style={[styles.roleCard, neuSm]} activeOpacity={0.85}>
           <View style={[styles.roleIconCaregiver]}>
             <Heart color={colors.riskLow} size={28} />
           </View>
