@@ -68,6 +68,13 @@ export async function getCurrentUserId(): Promise<string | null> {
 export async function signInWithGoogle() {
   try {
     await GoogleSignin.hasPlayServices();
+
+    // Clear any previous session to force the account picker to appear
+    const isSignedIntoGoogle = await GoogleSignin.hasPreviousSignIn();
+    if (isSignedIntoGoogle) {
+      await GoogleSignin.signOut();
+    }
+
     const userInfo = await GoogleSignin.signIn();
 
     if (userInfo.data?.idToken) {
