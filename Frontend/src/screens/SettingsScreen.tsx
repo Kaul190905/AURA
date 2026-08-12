@@ -78,7 +78,7 @@ export default function SettingsScreen() {
           </View>
           <View style={styles.sectionCard}>
             
-            <TouchableOpacity onPress={() => console.log('Accessibility coming soon')} style={styles.navRow} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => navigateTo('accessibility')} style={styles.navRow} activeOpacity={0.7}>
               <View style={styles.navRowInnerLg}>
                 <View style={styles.iconContainer}>
                   <Eye size={18} color={colors.primary} />
@@ -89,7 +89,7 @@ export default function SettingsScreen() {
             </TouchableOpacity>
             <View style={styles.divider} />
             
-            <TouchableOpacity onPress={() => console.log('Device info coming soon')} style={styles.navRow} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => navigateTo('device')} style={styles.navRow} activeOpacity={0.7}>
               <View style={styles.navRowInnerLg}>
                 <View style={styles.iconContainer}>
                   <Watch size={18} color={colors.primary} />
@@ -100,7 +100,7 @@ export default function SettingsScreen() {
             </TouchableOpacity>
             <View style={styles.divider} />
 
-            <TouchableOpacity onPress={() => console.log('Privacy coming soon')} style={styles.navRow} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => navigateTo('privacy')} style={styles.navRow} activeOpacity={0.7}>
               <View style={styles.navRowInnerLg}>
                 <View style={styles.iconContainer}>
                   <Shield size={18} color={colors.primary} />

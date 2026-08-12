@@ -16,7 +16,7 @@ export type AppScreen =
   | 'recovery' | 'settings' | 'speech' | 'plans'
   | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
   | 'teacher-home' | 'caretaker-students' | 'caretaker-track-student'
-  | 'user_profile';
+  | 'user_profile' | 'accessibility' | 'device' | 'privacy' | 'onboarding';
 
 export type AppState = {
   primaryRole: 'user' | 'caretaker' | null;

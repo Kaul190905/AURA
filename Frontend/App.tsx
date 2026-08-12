@@ -20,6 +20,7 @@ import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
 
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
+import OnboardingScreen from './src/screens/OnboardingScreen';
 import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -47,6 +48,10 @@ import ProfileDetailsScreen from './src/screens/ProfileDetailsScreen';
 import EmergencyContactsScreen from './src/screens/EmergencyContactsScreen';
 import ConnectedUserDetailsScreen from './src/screens/ConnectedUserDetailsScreen';
 import LiveAlertModal from './src/components/LiveAlertModal';
+
+import SettingsAccessibilityScreen from './src/screens/SettingsAccessibilityScreen';
+import SettingsDeviceScreen from './src/screens/SettingsDeviceScreen';
+import SettingsPrivacyScreen from './src/screens/SettingsPrivacyScreen';
 
 import { AppContext, AppNotification, AppScreen, AppState } from './src/AppContext';
 
@@ -603,7 +608,7 @@ export default function App() {
                 await supabase.auth.updateUser({ data: { role } });
                 setPrimaryRole(role);
                 if (role === 'user') {
-                  setAppScreen('home');
+                  setAppScreen('onboarding');
                 } else {
                   setCaretakerType('personal-caretaker');
                   setAppScreen('caretaker-home');
@@ -612,12 +617,16 @@ export default function App() {
             />
           )}
 
+          {!sessionLoading && userId && appScreen === 'onboarding' && <OnboardingScreen onDone={() => setAppScreen('home')} />}
           {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('settings')} onBack={() => setAppScreen('settings')} />}
 
           {userId && appScreen === 'recovery' && <RecoverySummaryScreen onDone={() => setAppScreen('home')} />}
           {userId && appScreen === 'speech' && <SpeechDiaryScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'user_profile' && <UserProfileScreen onBack={() => setAppScreen('home')} />}
+          {userId && appScreen === 'accessibility' && <SettingsAccessibilityScreen />}
+          {userId && appScreen === 'device' && <SettingsDeviceScreen />}
+          {userId && appScreen === 'privacy' && <SettingsPrivacyScreen />}
           {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setPrimaryRole('caretaker'); setAppScreen('caretaker-home'); }} />}
 
           {userId && appScreen === 'caretaker-home' && (

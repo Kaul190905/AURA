@@ -9,6 +9,7 @@ import { Ear, Sun, User, Calendar, Phone, Mail } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { TriggerKey } from '../types';
+import { supabase } from '../services/supabaseClient';
 
 interface Props {
   onDone: () => void;
@@ -59,6 +60,7 @@ export default function OnboardingScreen({ onDone }: Props) {
         return;
       }
       setErrors({});
+      supabase.auth.updateUser({ data: { name: name.trim() } }).catch(console.error);
       onDone();
     }
   };

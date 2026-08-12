@@ -11,10 +11,13 @@ interface Props { onBack: () => void; }
 
 export default function UserProfileScreen({ onBack }: Props) {
   const insets = useSafeAreaInsets();
-  const { caregiver, dob, primaryTrigger, profilePhoto, setProfilePhoto } = React.useContext(AppContext);
+  const { caregiver, dob, primaryTrigger, profilePhoto, setProfilePhoto, navigateTo } = React.useContext(AppContext);
   const [userName, setUserName] = useState<string>('User');
   const [isEditingName, setIsEditingName] = useState(false);
   const [updatingName, setUpdatingName] = useState(false);
+  const [aboutMe, setAboutMe] = useState<string>('I am using AURA to manage my sensory profile and stay connected with my caretaker.');
+  const [isEditingAboutMe, setIsEditingAboutMe] = useState(false);
+  const [updatingAboutMe, setUpdatingAboutMe] = useState(false);
 
   const handleUpdateName = async () => {
     if (!userName.trim()) return;
@@ -37,9 +40,24 @@ export default function UserProfileScreen({ onBack }: Props) {
         } else if (data.user.email) {
           setUserName(data.user.email.split('@')[0]);
         }
+        const metadataAboutMe = data.user.user_metadata?.aboutMe;
+        if (metadataAboutMe) {
+          setAboutMe(metadataAboutMe);
+        }
       }
     });
   }, []);
+
+  const handleUpdateAboutMe = async () => {
+    setUpdatingAboutMe(true);
+    try {
+      await supabase.auth.updateUser({ data: { aboutMe: aboutMe.trim() } });
+      setIsEditingAboutMe(false);
+    } catch (e) {
+      console.error(e);
+    }
+    setUpdatingAboutMe(false);
+  };
 
   const handlePickImage = () => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (response) => {
@@ -106,20 +124,48 @@ export default function UserProfileScreen({ onBack }: Props) {
         <View style={styles.detailsContainer}>
           {/* About Me */}
           <View style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <User size={16} color={colors.primary} />
-              <Text style={styles.label}>About Me</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <User size={16} color={colors.primary} />
+                <Text style={styles.label}>About Me</Text>
+              </View>
+              {isEditingAboutMe ? (
+                updatingAboutMe ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <TouchableOpacity onPress={handleUpdateAboutMe} style={styles.editBtn}>
+                    <Check size={18} color={colors.primary} />
+                  </TouchableOpacity>
+                )
+              ) : (
+                <TouchableOpacity onPress={() => setIsEditingAboutMe(true)} style={styles.editBtn}>
+                  <Edit2 size={16} color={colors.mutedForeground} />
+                </TouchableOpacity>
+              )}
             </View>
-            <Text style={styles.desc}>
-              I am using AURA to manage my sensory profile and stay connected with my caretaker.
-            </Text>
+            {isEditingAboutMe ? (
+              <TextInput
+                style={{ fontSize: 14, minWidth: '100%', textAlign: 'left', fontWeight: 'normal', color: colors.foreground, borderBottomWidth: 1, borderBottomColor: colors.primary, paddingBottom: 4 }}
+                value={aboutMe}
+                onChangeText={setAboutMe}
+                multiline
+                autoFocus
+              />
+            ) : (
+              <Text style={styles.desc}>{aboutMe}</Text>
+            )}
           </View>
 
           {/* Sensory Info */}
           <View style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Zap size={16} color={colors.primary} />
-              <Text style={styles.label}>Sensory Profile</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Zap size={16} color={colors.primary} />
+                <Text style={styles.label}>Sensory Profile</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigateTo('profile')} style={styles.editBtn}>
+                <Edit2 size={16} color={colors.mutedForeground} />
+              </TouchableOpacity>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoKey}>Year of Birth:</Text>
@@ -133,9 +179,14 @@ export default function UserProfileScreen({ onBack }: Props) {
 
           {/* Caregiver Info */}
           <View style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <AlertTriangle size={16} color={colors.primary} />
-              <Text style={styles.label}>Emergency Caregiver</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <AlertTriangle size={16} color={colors.primary} />
+                <Text style={styles.label}>Emergency Caregiver</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigateTo('profile')} style={styles.editBtn}>
+                <Edit2 size={16} color={colors.mutedForeground} />
+              </TouchableOpacity>
             </View>
 
             <View style={styles.infoRow}>
