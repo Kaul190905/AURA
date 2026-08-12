@@ -14,10 +14,11 @@ import {
   RiskTrendResponse, OverloadForecastResponse,
 } from '../services/api';
 
-export default function HistoryInsightsScreen({ navigation }: any) {
+export default function HistoryInsightsScreen({ route }: any) {
   const styles = getStyles();
-  const { history, userId } = useContext(AppContext);
+  const { history, userId: contextUserId } = useContext(AppContext);
   const insets = useSafeAreaInsets();
+  const userId = route?.params?.userId || contextUserId;
   const [range, setRange] = useState<'7d' | '30d'>('7d');
   const cutoff = Date.now() - (range === '7d' ? 7 : 30) * 86400000;
   const filtered = history.filter((h) => h.time >= cutoff);
@@ -29,15 +30,15 @@ export default function HistoryInsightsScreen({ navigation }: any) {
   const [apiLoading, setApiLoading] = useState(false);
 
   const fetchBackendData = useCallback(async () => {
-    if (!userId) {return;}
+    if (!userId) { return; }
     setApiLoading(true);
     try {
       const [trendResult, fcResult] = await Promise.allSettled([
         getRiskTrend(userId, range === '7d' ? 7 : 30),
         getOverloadForecast(userId),
       ]);
-      if (trendResult.status === 'fulfilled') {setRiskTrend(trendResult.value);}
-      if (fcResult.status === 'fulfilled') {setForecast(fcResult.value);}
+      if (trendResult.status === 'fulfilled') { setRiskTrend(trendResult.value); }
+      if (fcResult.status === 'fulfilled') { setForecast(fcResult.value); }
     } catch (e) {
       console.warn('[AURA] History API fetch failed:', e);
     } finally {
@@ -229,16 +230,16 @@ export default function HistoryInsightsScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
           <View style={styles.sectionCard}>
-             <View style={styles.navRow}>
-                <View style={styles.iconContainer}>
-                  <MapPin size={20} color={colors.riskHigh} />
-                </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={styles.eventTitle}>Downtown Transit Center</Text>
-                  <Text style={styles.eventDate}>Highest risk area</Text>
-                </View>
-                <ChevronLeft size={16} color={colors.mutedForeground} style={{ transform: [{ rotate: '180deg' }] }} />
-             </View>
+            <View style={styles.navRow}>
+              <View style={styles.iconContainer}>
+                <MapPin size={20} color={colors.riskHigh} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={styles.eventTitle}>Downtown Transit Center</Text>
+                <Text style={styles.eventDate}>Highest risk area</Text>
+              </View>
+              <ChevronLeft size={16} color={colors.mutedForeground} style={{ transform: [{ rotate: '180deg' }] }} />
+            </View>
           </View>
         </View>
 

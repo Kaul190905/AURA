@@ -8,7 +8,7 @@ import { colors, radius, spacing, fonts, neuSm } from '../theme';
 import { supabase } from '../services/supabaseClient';
 
 export default function ProfileDetailsScreen({ navigation }: any) {
-  const { darkMode, caretakerType, mockUsers, mockStudents } = useContext(AppContext);
+  const { darkMode, mockUsers } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   
   const [userEmail, setUserEmail] = useState('');
@@ -51,8 +51,8 @@ export default function ProfileDetailsScreen({ navigation }: any) {
   const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : { backgroundColor: '#ffffff' };
   const textStyle = darkMode ? { color: '#ffffff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaaaaa' } : { color: colors.mutedForeground };
-  const monitoringCount = caretakerType === 'teacher' ? mockStudents?.length || 0 : mockUsers?.length || 0;
-  const monitoringLabel = caretakerType === 'teacher' ? 'Students' : 'Users';
+  const monitoringCount = mockUsers?.length || 0;
+  const monitoringLabel = 'Users';
 
   return (
     <View style={[styles.container, bgStyle, { paddingTop: insets.top }]}>
@@ -88,7 +88,7 @@ export default function ProfileDetailsScreen({ navigation }: any) {
           </TouchableOpacity>
           <Text style={[styles.nameText, textStyle]}>{userName || 'Caretaker'}</Text>
           <Text style={[styles.roleText, { color: colors.primary }]}>
-            {caretakerType === 'teacher' ? 'Teacher' : 'Personal Caretaker'}
+            Caregiver
           </Text>
         </View>
 
@@ -120,7 +120,7 @@ export default function ProfileDetailsScreen({ navigation }: any) {
             </View>
             <View style={styles.infoTextContainer}>
               <Text style={[styles.infoLabel, subTextStyle]}>Role</Text>
-              <Text style={[styles.infoValue, textStyle]}>{caretakerType === 'teacher' ? 'Teacher' : 'Personal Caretaker'}</Text>
+              <Text style={[styles.infoValue, textStyle]}>Caregiver</Text>
             </View>
           </View>
 

@@ -13,7 +13,8 @@ export default function CaretakerProfileScreen({ navigation }: any) {
   const styles = getStyles();
   const {
     darkMode, setDarkMode, highContrast,
-    setUserId, setAccessToken, caretakerType, navigateTo,
+    setUserId, setAccessToken, navigateTo,
+    recentlyViewedUserIds, mockUsers
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
@@ -34,9 +35,12 @@ export default function CaretakerProfileScreen({ navigation }: any) {
   const textStyle = darkMode ? { color: '#ffffff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
 
+  const activeUserId = recentlyViewedUserIds[0] || 'u1';
+  const activeUser = mockUsers.find(u => u.id === activeUserId) || mockUsers[0];
+
   return (
     <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
-      <Header title="Settings" subtitle={caretakerType === 'teacher' ? 'Teacher Profile' : 'Personal Caretaker Profile'} />
+      <Header title="Settings" />
       <ScrollView contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: spacing.xl, paddingTop: spacing.md }}>
 
         {/* Profile Card */}

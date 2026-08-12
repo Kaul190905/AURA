@@ -9,7 +9,7 @@ import { riskColor } from '../utils';
 export default function CaretakerDashboardScreen({ navigation }: any) {
   const {
     mockUsers, recentlyViewedUserIds, setRecentlyViewedUserIds,
-    darkMode, setIsNotificationCenterOpen
+    darkMode, setIsNotificationCenterOpen, isCaregiverOnline
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
@@ -37,7 +37,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
   const openUser = (id: string) => {
     const newIds = [id, ...recentlyViewedUserIds.filter(pid => pid !== id)];
     setRecentlyViewedUserIds(newIds.slice(0, 10));
-    navigation.navigate('TrackUser', { userId: id });
+    navigation.navigate('ConnectedUserDetails', { userId: id });
   };
 
   const getStatusText = (s: any) => {
@@ -51,12 +51,22 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
 
       {/* Header */}
       <View style={styles.header}>
-        <View>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={[styles.headerTitle, textStyle]}>Dashboard</Text>
+
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={[styles.superText, subTextStyle]}>CAREGIVER VIEW</Text>
-            <View style={styles.onlineBadge}><Text style={styles.onlineText}>ONLINE</Text></View>
+            {isCaregiverOnline ? (
+              <>
+                <View style={[styles.onlineDot, { backgroundColor: colors.primary }]} />
+                <Text style={[styles.onlineTextStatus, { color: colors.primary }]}>Online</Text>
+              </>
+            ) : (
+              <>
+                <View style={[styles.onlineDot, { backgroundColor: colors.mutedForeground }]} />
+                <Text style={[styles.onlineTextStatus, { color: colors.mutedForeground }]}>Offline</Text>
+              </>
+            )}
           </View>
-          <Text style={[styles.headerTitle, textStyle]}>Caregiver Dashboard</Text>
         </View>
         <TouchableOpacity style={styles.bellBtn} onPress={() => setIsNotificationCenterOpen(true)}>
           <Bell size={24} color={colors.primary} />
@@ -154,6 +164,8 @@ const styles = StyleSheet.create({
   superText: { fontSize: 10, ...fonts.bold, letterSpacing: 0.5 },
   onlineBadge: { backgroundColor: `${colors.primary}20`, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   onlineText: { color: colors.primary, fontSize: 9, ...fonts.bold },
+  onlineDot: { width: 8, height: 8, borderRadius: 4 },
+  onlineTextStatus: { fontSize: 14, ...fonts.bold },
   headerTitle: { fontSize: 24, ...fonts.bold, marginTop: 4 },
   bellBtn: { padding: 8, position: 'relative' },
   bellBadge: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.riskHigh },
