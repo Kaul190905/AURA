@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const babel = require('@babel/core');
 
@@ -28,13 +28,13 @@ files.forEach(file => {
   const out = babel.transformSync(content, {
     presets: ['@babel/preset-typescript', '@babel/preset-react'],
     plugins: [
-      function myCustomPlugin(babel) {
-        const { types: t } = babel;
+      function myCustomPlugin(babelCore) {
+        const { types: t } = babelCore;
         return {
           visitor: {
-            VariableDeclaration(path) {
-              if (path.node.declarations.length === 1) {
-                const dec = path.node.declarations[0];
+            VariableDeclaration(varPath) {
+              if (varPath.node.declarations.length === 1) {
+                const dec = varPath.node.declarations[0];
                 if (t.isIdentifier(dec.id, { name: 'styles' }) && dec.init && t.isCallExpression(dec.init)) {
                   if (t.isMemberExpression(dec.init.callee) && t.isIdentifier(dec.init.callee.object, { name: 'StyleSheet' }) && t.isIdentifier(dec.init.callee.property, { name: 'create' })) {
                     // Turn it into: const useStyles = () => StyleSheet.create(...)
@@ -42,24 +42,24 @@ files.forEach(file => {
                     const newDec = t.variableDeclaration('const', [
                       t.variableDeclarator(t.identifier('useStyles'), arrowFunc),
                     ]);
-                    path.replaceWith(newDec);
+                    varPath.replaceWith(newDec);
                   }
                 }
               }
             },
-            FunctionDeclaration(path) {
+            FunctionDeclaration(funcPath) {
               // Inject const styles = useStyles(); at the top of the function
-              if (path.node.body && path.node.body.type === 'BlockStatement') {
+              if (funcPath.node.body && funcPath.node.body.type === 'BlockStatement') {
                 // Check if it returns JSX (simplistic check)
                 let returnsJSX = false;
-                path.traverse({
+                funcPath.traverse({
                   ReturnStatement(retPath) {
                     if (retPath.node.argument && (retPath.node.argument.type === 'JSXElement' || retPath.node.argument.type === 'JSXFragment')) {
                       returnsJSX = true;
                     }
                   },
                 });
-                if (returnsJSX || path.node.id?.name.endsWith('Screen')) {
+                if (returnsJSX || funcPath.node.id?.name.endsWith('Screen')) {
                   const inject = t.variableDeclaration('const', [
                     t.variableDeclarator(
                       t.identifier('styles'),

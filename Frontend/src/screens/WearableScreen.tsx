@@ -165,13 +165,13 @@ export default function WearableScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.sliderCardTitle}>Noise</Text>
-                <Text style={styles.sliderCardHint}>{noise < 60 ? 'Quiet' : noise < 80 ? 'Busy' : 'Loud'}</Text>
+                <Text style={styles.sliderCardHint}>{noise === null ? 'No Data' : noise < 60 ? 'Quiet' : noise < 80 ? 'Busy' : 'Loud'}</Text>
               </View>
-              <Text style={styles.sliderValue}>{noise}<Text style={styles.sliderUnit}> dB</Text></Text>
+              <Text style={styles.sliderValue}>{noise !== null ? noise : '--'}<Text style={styles.sliderUnit}> dB</Text></Text>
             </View>
             <Slider
               minimumValue={40} maximumValue={100} step={1}
-              value={noise} onValueChange={(v) => !bleConnected && setNoise(Math.round(v))}
+              value={noise ?? 40} onValueChange={(v) => !bleConnected && setNoise(Math.round(v))}
               disabled={bleConnected}
               minimumTrackTintColor={colors.primary}
               maximumTrackTintColor={colors.border}
@@ -188,13 +188,13 @@ export default function WearableScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.sliderCardTitle}>Temperature</Text>
-                <Text style={styles.sliderCardHint}>{temperature < 97 ? 'Cold' : temperature < 100 ? 'Normal' : 'Fever'}</Text>
+                <Text style={styles.sliderCardHint}>{temperature === null ? 'No Data' : temperature < 97 ? 'Cold' : temperature < 100 ? 'Normal' : 'Fever'}</Text>
               </View>
-              <Text style={styles.sliderValue}>{Math.round(((temperature - 32) * 5) / 9)}<Text style={styles.sliderUnit}> °C</Text></Text>
+              <Text style={styles.sliderValue}>{temperature !== null ? Math.round(((temperature - 32) * 5) / 9) : '--'}<Text style={styles.sliderUnit}> °C</Text></Text>
             </View>
             <Slider
               minimumValue={30} maximumValue={110} step={1}
-              value={temperature} onValueChange={(v) => !bleConnected && setTemperature(Math.round(v))}
+              value={temperature ?? 98.6} onValueChange={(v) => !bleConnected && setTemperature(Math.round(v))}
               disabled={bleConnected}
               minimumTrackTintColor={colors.primary}
               maximumTrackTintColor={colors.border}

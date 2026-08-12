@@ -20,34 +20,42 @@ export default function PastEventsScreen({ navigation }: any) {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {history.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>No events recorded yet.</Text>
-          </View>
-        ) : (
-          <View style={{ gap: 12 }}>
-            {history.map((h) => {
+      {history.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyText}>No events recorded yet.</Text>
+        </View>
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={true} style={styles.tableWrapper}>
+          <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={styles.tableContent}>
+            {/* Table Header */}
+            <View style={styles.tableHeader}>
+              <Text style={[styles.headerCell, { width: 140 }]}>Date / Time</Text>
+              <Text style={[styles.headerCell, { width: 100 }]}>Trigger</Text>
+              <Text style={[styles.headerCell, { width: 90 }]}>Action</Text>
+              <Text style={[styles.headerCell, { width: 70 }]}>Score</Text>
+              <Text style={[styles.headerCell, { width: 220 }]}>Notes</Text>
+            </View>
+
+            {/* Table Rows */}
+            {history.map((h, index) => {
               const c = riskColor(h.score);
               return (
-                <View key={h.id} style={styles.eventCard}>
-                  <View style={[styles.eventIndicator, { backgroundColor: c }]} />
-                  <View style={styles.eventContent}>
-                    <View style={styles.eventHeader}>
-                      <Text style={styles.eventTitle}>
-                        {h.trigger} · <Text style={styles.eventAction}>{h.action}</Text>
-                      </Text>
-                      <Text style={[styles.eventScore, { color: c }]}>{h.score}</Text>
-                    </View>
-                    <Text style={styles.eventDate}>{new Date(h.time).toLocaleString()}</Text>
-                    {h.note && <Text style={styles.eventNote}>"{h.note}"</Text>}
-                  </View>
+                <View key={h.id} style={[styles.tableRow, index % 2 === 0 ? styles.rowEven : styles.rowOdd]}>
+                  <Text style={[styles.cell, { width: 140 }]}>
+                    {new Date(h.time).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                  </Text>
+                  <Text style={[styles.cell, { width: 100, textTransform: 'capitalize' }]}>{h.trigger}</Text>
+                  <Text style={[styles.cell, { width: 90 }]}>{h.action}</Text>
+                  <Text style={[styles.cell, { width: 70, color: c, ...fonts.bold }]}>{h.score}</Text>
+                  <Text style={[styles.cell, { width: 220, fontStyle: 'italic', opacity: 0.8 }]} numberOfLines={2}>
+                    {h.note || '-'}
+                  </Text>
                 </View>
               );
             })}
-          </View>
-        )}
-      </ScrollView>
+          </ScrollView>
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -72,28 +80,45 @@ const styles = StyleSheet.create({
     backgroundColor: colors.muted,
   },
   headerTitle: { fontSize: 18, color: colors.foreground, ...fonts.bold },
-  scrollContent: { padding: spacing.lg, paddingBottom: 80 },
-  emptyCard: { backgroundColor: colors.muted, borderRadius: radius.md, padding: 16, alignItems: 'center' },
+  emptyCard: { backgroundColor: colors.muted, borderRadius: radius.md, margin: 16, padding: 16, alignItems: 'center' },
   emptyText: { fontSize: 14, color: colors.mutedForeground },
-  eventCard: {
-    flexDirection: 'row',
+  tableWrapper: {
+    flex: 1,
     backgroundColor: colors.background,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.border + '80',
-    overflow: 'hidden',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
-  eventIndicator: { width: 6 },
-  eventContent: { flex: 1, padding: 16 },
-  eventHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  eventTitle: { fontSize: 15, color: colors.foreground, textTransform: 'capitalize', ...fonts.semibold },
-  eventAction: { color: colors.mutedForeground },
-  eventDate: { fontSize: 12, color: colors.mutedForeground, marginTop: 4 },
-  eventNote: { fontSize: 13, color: colors.foreground, opacity: 0.8, marginTop: 8, fontStyle: 'italic' },
-  eventScore: { fontSize: 18, ...fonts.bold },
+  tableContent: {
+    paddingBottom: 80,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: colors.muted,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headerCell: {
+    fontSize: 13,
+    color: colors.foreground,
+    ...fonts.bold,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border + '50',
+    alignItems: 'center',
+  },
+  rowEven: {
+    backgroundColor: colors.background,
+  },
+  rowOdd: {
+    backgroundColor: colors.muted + '40',
+  },
+  cell: {
+    fontSize: 13,
+    color: colors.foreground,
+    paddingRight: 8,
+  },
 });

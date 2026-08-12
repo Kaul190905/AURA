@@ -15,7 +15,7 @@ export type AppScreen =
   | 'login' | 'welcome' | 'profile' | 'home' | 'crisis'
   | 'recovery' | 'settings' | 'speech' | 'plans'
   | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
-  | 'user_profile' | 'accessibility' | 'device' | 'privacy' | 'onboarding';
+  | 'user_profile' | 'accessibility' | 'device' | 'privacy' | 'onboarding' | 'caregiver_manager';
 
 export type AppState = {
   primaryRole: 'user' | 'caretaker' | null;
@@ -35,12 +35,12 @@ export type AppState = {
 
   dob: string;
   setDob: (d: string) => void;
-  noise: number;
-  setNoise: (n: number) => void;
-  temperature: number;
-  setTemperature: (v: number) => void;
-  heartRate: number;
-  setHeartRate: (v: number) => void;
+  noise: number | null;
+  setNoise: (n: number | null) => void;
+  temperature: number | null;
+  setTemperature: (v: number | null) => void;
+  heartRate: number | null;
+  setHeartRate: (v: number | null) => void;
   selfReport: number;
   setSelfReport: (n: number) => void;
   bleConnected: boolean;

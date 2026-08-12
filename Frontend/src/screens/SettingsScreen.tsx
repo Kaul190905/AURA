@@ -59,7 +59,7 @@ export default function SettingsScreen() {
               <ChevronRight size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
             <View style={styles.divider} />
-            <TouchableOpacity onPress={() => console.log('Caregiver Management coming soon')} style={styles.navRow} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => navigateTo('caregiver_manager')} style={styles.navRow} activeOpacity={0.7}>
               <Text style={styles.navRowText}>Caregiver Management</Text>
               <ChevronRight size={16} color={colors.mutedForeground} />
             </TouchableOpacity>

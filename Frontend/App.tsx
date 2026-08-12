@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, StyleSheet, TouchableOpacity, Text, Modal, Linking } from 'react-native';
-import { House, Library, TrendingUp, Bluetooth, Settings, User, AlertTriangle, CheckCircle2, Users } from 'lucide-react-native';
+import { House, Library, TrendingUp, Bluetooth, Settings, AlertTriangle, CheckCircle2, Users } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { colors, fonts, applyColorVisionMode } from './src/theme';
@@ -13,6 +13,7 @@ import { TriggerKey, HistoryEvent, Strategy, Accommodation } from './src/types';
 import { computeRisk } from './src/utils';
 
 // Backend services
+import { getAssignedUsers, getCaregiverUserPreferences, getCaregiverUserSensorData } from './src/services/caregiverApi';
 import { supabase } from './src/services/supabaseClient';
 import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEvents, getAlerts } from './src/services/api';
 import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
@@ -37,6 +38,7 @@ import PlansScreen from './src/screens/PlansScreen';
 import CaretakerGateScreen from './src/screens/CaretakerGateScreen';
 import CaretakerDashboardScreen from './src/screens/CaretakerDashboardScreen';
 import CaretakerUsersScreen from './src/screens/CaretakerUsersScreen';
+import CaregiverManagementScreen from './src/screens/CaregiverManagementScreen';
 import CaretakerUserHistoryScreen from './src/screens/CaretakerUserHistoryScreen';
 import CaretakerProfileScreen from './src/screens/CaretakerProfileScreen';
 import ProfileDetailsScreen from './src/screens/ProfileDetailsScreen';
@@ -61,7 +63,6 @@ const renderTrendingUpIcon = ({ color, size }: any) => <TrendingUp color={color}
 const renderBluetoothIcon = ({ color, size }: any) => <Bluetooth color={color} size={size} />;
 const renderSettingsIcon = ({ color, size }: any) => <Settings color={color} size={size} />;
 const renderUsersIcon = ({ color, size }: any) => <Users color={color} size={size} />;
-const renderUserIcon = ({ color, size }: any) => <User color={color} size={size} />;
 
 // ── Tab Navigator (main app) ──────────────────────────────────────────────────
 function TabNavigator({ initialRouteName = 'House' }: { initialRouteName?: string }) {
@@ -74,6 +75,7 @@ function TabNavigator({ initialRouteName = 'House' }: { initialRouteName?: strin
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarLabelStyle: styles.tabLabel,
+        tabBarHideOnKeyboard: true,
       }}
     >
       <MainTab.Screen
@@ -87,7 +89,7 @@ function TabNavigator({ initialRouteName = 'House' }: { initialRouteName?: strin
         options={{ tabBarIcon: renderLibraryIcon }}
       />
       <MainTab.Screen
-        name="Insights"
+        name="Analysis"
         component={InsightsRoot}
         options={{ tabBarIcon: renderTrendingUpIcon }}
       />
@@ -131,6 +133,7 @@ function CaretakerTabNavigator() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarLabelStyle: styles.tabLabel,
+        tabBarHideOnKeyboard: true,
       }}
     >
       <CaretakerTab.Screen
@@ -146,7 +149,7 @@ function CaretakerTabNavigator() {
       <CaretakerTab.Screen
         name="Settings"
         component={ProfileStackNavigator}
-        options={{ tabBarIcon: ({ color, size }) => <Settings color={color} size={size} /> }}
+        options={{ tabBarIcon: renderSettingsIcon }}
       />
     </CaretakerTab.Navigator>
   );
@@ -189,9 +192,9 @@ export default function App() {
 
   const [profile, setProfile] = useState<Partial<Record<TriggerKey, number>>>({ sound: 4, temp: 2 });
   const [dob, setDob] = useState('');
-  const [noise, setNoise] = useState(65);
-  const [temperature, setTemperature] = useState(98.6); // Base line temperature
-  const [heartRate, setHeartRate] = useState(72);
+  const [noise, setNoise] = useState<number | null>(null);
+  const [temperature, setTemperature] = useState<number | null>(null);
+  const [heartRate, setHeartRate] = useState<number | null>(null);
   const [selfReport, setSelfReport] = useState(3);
   const [bleConnected, setBleConnected] = useState(false);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
@@ -203,13 +206,12 @@ export default function App() {
   const [colorVisionMode, setColorVisionMode] = useState<'default' | 'protanopia' | 'deuteranopia' | 'tritanopia'>('default');
   const [sensitivity, setSensitivity] = useState(3);
   const [alertOpen, setAlertOpen] = useState(false);
-  const [alertShownForScore, setAlertShownForScore] = useState<number | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
   const [sosConfirmOpen, setSosConfirmOpen] = useState(false);
   const [sosSent, setSosSent] = useState(false);
   const [currentTab, setCurrentTab] = useState('House');
-  
+
   // ── Auth / Backend state ────────────────────────────────────────────────────
   const [userId, setUserId] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -227,10 +229,16 @@ export default function App() {
 
     const loadInitialData = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && user.user_metadata) {
+          if (user.user_metadata.sensory_profile) {setProfile(user.user_metadata.sensory_profile);}
+          if (user.user_metadata.dob) {setDob(user.user_metadata.dob);}
+          if (user.user_metadata.caregiver) {setCaregiver(user.user_metadata.caregiver);}
+        }
         const [recsRes, historyRes, alertsRes] = await Promise.allSettled([
           getRecommendations(userId),
           getOverloadEvents(userId),
-          getAlerts(userId)
+          getAlerts(userId),
         ]);
 
         if (recsRes.status === 'fulfilled' && recsRes.value.recommendations) {
@@ -241,7 +249,7 @@ export default function App() {
             trigger: 'sound',
             helped: 0,
             tried: 0,
-            custom: false
+            custom: false,
           }));
           setStrategies(prev => [...prev.filter(s => s.custom), ...fetchedStrats]);
         }
@@ -253,7 +261,7 @@ export default function App() {
             trigger: e.trigger_metric as TriggerKey,
             action: 'crisis',
             score: e.trigger_value,
-            note: `Duration: ${e.duration_seconds}s`
+            note: `Duration: ${e.duration_seconds}s`,
           }));
           setHistory(fetchedHistory);
         }
@@ -265,7 +273,7 @@ export default function App() {
             description: a.message,
             time: new Date(a.created_at).getTime(),
             read: a.confirmed ?? false,
-            type: 'alert'
+            type: 'alert',
           }));
           setNotifications(fetchedNotifications);
         }
@@ -281,31 +289,96 @@ export default function App() {
   const [recentlyViewedUserIds, setRecentlyViewedUserIds] = useState<string[]>([]);
   const [isCaregiverOnline, setIsCaregiverOnline] = useState(true);
   const [mockUsers, setMockUsers] = useState<AppState['mockUsers']>([
-    { 
+    {
       id: 'u1', name: 'Rahul', risk: 9, isCrisis: true, condition: 'High Noise', sensorValue: '92 dB', phoneLocation: 'School Campus', locationSharingStatus: 'Active', lastUpdated: '2 min ago',
       sensoryProfile: { sound: true, temperature: true },
       currentSensorData: { heartRate: 112, soundDb: 92, temperatureC: 36.5 },
       aboutMe: 'I am sensitive to loud noises and extreme temperatures.',
       dob: '2010',
-      emergencyCaregiver: { name: 'Dr. Smith', phone: '555-0192', email: 'smith@example.com' }
+      emergencyCaregiver: { name: 'Dr. Smith', phone: '555-0192', email: 'smith@example.com' },
     },
-    { 
+    {
       id: 'u2', name: 'Nisha', risk: 1, isCrisis: false, condition: 'Safe', phoneLocation: 'Home', locationSharingStatus: 'Active', lastUpdated: 'Just now',
       sensoryProfile: { sound: true, temperature: false },
       currentSensorData: { heartRate: 78, soundDb: 55, temperatureC: null },
       aboutMe: 'I prefer quiet environments.',
       dob: '2008',
-      emergencyCaregiver: { name: 'Mrs. Davis', phone: '555-0188', email: 'davis@example.com' }
+      emergencyCaregiver: { name: 'Mrs. Davis', phone: '555-0188', email: 'davis@example.com' },
     },
-    { 
+    {
       id: 'u3', name: 'Aarav', risk: 6, isCrisis: false, condition: 'High Temperature', sensorValue: '39°C', phoneLocation: 'Library', locationSharingStatus: 'Paused', lastUpdated: '15 min ago',
       sensoryProfile: { sound: false, temperature: true },
       currentSensorData: { heartRate: 95, soundDb: null, temperatureC: 39.0 },
       aboutMe: 'I get overwhelmed when it is too hot.',
       dob: '2012',
-      emergencyCaregiver: { name: 'Mr. Patel', phone: '555-0211', email: 'patel@example.com' }
+      emergencyCaregiver: { name: 'Mr. Patel', phone: '555-0211', email: 'patel@example.com' },
     },
   ]);
+
+  useEffect(() => {
+    if (!userId || primaryRole !== 'caretaker') {return;}
+
+    const loadCaretakerData = async () => {
+      try {
+        const assigned = await getAssignedUsers();
+
+        const userPromises = assigned.map(async (assignment) => {
+          try {
+            const [prefs, sensors] = await Promise.all([
+              getCaregiverUserPreferences(assignment.user_id),
+              getCaregiverUserSensorData(assignment.user_id).catch(() => null),
+            ]);
+
+            const metadata = prefs.user_metadata || {};
+            const userProfile = metadata.sensory_profile || {};
+
+            let risk = 1;
+            let isCrisis = false;
+            let condition = 'Safe';
+
+            const userNoise = sensors?.noise;
+            const userTemp = sensors?.temperature;
+            const userHr = sensors?.heart_rate;
+
+            if (userNoise && userNoise > 85) { risk = 8; condition = 'High Noise'; }
+            else if (userTemp && userTemp > 100) { risk = 7; condition = 'High Temperature'; }
+            else if (userHr && userHr > 100) { risk = 6; condition = 'High Heart Rate'; }
+
+            return {
+              id: assignment.user_id,
+              name: metadata.name || prefs.email || 'Unknown User',
+              risk,
+              isCrisis,
+              condition,
+              sensorValue: condition !== 'Safe' && userNoise ? `${userNoise} dB` : '',
+              phoneLocation: 'Unknown',
+              locationSharingStatus: 'Active' as const,
+              lastUpdated: sensors?.timestamp ? new Date(sensors.timestamp).toLocaleTimeString() : 'Just now',
+              sensoryProfile: { sound: userProfile.sound > 3, temperature: userProfile.temp > 3 },
+              currentSensorData: { heartRate: userHr || null, soundDb: userNoise || null, temperatureC: userTemp ? ((userTemp - 32) * 5 / 9) : null },
+              aboutMe: metadata.aboutMe || '',
+              dob: metadata.dob || '',
+              emergencyCaregiver: metadata.caregiver || null,
+            };
+          } catch (err) {
+            console.warn(`Failed to load data for assigned user ${assignment.user_id}:`, err);
+            return null;
+          }
+        });
+
+        const loadedUsers = (await Promise.all(userPromises)).filter(Boolean) as AppState['mockUsers'];
+        setMockUsers(loadedUsers);
+
+      } catch (err) {
+        console.error('[AURA] Error loading caretaker data:', err);
+      }
+    };
+
+    loadCaretakerData();
+    // Refresh every 30 seconds
+    const interval = setInterval(loadCaretakerData, 30000);
+    return () => clearInterval(interval);
+  }, [userId, primaryRole]);
 
   // Handle Deep Links for Google OAuth Redirect
   useEffect(() => {
@@ -337,7 +410,7 @@ export default function App() {
     const handleAuth = async (user: any) => {
       const storedRole = user?.user_metadata?.role;
       const roleSelected = user?.user_metadata?.roleSelected;
-      
+
       if (roleSelected && storedRole === 'user') {
         setPrimaryRole('user');
         setAppScreen('home');
@@ -379,8 +452,9 @@ export default function App() {
 
   // ── Periodic sensor data push ───────────────────────────────────────────────
   useEffect(() => {
-    if (!userId) { return; }
+    if (!userId || !bleConnected) { return; }
     const push = async () => {
+      if (noise === null || temperature === null || heartRate === null) {return;}
       try {
         await submitSensorData({
           user_id: userId,
@@ -397,7 +471,7 @@ export default function App() {
     push();
     const timer = setInterval(push, SENSOR_PUSH_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [userId, noise, temperature, heartRate]);
+  }, [userId, bleConnected, noise, temperature, heartRate]);
 
   const risk = useMemo(() => computeRisk(noise, temperature, selfReport, profile), [noise, temperature, selfReport, profile]);
 
@@ -459,20 +533,14 @@ export default function App() {
   }, [risk.score, userId, primaryTrigger]);
 
 
-  useEffect(() => {
-    if (risk.score >= 3 && alertShownForScore === null && appScreen !== 'welcome' && appScreen !== 'profile' && !isCrisisMode) {
-      setAlertOpen(true);
-      setAlertShownForScore(risk.score);
-    }
-    if (risk.score < 3) { setAlertShownForScore(null); }
-  }, [risk.score, appScreen, alertShownForScore, isCrisisMode]);
+  // Removed automatic alertOpen to prevent popup on app launch
 
   const [highNoiseAlerted, setHighNoiseAlerted] = useState(false);
   const [dangerousTempAlerted, setDangerousTempAlerted] = useState(false);
   const [popupState, setPopupState] = useState({ visible: false, message: '' });
 
   useEffect(() => {
-    if (noise > 75 && !highNoiseAlerted) {
+    if (noise !== null && noise > 75 && !highNoiseAlerted) {
       setHighNoiseAlerted(true);
       setNotifications(prev => [{
         id: Math.random().toString(),
@@ -485,12 +553,13 @@ export default function App() {
 
       setPopupState({ visible: true, message: `Noise level reached ${noise}dB. An alert has been sent to your caretaker.` });
       setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
-    } else if (noise <= 75 && highNoiseAlerted) {
+    } else if (noise !== null && noise <= 75 && highNoiseAlerted) {
       setHighNoiseAlerted(false);
     }
   }, [noise, highNoiseAlerted]);
 
   useEffect(() => {
+    if (temperature === null) { return; }
     const isDangerousTemp = temperature >= 104 || temperature <= 95;
     if (isDangerousTemp && !dangerousTempAlerted) {
       setDangerousTempAlerted(true);
@@ -527,7 +596,7 @@ export default function App() {
     isNotificationCenterOpen, setIsNotificationCenterOpen,
     caregiver, setCaregiver,
     profile, setProfile, dob, setDob,
-    noise, setNoise, temperature, setTemperature, selfReport, setSelfReport,
+    noise, setNoise, temperature, setTemperature, heartRate, setHeartRate, selfReport, setSelfReport,
     bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
     accommodations, setAccommodations, highContrast, setHighContrast,
     reduceMotion, setReduceMotion, darkMode, setDarkMode, colorVisionMode, setColorVisionMode: handleSetColorVisionMode, sensitivity, setSensitivity,
@@ -583,10 +652,11 @@ export default function App() {
           {userId && appScreen === 'recovery' && <RecoverySummaryScreen onDone={() => setAppScreen('home')} />}
           {userId && appScreen === 'speech' && <SpeechDiaryScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
-          {userId && appScreen === 'user_profile' && <UserProfileScreen onBack={() => setAppScreen('home')} />}
+          {userId && appScreen === 'user_profile' && <UserProfileScreen onBack={() => setAppScreen('settings')} />}
           {userId && appScreen === 'accessibility' && <SettingsAccessibilityScreen />}
           {userId && appScreen === 'device' && <SettingsDeviceScreen />}
           {userId && appScreen === 'privacy' && <SettingsPrivacyScreen />}
+          {userId && appScreen === 'caregiver_manager' && <CaregiverManagementScreen />}
           {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setPrimaryRole('caretaker'); setAppScreen('caretaker-home'); }} />}
           {userId && appScreen === 'caretaker-home' && (
             <View style={styles.flex1}>
@@ -599,6 +669,7 @@ export default function App() {
               {currentTab !== 'House' && (
                 <TouchableOpacity
                   onPress={goCrisis}
+                  // eslint-disable-next-line react-native/no-inline-styles
                   style={[styles.overloadBtn, {
                     backgroundColor: risk.score <= 2 ? '#4CAF82' : risk.score <= 4 ? '#E0A83A' : risk.score <= 6 ? '#E08A3A' : '#E06B3A',
                   }]}
@@ -642,7 +713,7 @@ export default function App() {
         <Modal visible={sosSent} transparent animationType="fade" onRequestClose={() => setSosSent(false)}>
           <View style={styles.popupOverlay}>
             <View style={styles.popupCard}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <View style={styles.sosSentHeader}>
                 <CheckCircle2 size={24} color={colors.riskHigh} />
                 <Text style={styles.popupTitle}>SOS Sent</Text>
               </View>
@@ -781,5 +852,11 @@ const styles = StyleSheet.create({
   },
   modalBtnText: {
     fontSize: 16, color: '#fff', ...fonts.bold,
+  },
+  sosSentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
   },
 });

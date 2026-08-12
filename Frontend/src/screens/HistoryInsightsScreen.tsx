@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TrendingUp, Zap, AudioWaveform, MapPin, ChevronLeft } from 'lucide-react-native';
+import { TrendingUp, Zap, AudioWaveform, MapPin, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
@@ -14,7 +14,7 @@ import {
   RiskTrendResponse, OverloadForecastResponse,
 } from '../services/api';
 
-export default function HistoryInsightsScreen({ route }: any) {
+export default function HistoryInsightsScreen({ route, navigation }: any) {
   const styles = getStyles();
   const { history, userId: contextUserId } = useContext(AppContext);
   const insets = useSafeAreaInsets();
@@ -77,7 +77,7 @@ export default function HistoryInsightsScreen({ route }: any) {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Header title="Insights" subtitle="Your patterns" />
+      <Header title="Analysis" subtitle="Your patterns" />
 
       {/* Range toggle */}
       <View style={styles.rangeWrap}>
@@ -146,101 +146,22 @@ export default function HistoryInsightsScreen({ route }: any) {
           </View>
         </View>
 
-        {/* Top triggers */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Zap size={18} color={colors.primary} />
-              <Text style={styles.sectionTitle}>Top triggers</Text>
-            </View>
-            <Text style={styles.badge}>{triggerBreakdown.length}</Text>
-          </View>
-          <View style={styles.sectionCard}>
-            <View style={{ alignItems: 'center', marginVertical: 8 }}>
-              {triggerBreakdown.length > 0 ? (
-                <BarChart
-                  data={triggerBreakdown}
-                  height={120}
-                  width={280}
-                  barWidth={28}
-                  barBorderRadius={6}
-                  frontColor={colors.primary}
-                  xAxisLabelTextStyle={{ fontSize: 9, color: colors.mutedForeground }}
-                  hideYAxisText
-                  noOfSections={4}
-                />
-              ) : (
-                <Text style={styles.emptyText}>No events in this range.</Text>
-              )}
-            </View>
-          </View>
-        </View>
-
         {/* Past events */}
         <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <AudioWaveform size={18} color={colors.primary} />
-              <Text style={styles.sectionTitle}>Past events</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('PastEvents')} activeOpacity={0.7}>
+            <View style={[styles.sectionCard, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 20 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={styles.iconContainer}>
+                  <AudioWaveform size={20} color={colors.primary} />
+                </View>
+                <View>
+                  <Text style={[styles.sectionTitle, { fontSize: 16 }]}>Past events</Text>
+                  <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 2 }}>{filtered.length} events in range</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color={colors.mutedForeground} />
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate('PastEvents')}>
-              <Text style={styles.viewAllText}>View all ({filtered.length})</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.sectionCard}>
-            {recentEvents.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>No events in this range.</Text>
-              </View>
-            ) : (
-              <View style={{ gap: 8 }}>
-                {recentEvents.map((h, i) => {
-                  const c = riskColor(h.score);
-                  return (
-                    <React.Fragment key={h.id}>
-                      <View style={styles.navRow}>
-                        <View style={[styles.eventDot, { borderColor: c }]} />
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                          <Text style={styles.eventTitle}>
-                            {h.trigger} · <Text style={styles.eventAction}>{h.action}</Text>
-                          </Text>
-                          <Text style={styles.eventDate}>{new Date(h.time).toLocaleString()}</Text>
-                          {h.note && <Text style={styles.eventNote}>"{h.note}"</Text>}
-                        </View>
-                        <Text style={[styles.eventScore, { color: c }]}>{h.score}</Text>
-                      </View>
-                      {i < recentEvents.length - 1 && <View style={styles.divider} />}
-                    </React.Fragment>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* High Risk Locations */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <MapPin size={18} color={colors.primary} />
-              <Text style={styles.sectionTitle}>High-risk locations</Text>
-            </View>
-            <TouchableOpacity onPress={() => navigation.navigate('Locations')}>
-              <Text style={styles.viewAllText}>View details</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.sectionCard}>
-            <View style={styles.navRow}>
-              <View style={styles.iconContainer}>
-                <MapPin size={20} color={colors.riskHigh} />
-              </View>
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.eventTitle}>Downtown Transit Center</Text>
-                <Text style={styles.eventDate}>Highest risk area</Text>
-              </View>
-              <ChevronLeft size={16} color={colors.mutedForeground} style={{ transform: [{ rotate: '180deg' }] }} />
-            </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
       </ScrollView>

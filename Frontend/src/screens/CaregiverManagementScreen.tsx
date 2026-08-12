@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AppContext } from '../AppContext';
 import { CaregiverResponse, getUserCaregivers, inviteCaregiver, revokeCaregiver, updateCaregiverPermissions } from '../services/caregiverApi';
 
 export default function CaregiverManagementScreen() {
@@ -7,6 +9,8 @@ export default function CaregiverManagementScreen() {
   const [loading, setLoading] = useState(true);
   const [emailInput, setEmailInput] = useState('');
   const [inviting, setInviting] = useState(false);
+  const { navigateTo } = useContext(AppContext);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     fetchCaregivers();
@@ -103,8 +107,13 @@ export default function CaregiverManagementScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Caregiver Management</Text>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => navigateTo('settings')} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>← Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.header}>Caregiver Management</Text>
+      </View>
       
       <View style={styles.inviteSection}>
         <TextInput
@@ -138,12 +147,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#fff',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  backBtn: {
+    marginRight: 12,
+    padding: 8,
+  },
+  backBtnText: {
+    fontSize: 16,
+    color: '#007AFF',
   },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
   },
   inviteSection: {
     flexDirection: 'row',

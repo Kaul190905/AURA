@@ -54,7 +54,7 @@ export default function HomeScreen() {
   const riskC = riskColor(risk.score);
 
   // Convert temperature from Fahrenheit to Celsius
-  const tempCelsius = ((temperature - 32) * 5) / 9;
+  const tempCelsius = temperature !== null ? ((temperature - 32) * 5) / 9 : null;
 
   // Timestamp for "Last Updated"
   const lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -128,7 +128,7 @@ export default function HomeScreen() {
                   <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#00C48C' }} />
                   <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>BPM</Text>
                 </View>
-                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{heartRate} bpm</Text>
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{heartRate ?? '--'} bpm</Text>
               </View>
 
               <View style={{ marginBottom: 12 }}>
@@ -136,7 +136,7 @@ export default function HomeScreen() {
                   <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#FF9F43' }} />
                   <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Temp</Text>
                 </View>
-                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{tempCelsius.toFixed(1)}°C</Text>
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{tempCelsius !== null ? tempCelsius.toFixed(1) : '--'}°C</Text>
               </View>
 
               <View>
@@ -144,7 +144,7 @@ export default function HomeScreen() {
                   <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#5F88FF' }} />
                   <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Noise</Text>
                 </View>
-                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{Math.round(noise)} dB</Text>
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{noise !== null ? Math.round(noise) : '--'} dB</Text>
               </View>
             </View>
           </View>
@@ -157,7 +157,7 @@ export default function HomeScreen() {
               <Heart size={16} color="#FF4D4F" />
               <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Heart rate</Text>
             </View>
-            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{heartRate} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>bpm</Text></Text>
+            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{heartRate ?? '--'} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>bpm</Text></Text>
 
             <View style={{ flex: 1, justifyContent: 'flex-end', marginTop: 6 }}>
               <Svg height="80" width="100%" viewBox="0 0 100 50" preserveAspectRatio="none">
@@ -179,7 +179,7 @@ export default function HomeScreen() {
               <Volume2 size={16} color="#00C48C" />
               <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Noise level</Text>
             </View>
-            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{Math.round(noise)} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>dB</Text></Text>
+            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{noise !== null ? Math.round(noise) : '--'} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>dB</Text></Text>
 
             <View style={{ flex: 1, justifyContent: 'flex-end', marginTop: 6 }}>
               <Svg height="80" width="100%" viewBox="0 0 100 50" preserveAspectRatio="none">
@@ -278,7 +278,7 @@ export default function HomeScreen() {
                 <View style={[styles.sensorIconWrap, { backgroundColor: `${colors.riskHigh}15` }]}>
                   <Activity size={22} color={colors.riskHigh} />
                 </View>
-                <Text style={styles.sensorValue}>{heartRate}</Text>
+                <Text style={styles.sensorValue}>{heartRate ?? '--'}</Text>
                 <Text style={styles.sensorUnit}>BPM</Text>
                 <Text style={styles.sensorLabel}>Heart Rate</Text>
               </View>
@@ -288,7 +288,7 @@ export default function HomeScreen() {
                 <View style={[styles.sensorIconWrap, { backgroundColor: `${colors.primary}15` }]}>
                   <Thermometer size={22} color={colors.primary} />
                 </View>
-                <Text style={styles.sensorValue}>{tempCelsius.toFixed(1)}</Text>
+                <Text style={styles.sensorValue}>{tempCelsius !== null ? tempCelsius.toFixed(1) : '--'}</Text>
                 <Text style={styles.sensorUnit}>°C</Text>
                 <Text style={styles.sensorLabel}>Temperature</Text>
               </View>
@@ -298,7 +298,7 @@ export default function HomeScreen() {
                 <View style={[styles.sensorIconWrap, { backgroundColor: `${colors.riskMed ?? '#E0A83A'}15` }]}>
                   <Volume2 size={22} color={colors.riskMed ?? '#E0A83A'} />
                 </View>
-                <Text style={styles.sensorValue}>{Math.round(noise)}</Text>
+                <Text style={styles.sensorValue}>{noise !== null ? Math.round(noise) : '--'}</Text>
                 <Text style={styles.sensorUnit}>dB</Text>
                 <Text style={styles.sensorLabel}>Noise Level</Text>
               </View>

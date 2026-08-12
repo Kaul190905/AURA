@@ -2,24 +2,33 @@ import { TriggerKey, HistoryEvent } from './types';
 
 // ── Risk engine ───────────────────────────────────────────────────────────────
 export function computeRisk(
-  noiseDb: number,
-  tempF: number,
-  selfReport: number,
+  noiseDb: number | null,
+  tempF: number | null,
+  selfReport: number | null,
   profile: Partial<Record<TriggerKey, number>>,
 ) {
   const factors: { label: string; weight: number }[] = [];
 
-  const soundSens = (profile.sound ?? 2) / 5;
-  const noiseScore = Math.max(0, Math.min(5, (noiseDb - 50) / 10)) * (0.5 + soundSens);
-  const tempSens = (profile.temp ?? 2) / 5;
-  const tempDev = Math.abs(tempF - 98.6);
-  const tempScore = Math.max(0, Math.min(5, tempDev / 1.5)) * (0.5 + tempSens);
+  let noiseScore = 0;
+  if (noiseDb !== null) {
+    const soundSens = (profile.sound ?? 2) / 5;
+    noiseScore = Math.max(0, Math.min(5, (noiseDb - 50) / 10)) * (0.5 + soundSens);
+    if (noiseScore > 1) {factors.push({ label: `Loud noise (${Math.round(noiseDb)}dB)`, weight: noiseScore });}
+  }
 
-  const selfScore = (selfReport - 1) * 1.2;
+  let tempScore = 0;
+  if (tempF !== null) {
+    const tempSens = (profile.temp ?? 2) / 5;
+    const tempDev = Math.abs(tempF - 98.6);
+    tempScore = Math.max(0, Math.min(5, tempDev / 1.5)) * (0.5 + tempSens);
+    if (tempScore > 1) {factors.push({ label: `Abnormal temp (${Math.round(((tempF - 32) * 5) / 9)}°C)`, weight: tempScore });}
+  }
 
-  if (noiseScore > 1) {factors.push({ label: `Loud noise (${Math.round(noiseDb)}dB)`, weight: noiseScore });}
-  if (tempScore > 1) {factors.push({ label: `Abnormal temp (${Math.round(((tempF - 32) * 5) / 9)}°C)`, weight: tempScore });}
-  if (selfScore > 1) {factors.push({ label: 'Self reported stress', weight: selfScore });}
+  let selfScore = 0;
+  if (selfReport !== null) {
+    selfScore = (selfReport - 1) * 1.2;
+    if (selfScore > 1) {factors.push({ label: 'Self reported stress', weight: selfScore });}
+  }
 
   const raw = noiseScore + tempScore + selfScore;
   const score = Math.max(0, Math.min(10, Math.round(raw)));
