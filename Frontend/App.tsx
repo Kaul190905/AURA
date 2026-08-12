@@ -105,52 +105,6 @@ function TabNavigator({ initialRouteName = 'House' }: { initialRouteName?: strin
   );
 }
 
-<<<<<<< HEAD
-// ── Teacher Tab Navigator ──────────────────────────────────────────────────
-function TeacherTabNavigator() {
-  const { darkMode } = React.useContext(AppContext);
-  const bg = darkMode ? '#000000' : colors.background;
-  const border = darkMode ? '#1c1c1e' : colors.border;
-  return (
-    <TeacherTab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: [styles.tabBar, { backgroundColor: bg, borderTopColor: border }],
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.mutedForeground,
-        tabBarLabelStyle: styles.tabLabel,
-      }}
-    >
-      <TeacherTab.Screen
-        name="Dashboard"
-        component={TeacherDashboardScreen}
-        options={{ tabBarIcon: renderHouseIcon }}
-      />
-      <TeacherTab.Screen
-        name="Students"
-        component={TeacherStudentsScreen}
-        options={{ tabBarIcon: renderUsersIcon }}
-      />
-      <TeacherTab.Screen
-        name="Profile"
-        component={ProfileStackNavigator}
-        options={{ tabBarIcon: renderUserIcon }}
-      />
-    </TeacherTab.Navigator>
-  );
-}
-
-const TeacherStack = createStackNavigator();
-function TeacherRoot() {
-  return (
-    <TeacherStack.Navigator screenOptions={{ headerShown: false }}>
-      <TeacherStack.Screen name="TeacherTabs" component={TeacherTabNavigator} />
-      <TeacherStack.Screen name="TrackStudent" component={TeacherStudentDetailsScreen} />
-    </TeacherStack.Navigator>
-  );
-}
-=======
->>>>>>> 3e70384f1424f49ef568ec8f5b5ca846eb919412
 
 // ── Insights Stack Navigator ──────────────────────────────────────────────────
 const InsightsStack = createStackNavigator();
@@ -192,11 +146,7 @@ function CaretakerTabNavigator() {
       <CaretakerTab.Screen
         name="Settings"
         component={ProfileStackNavigator}
-<<<<<<< HEAD
-        options={{ tabBarIcon: renderUserIcon }}
-=======
         options={{ tabBarIcon: ({ color, size }) => <Settings color={color} size={size} /> }}
->>>>>>> 3e70384f1424f49ef568ec8f5b5ca846eb919412
       />
     </CaretakerTab.Navigator>
   );
@@ -328,20 +278,6 @@ export default function App() {
   }, [userId]);
 
   // ── Monitoring Modes state ────────────────────────────────────────────────────
-<<<<<<< HEAD
-  const [caretakerType, setCaretakerType] = useState<'teacher' | 'personal-caretaker' | null>(null);
-  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
-  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
-  const [mockStudents, _setMockStudents] = useState<AppState['mockStudents']>([
-    { id: 's1', name: 'Rahul Sharma', location: 'Science Lab', risk: 9, isCrisis: true, condition: 'High Noise', sensorValue: '92 dB', bluetoothStatus: 'Connected', lastUpdated: '10 sec ago' },
-    { id: 's2', name: 'Nisha Patel', location: 'Cafeteria', risk: 6, isCrisis: false, condition: 'High Temperature', sensorValue: '39°C', bluetoothStatus: 'Connected', lastUpdated: '15 sec ago' },
-    { id: 's3', name: 'Aarav Kumar', location: 'Assembly Hall', risk: 7, isCrisis: false, condition: 'Crowded', sensorValue: 'High Stress', bluetoothStatus: 'Connected', lastUpdated: '30 sec ago' },
-    { id: 's4', name: 'Meera Iyer', location: 'Library', risk: 1, isCrisis: false, condition: 'Safe', bluetoothStatus: 'Disconnected', lastUpdated: '4 min ago' },
-    { id: 's5', name: 'Arjun Singh', location: 'Classroom B', risk: 4, isCrisis: false, condition: 'Bright Light', sensorValue: '1200 lux', bluetoothStatus: 'Connected', lastUpdated: '8 min ago' },
-  ]);
-
-=======
->>>>>>> 3e70384f1424f49ef568ec8f5b5ca846eb919412
   const [recentlyViewedUserIds, setRecentlyViewedUserIds] = useState<string[]>([]);
   const [isCaregiverOnline, setIsCaregiverOnline] = useState(true);
   const [mockUsers, setMockUsers] = useState<AppState['mockUsers']>([
@@ -583,7 +519,6 @@ export default function App() {
     }, 10000);
   };
 
-<<<<<<< HEAD
   const appState: AppState = {
     primaryRole, setPrimaryRole,
     isCrisisMode, setIsCrisisMode,
@@ -592,7 +527,7 @@ export default function App() {
     isNotificationCenterOpen, setIsNotificationCenterOpen,
     caregiver, setCaregiver,
     profile, setProfile, dob, setDob,
-    noise, setNoise, temperature, setTemperature, heartRate, setHeartRate, selfReport, setSelfReport,
+    noise, setNoise, temperature, setTemperature, selfReport, setSelfReport,
     bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
     accommodations, setAccommodations, highContrast, setHighContrast,
     reduceMotion, setReduceMotion, darkMode, setDarkMode, colorVisionMode, setColorVisionMode: handleSetColorVisionMode, sensitivity, setSensitivity,
@@ -601,36 +536,10 @@ export default function App() {
     profilePhoto, setProfilePhoto: handleSetProfilePhoto,
     userId, setUserId,
     accessToken, setAccessToken,
-    caretakerType, setCaretakerType,
-    selectedStudent, setSelectedStudent,
-    recentlyViewedIds, setRecentlyViewedIds,
-    mockStudents,
     recentlyViewedUserIds, setRecentlyViewedUserIds,
     mockUsers, setMockUsers,
+    isCaregiverOnline, setIsCaregiverOnline,
   };
-=======
-    const appState: AppState = {
-      primaryRole, setPrimaryRole,
-      isCrisisMode, setIsCrisisMode,
-      crisisRiskBefore, setCrisisRiskBefore,
-      notifications, setNotifications,
-      isNotificationCenterOpen, setIsNotificationCenterOpen,
-      caregiver, setCaregiver,
-      profile, setProfile, dob, setDob,
-      noise, setNoise, temperature, setTemperature, selfReport, setSelfReport,
-      bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
-      accommodations, setAccommodations, highContrast, setHighContrast,
-      reduceMotion, setReduceMotion, darkMode, setDarkMode, colorVisionMode, setColorVisionMode: handleSetColorVisionMode, sensitivity, setSensitivity,
-      risk, primaryTrigger, suggestions, goCrisis,
-      navigateTo: setAppScreen,
-      profilePhoto, setProfilePhoto: handleSetProfilePhoto,
-      userId, setUserId,
-      accessToken, setAccessToken,
-      recentlyViewedUserIds, setRecentlyViewedUserIds,
-      mockUsers, setMockUsers,
-      isCaregiverOnline, setIsCaregiverOnline,
-    };
->>>>>>> 3e70384f1424f49ef568ec8f5b5ca846eb919412
 
 
   return (
@@ -654,17 +563,14 @@ export default function App() {
           {!sessionLoading && !userId && (
             <LoginScreen onSuccess={() => { }} />
           )}
-<<<<<<< HEAD
-
           {!sessionLoading && userId && appScreen === 'welcome' && (
             <WelcomeScreen
               onNext={async (role) => {
-                await supabase.auth.updateUser({ data: { role } });
+                await supabase.auth.updateUser({ data: { role, roleSelected: true } });
                 setPrimaryRole(role);
                 if (role === 'user') {
                   setAppScreen('onboarding');
                 } else {
-                  setCaretakerType('personal-caretaker');
                   setAppScreen('caretaker-home');
                 }
               }}
@@ -672,41 +578,21 @@ export default function App() {
           )}
 
           {!sessionLoading && userId && appScreen === 'onboarding' && <OnboardingScreen onDone={() => setAppScreen('home')} />}
-=======
-          {!sessionLoading && userId && appScreen === 'welcome' && <WelcomeScreen onNext={async (role) => {
-            await supabase.auth.updateUser({ data: { role, roleSelected: true } });
-            setPrimaryRole(role);
-            setAppScreen(role === 'caretaker' ? 'caretaker-home' : 'home');
-          }} />}
->>>>>>> 3e70384f1424f49ef568ec8f5b5ca846eb919412
           {!sessionLoading && userId && appScreen === 'profile' && <ProfileSetupScreen onDone={() => setAppScreen('settings')} onBack={() => setAppScreen('settings')} />}
 
           {userId && appScreen === 'recovery' && <RecoverySummaryScreen onDone={() => setAppScreen('home')} />}
           {userId && appScreen === 'speech' && <SpeechDiaryScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'plans' && <PlansScreen onBack={() => setAppScreen('home')} />}
           {userId && appScreen === 'user_profile' && <UserProfileScreen onBack={() => setAppScreen('home')} />}
-<<<<<<< HEAD
           {userId && appScreen === 'accessibility' && <SettingsAccessibilityScreen />}
           {userId && appScreen === 'device' && <SettingsDeviceScreen />}
           {userId && appScreen === 'privacy' && <SettingsPrivacyScreen />}
           {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setPrimaryRole('caretaker'); setAppScreen('caretaker-home'); }} />}
-
-=======
-          {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setPrimaryRole('caretaker'); setAppScreen('caretaker-home'); }} />}
->>>>>>> 3e70384f1424f49ef568ec8f5b5ca846eb919412
           {userId && appScreen === 'caretaker-home' && (
             <View style={styles.flex1}>
               <CaretakerRoot />
             </View>
           )}
-<<<<<<< HEAD
-          {userId && appScreen === 'teacher-home' && (
-            <View style={styles.flex1}>
-              <TeacherRoot />
-            </View>
-          )}
-=======
->>>>>>> 3e70384f1424f49ef568ec8f5b5ca846eb919412
           {userId && (appScreen === 'home' || appScreen === 'settings') && (
             <View style={styles.flex1}>
               <TabNavigator initialRouteName={appScreen === 'settings' ? 'Settings' : 'House'} />

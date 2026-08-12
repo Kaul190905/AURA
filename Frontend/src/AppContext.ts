@@ -15,12 +15,7 @@ export type AppScreen =
   | 'login' | 'welcome' | 'profile' | 'home' | 'crisis'
   | 'recovery' | 'settings' | 'speech' | 'plans'
   | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
-<<<<<<< HEAD
-  | 'teacher-home' | 'caretaker-students' | 'caretaker-track-student'
   | 'user_profile' | 'accessibility' | 'device' | 'privacy' | 'onboarding';
-=======
-  | 'user_profile';
->>>>>>> 3e70384f1424f49ef568ec8f5b5ca846eb919412
 
 export type AppState = {
   primaryRole: 'user' | 'caretaker' | null;
