@@ -85,53 +85,44 @@ def execute_v3_rectification():
     # ---------------------------------------------------------
     print("[Step 8, 9, 10 & 11] Generating V3 dataset splits...")
     np.random.seed(42)
-    rows_tr, rows_va, rows_te = [], [], []
-    
-    # Train partition: U0001-U0700
-    for u_idx in range(1, 701):
-        u_id = f"U{u_idx:04d}"
-        hr_baseline = np.random.normal(72, 4)
-        for _ in range(10):
-            noise = np.random.normal(55, 8)
-            hr = hr_baseline + (noise - 55) * 0.12 + np.random.normal(0, 1.5)
-            # Probabilistic target logic
-            prob = (hr - 70) * 0.05 + (noise - 50) * 0.02
-            risk = 0
-            if prob > 1.1:
-                risk = 2
-            elif prob > 0.5:
-                risk = 1
-            rows_tr.append([u_id, hr, noise, risk])
-            
-    # Val partition: U0701-U0850
-    for u_idx in range(701, 851):
-        u_id = f"U{u_idx:04d}"
-        hr_baseline = np.random.normal(72, 4)
-        for _ in range(10):
-            noise = np.random.normal(55, 8)
-            hr = hr_baseline + (noise - 55) * 0.12 + np.random.normal(0, 1.5)
-            prob = (hr - 70) * 0.05 + (noise - 50) * 0.02
-            risk = 0
-            if prob > 1.1:
-                risk = 2
-            elif prob > 0.5:
-                risk = 1
-            rows_va.append([u_id, hr, noise, risk])
+    def generate_augmented_samples(start_idx, end_idx):
+        rows = []
+        for u_idx in range(start_idx, end_idx):
+            u_id = f"U{u_idx:04d}"
+            hr_baseline = np.random.normal(72, 4)
+            for _ in range(10):
+                # Base true underlying physiological values
+                true_noise = np.random.normal(55, 8)
+                true_hr = hr_baseline + (true_noise - 55) * 0.12 + np.random.normal(0, 1.5)
+                
+                # Ground truth risk depends on true values
+                prob = (true_hr - 70) * 0.05 + (true_noise - 50) * 0.02
+                risk = 0
+                if prob > 1.1:
+                    risk = 2
+                elif prob > 0.5:
+                    risk = 1
+                    
+                # Stochastic label smoothing (5% chance to flip label to prevent overconfidence)
+                if np.random.rand() < 0.05:
+                    risk = np.random.choice([0, 1, 2])
+                    
+                # Sensor Noise Injection (Laplace for fatter tails/artifacts)
+                obs_noise = true_noise + np.random.laplace(0, 3.0)
+                obs_hr = true_hr + np.random.laplace(0, 4.0)
+                
+                # Missing Data Simulation (5% dropout rate)
+                if np.random.rand() < 0.05:
+                    obs_hr = np.nan
+                if np.random.rand() < 0.05:
+                    obs_noise = np.nan
+                    
+                rows.append([u_id, obs_hr, obs_noise, risk])
+        return rows
 
-    # Test partition: U0851-U1000
-    for u_idx in range(851, 1001):
-        u_id = f"U{u_idx:04d}"
-        hr_baseline = np.random.normal(72, 4)
-        for _ in range(10):
-            noise = np.random.normal(55, 8)
-            hr = hr_baseline + (noise - 55) * 0.12 + np.random.normal(0, 1.5)
-            prob = (hr - 70) * 0.05 + (noise - 50) * 0.02
-            risk = 0
-            if prob > 1.1:
-                risk = 2
-            elif prob > 0.5:
-                risk = 1
-            rows_te.append([u_id, hr, noise, risk])
+    rows_tr = generate_augmented_samples(1, 701)
+    rows_va = generate_augmented_samples(701, 851)
+    rows_te = generate_augmented_samples(851, 1001)
 
     df_train = pd.DataFrame(rows_tr, columns=["user_id", "heart_rate", "noise_db", "risk_label"])
     df_val = pd.DataFrame(rows_va, columns=["user_id", "heart_rate", "noise_db", "risk_label"])

@@ -87,32 +87,37 @@ def train_risk_with_real_data():
     print(f"Training subset of real data: {len(X_train_r)} samples.")
     print(f"Testing subset of real data: {len(X_test_r)} samples.")
     
-    # Combine synthetic train split with real train split
-    # Since real dataset is small, we oversample it to make it impactful
-    X_train_combined = np.vstack([X_train_s, np.repeat(X_train_r, 500, axis=0)])
-    y_train_combined = np.concatenate([y_train_s, np.repeat(y_train_r, 500)])
-    
-    # Shuffle combined training data
-    shuffle_idx = np.random.permutation(len(X_train_combined))
-    X_train_combined = X_train_combined[shuffle_idx]
-    y_train_combined = y_train_combined[shuffle_idx]
-    
-    # Train the GradientBoostingClassifier
-    print("\nTraining GradientBoostingClassifier on combined dataset...")
+    # Pre-train the model on Synthetic Data
+    print("\nPre-training GradientBoostingClassifier on synthetic dataset...")
     # Best params from GridSearchCV
     model = GradientBoostingClassifier(
         learning_rate=0.1,
         max_depth=5,
         min_samples_split=20,
         subsample=0.8,
-        n_estimators=150,
+        n_estimators=100, # Initial trees
+        warm_start=True, # Freeze base estimators for transfer learning
         random_state=42
     )
     
-    # We train on a representative subset of combined data for speed
-    train_size = min(len(X_train_combined), 150000)
-    model.fit(X_train_combined[:train_size], y_train_combined[:train_size])
-    print("Training completed.")
+    train_size_s = min(len(X_train_s), 150000)
+    model.fit(X_train_s[:train_size_s], y_train_s[:train_size_s])
+    print("Pre-training completed.")
+
+    # Fine-tune the model on Real Data
+    print("\nFine-tuning on real dataset...")
+    model.n_estimators += 50 # Add 50 new trees specifically fitted to real data
+    
+    X_train_r_oversampled = np.repeat(X_train_r, 500, axis=0)
+    y_train_r_oversampled = np.repeat(y_train_r, 500)
+    
+    # Shuffle oversampled real data
+    shuffle_idx = np.random.permutation(len(X_train_r_oversampled))
+    X_train_r_oversampled = X_train_r_oversampled[shuffle_idx]
+    y_train_r_oversampled = y_train_r_oversampled[shuffle_idx]
+
+    model.fit(X_train_r_oversampled, y_train_r_oversampled)
+    print("Fine-tuning completed.")
     
     # 3. Evaluate
     print("\nEvaluating model on Synthetic Test Set...")

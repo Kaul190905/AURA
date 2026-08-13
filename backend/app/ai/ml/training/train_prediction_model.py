@@ -33,13 +33,24 @@ from typing import Tuple
 
 import joblib
 import numpy as np
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.metrics import mean_absolute_error
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-
 from app.ai.prediction_engine import RulePredictionEngine
-from app.ai.ml.prediction_features import TRAJECTORY_FEATURE_KEYS, build_trajectory_features
+
+class LSTMRegressor(nn.Module):
+    def __init__(self, input_size=1, hidden_size=32, num_layers=1):
+        super(LSTMRegressor, self).__init__()
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, 1)
+
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        out = self.fc(out[:, -1, :])
+        return out
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("train_prediction_model")
@@ -68,8 +79,10 @@ async def _generate_distilled_dataset(n_samples: int = 6000) -> Tuple[np.ndarray
     for _ in range(n_samples):
         trajectory = _random_trajectory()
         result = await teacher.forecast_overload_event(None, {"risk_scores": trajectory})
-        feats = build_trajectory_features(trajectory)
-        X.append([feats[k] for k in TRAJECTORY_FEATURE_KEYS])
+        seq = trajectory[-15:]
+        if len(seq) < 15:
+            seq = [0.0] * (15 - len(seq)) + seq
+        X.append(seq)
         y.append(result["overload_probability"])
     return np.array(X), np.array(y)
 
@@ -126,8 +139,10 @@ async def _load_live_dataset(window_size: int = 10) -> Tuple[np.ndarray, np.ndar
                 result = await rule_risk_engine.evaluate_current_risk(telemetry, preferences)
                 risk_scores.append(result["risk_score"])
 
-            feats = build_trajectory_features(risk_scores)
-            X.append([feats[k] for k in TRAJECTORY_FEATURE_KEYS])
+            seq = risk_scores[-15:]
+            if len(seq) < 15:
+                seq = [0.0] * (15 - len(seq)) + seq
+            X.append(seq)
             y.append(1.0)
 
             # Negative example: a window from well before this event (>= 2h earlier),
@@ -153,8 +168,10 @@ async def _load_live_dataset(window_size: int = 10) -> Tuple[np.ndarray, np.ndar
                 result = await rule_risk_engine.evaluate_current_risk(telemetry, preferences)
                 negative_scores.append(result["risk_score"])
 
-            neg_feats = build_trajectory_features(negative_scores)
-            X.append([neg_feats[k] for k in TRAJECTORY_FEATURE_KEYS])
+            seq = negative_scores[-15:]
+            if len(seq) < 15:
+                seq = [0.0] * (15 - len(seq)) + seq
+            X.append(seq)
             y.append(0.0)
 
     return np.array(X), np.array(y)
@@ -175,27 +192,46 @@ async def train(mode: str) -> None:
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+    # Scaling (scale each sequence element as if it were a flat feature, or scale all raw scores together)
     scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    X_train_scaled = scaler.fit_transform(X_train.reshape(-1, 1)).reshape(X_train.shape[0], X_train.shape[1], 1)
+    X_test_scaled = scaler.transform(X_test.reshape(-1, 1)).reshape(X_test.shape[0], X_test.shape[1], 1)
 
-    model = GradientBoostingRegressor(
-        random_state=42, n_estimators=150, max_depth=3, learning_rate=0.1
-    )
-    model.fit(X_train_scaled, y_train)
+    # PyTorch setup
+    model = LSTMRegressor(1, 32, 1)
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
 
-    mae = mean_absolute_error(y_test, model.predict(X_test_scaled))
+    train_ds = TensorDataset(torch.FloatTensor(X_train_scaled), torch.FloatTensor(y_train).unsqueeze(1))
+    train_dl = DataLoader(train_ds, batch_size=64, shuffle=True)
+
+    # Training loop
+    model.train()
+    for epoch in range(10):
+        for batch_x, batch_y in train_dl:
+            optimizer.zero_grad()
+            out = model(batch_x)
+            loss = criterion(out, batch_y)
+            loss.backward()
+            optimizer.step()
+
+    # Evaluation
+    model.eval()
+    with torch.no_grad():
+        test_preds = model(torch.FloatTensor(X_test_scaled)).squeeze(1).numpy()
+    
+    mae = np.mean(np.abs(test_preds - y_test))
     logger.info("Trained on %d samples (mode=%s). Test MAE: %.3f", len(X), mode, mae)
 
     os.makedirs(ARTIFACT_DIR, exist_ok=True)
-    joblib.dump({"model": model, "scaler": scaler}, MODEL_PATH)
+    joblib.dump({"model_state": model.state_dict(), "scaler": scaler}, MODEL_PATH)
 
     metadata = {
         "trained_at": datetime.now(timezone.utc).isoformat(),
         "mode": mode,
         "n_samples": len(X),
         "test_mae": round(float(mae), 4),
-        "feature_keys": TRAJECTORY_FEATURE_KEYS,
+        "architecture": "LSTM",
     }
     with open(METADATA_PATH, "w") as f:
         json.dump(metadata, f, indent=2)

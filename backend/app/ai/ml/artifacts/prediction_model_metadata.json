@@ -1,13 +1,7 @@
 {
-  "trained_at": "2026-07-23T04:33:44.910891+00:00",
+  "trained_at": "2026-08-13T06:15:18.197509+00:00",
   "mode": "distill",
   "n_samples": 6000,
-  "test_mae": 0.0032,
-  "feature_keys": [
-    "last_value",
-    "mean",
-    "std",
-    "slope",
-    "n_points"
-  ]
+  "test_mae": 0.0127,
+  "architecture": "LSTM"
 }
