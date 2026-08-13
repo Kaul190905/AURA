@@ -1,4 +1,5 @@
-import React, { useContext, useState, useCallback } from 'react';
+/* eslint-disable react-native/no-inline-styles */
+import React, { useContext, useState, useCallback, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, StyleSheet, TouchableOpacity, Modal,
@@ -53,8 +54,44 @@ export default function HomeScreen() {
   const unreadCount = notifications.filter(n => !n.read).length;
   const riskC = riskColor(risk.score);
 
+  // Derived display values: show nothing if disconnected
+  const displayHeartRate = bleConnected ? heartRate : null;
+  const displayTemperature = bleConnected ? temperature : null;
+  const displayNoise = bleConnected ? noise : null;
+
   // Convert temperature from Fahrenheit to Celsius
-  const tempCelsius = temperature !== null ? ((temperature - 32) * 5) / 9 : null;
+  const tempCelsius = displayTemperature !== null ? ((displayTemperature - 32) * 5) / 9 : null;
+
+  // Calculate live ring percentages
+  const bpmPct = displayHeartRate ? Math.min(Math.max(displayHeartRate / 150, 0), 1) : 0;
+  const tempPct = tempCelsius ? Math.min(Math.max((tempCelsius - 34) / 8, 0), 1) : 0;
+  const noisePct = displayNoise ? Math.min(Math.max(displayNoise / 120, 0), 1) : 0;
+
+  // Animated states for live charts
+  const [noiseBars, setNoiseBars] = useState<number[]>(Array(7).fill(0));
+  const [hrPhase, setHrPhase] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!displayNoise) {
+        setNoiseBars(Array(7).fill(0));
+      } else {
+        setNoiseBars(Array(7).fill(0).map(() => (displayNoise / 120) * 45 * (0.4 + Math.random() * 0.6)));
+      }
+    }, 400);
+    return () => clearInterval(interval);
+  }, [displayNoise]);
+
+  useEffect(() => {
+    if (!displayHeartRate) { return; }
+    const pixelsPerSecond = (displayHeartRate / 60) * 50;
+    const fps = 20;
+    const pixelsPerFrame = pixelsPerSecond / fps;
+    const interval = setInterval(() => {
+      setHrPhase(prev => (prev + pixelsPerFrame) % 100);
+    }, 1000 / fps);
+    return () => clearInterval(interval);
+  }, [displayHeartRate]);
 
   // Timestamp for "Last Updated"
   const lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -108,15 +145,15 @@ export default function HomeScreen() {
                 <G rotation="-90" originX="80" originY="80">
                   {/* Outer - BPM */}
                   <Circle cx="80" cy="80" r="65" stroke="#00C48C" strokeWidth="12" fill="none" strokeOpacity="0.2" />
-                  <Circle cx="80" cy="80" r="65" stroke="#00C48C" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 65}`} strokeDashoffset={`${2 * Math.PI * 65 * (1 - 0.75)}`} strokeLinecap="round" />
+                  <Circle cx="80" cy="80" r="65" stroke="#00C48C" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 65}`} strokeDashoffset={`${2 * Math.PI * 65 * (1 - bpmPct)}`} strokeLinecap="round" />
 
                   {/* Middle - Temp */}
                   <Circle cx="80" cy="80" r="47" stroke="#FF9F43" strokeWidth="12" fill="none" strokeOpacity="0.2" />
-                  <Circle cx="80" cy="80" r="47" stroke="#FF9F43" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 47}`} strokeDashoffset={`${2 * Math.PI * 47 * (1 - 0.65)}`} strokeLinecap="round" />
+                  <Circle cx="80" cy="80" r="47" stroke="#FF9F43" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 47}`} strokeDashoffset={`${2 * Math.PI * 47 * (1 - tempPct)}`} strokeLinecap="round" />
 
                   {/* Inner - Noise */}
                   <Circle cx="80" cy="80" r="29" stroke="#5F88FF" strokeWidth="12" fill="none" strokeOpacity="0.2" />
-                  <Circle cx="80" cy="80" r="29" stroke="#5F88FF" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 29}`} strokeDashoffset={`${2 * Math.PI * 29 * (1 - 0.45)}`} strokeLinecap="round" />
+                  <Circle cx="80" cy="80" r="29" stroke="#5F88FF" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 29}`} strokeDashoffset={`${2 * Math.PI * 29 * (1 - noisePct)}`} strokeLinecap="round" />
                 </G>
               </Svg>
             </View>
@@ -128,7 +165,7 @@ export default function HomeScreen() {
                   <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#00C48C' }} />
                   <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>BPM</Text>
                 </View>
-                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{heartRate ?? '--'} bpm</Text>
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{displayHeartRate ?? '--'} bpm</Text>
               </View>
 
               <View style={{ marginBottom: 12 }}>
@@ -144,7 +181,7 @@ export default function HomeScreen() {
                   <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#5F88FF' }} />
                   <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Noise</Text>
                 </View>
-                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{noise !== null ? Math.round(noise) : '--'} dB</Text>
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{displayNoise !== null ? Math.round(displayNoise) : '--'} dB</Text>
               </View>
             </View>
           </View>
@@ -157,7 +194,7 @@ export default function HomeScreen() {
               <Heart size={16} color="#FF4D4F" />
               <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Heart rate</Text>
             </View>
-            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{heartRate ?? '--'} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>bpm</Text></Text>
+            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{displayHeartRate ?? '--'} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>bpm</Text></Text>
 
             <View style={{ flex: 1, justifyContent: 'flex-end', marginTop: 6 }}>
               <Svg height="80" width="100%" viewBox="0 0 100 50" preserveAspectRatio="none">
@@ -167,8 +204,17 @@ export default function HomeScreen() {
                     <Stop offset="100%" stopColor="#FF4D4F" stopOpacity="0" />
                   </LinearGradient>
                 </Defs>
-                <Path d="M0,40 C10,40 15,35 20,20 C25,5 28,5 32,30 C38,40 42,40 48,40 C52,40 55,33 58,20 C62,10 68,10 72,30 C75,40 80,40 85,40 L100,40 L100,50 L0,50 Z" fill="url(#grad)" />
-                <Path d="M0,40 C10,40 15,35 20,20 C25,5 28,5 32,30 C38,40 42,40 48,40 C52,40 55,33 58,20 C62,10 68,10 72,30 C75,40 80,40 85,40 L100,40" fill="none" stroke="#FF4D4F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                {displayHeartRate ? (
+                  <G x={-hrPhase}>
+                    <Path d="M0,40 C10,40 15,35 20,20 C25,5 28,5 32,30 C38,40 42,40 48,40 C52,40 55,33 58,20 C62,10 68,10 72,30 C75,40 80,40 85,40 L100,40 C110,40 115,35 120,20 C125,5 128,5 132,30 C138,40 142,40 148,40 C152,40 155,33 158,20 C162,10 168,10 172,30 C175,40 180,40 185,40 L200,40 L200,50 L0,50 Z" fill="url(#grad)" />
+                    <Path d="M0,40 C10,40 15,35 20,20 C25,5 28,5 32,30 C38,40 42,40 48,40 C52,40 55,33 58,20 C62,10 68,10 72,30 C75,40 80,40 85,40 L100,40 C110,40 115,35 120,20 C125,5 128,5 132,30 C138,40 142,40 148,40 C152,40 155,33 158,20 C162,10 168,10 172,30 C175,40 180,40 185,40 L200,40" fill="none" stroke="#FF4D4F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </G>
+                ) : (
+                  <>
+                    <Path d="M0,40 L100,40 L100,50 L0,50 Z" fill="url(#grad)" />
+                    <Path d="M0,40 L100,40" fill="none" stroke="#FF4D4F" strokeWidth="2.5" strokeLinecap="round" />
+                  </>
+                )}
               </Svg>
             </View>
           </View>
@@ -179,17 +225,17 @@ export default function HomeScreen() {
               <Volume2 size={16} color="#00C48C" />
               <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Noise level</Text>
             </View>
-            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{noise !== null ? Math.round(noise) : '--'} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>dB</Text></Text>
+            <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{displayNoise !== null ? Math.round(displayNoise) : '--'} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>dB</Text></Text>
 
             <View style={{ flex: 1, justifyContent: 'flex-end', marginTop: 6 }}>
               <Svg height="80" width="100%" viewBox="0 0 100 50" preserveAspectRatio="none">
-                <Rect x="5" y="25" width="8" height="25" rx="4" fill="#A7F3D0" />
-                <Rect x="20" y="15" width="8" height="35" rx="4" fill="#00C48C" />
-                <Rect x="35" y="30" width="8" height="20" rx="4" fill="#A7F3D0" />
-                <Rect x="50" y="5" width="8" height="45" rx="4" fill="#00C48C" />
-                <Rect x="65" y="20" width="8" height="30" rx="4" fill="#00C48C" />
-                <Rect x="80" y="10" width="8" height="40" rx="4" fill="#00C48C" />
-                <Rect x="95" y="25" width="8" height="25" rx="4" fill="#A7F3D0" />
+                {noiseBars.map((h, i) => {
+                  const finalH = displayNoise ? Math.max(h, 0) : 0;
+                  const y = 50 - finalH;
+                  return (
+                    <Rect key={i} x={5 + i * 15} y={y} width="8" height={finalH} rx={finalH > 4 ? 4 : finalH / 2} fill={i % 2 === 0 ? '#A7F3D0' : '#00C48C'} />
+                  );
+                })}
               </Svg>
             </View>
           </View>
@@ -278,7 +324,7 @@ export default function HomeScreen() {
                 <View style={[styles.sensorIconWrap, { backgroundColor: `${colors.riskHigh}15` }]}>
                   <Activity size={22} color={colors.riskHigh} />
                 </View>
-                <Text style={styles.sensorValue}>{heartRate ?? '--'}</Text>
+                <Text style={styles.sensorValue}>{displayHeartRate ?? '--'}</Text>
                 <Text style={styles.sensorUnit}>BPM</Text>
                 <Text style={styles.sensorLabel}>Heart Rate</Text>
               </View>
@@ -298,7 +344,7 @@ export default function HomeScreen() {
                 <View style={[styles.sensorIconWrap, { backgroundColor: `${colors.riskMed ?? '#E0A83A'}15` }]}>
                   <Volume2 size={22} color={colors.riskMed ?? '#E0A83A'} />
                 </View>
-                <Text style={styles.sensorValue}>{noise !== null ? Math.round(noise) : '--'}</Text>
+                <Text style={styles.sensorValue}>{displayNoise !== null ? Math.round(displayNoise) : '--'}</Text>
                 <Text style={styles.sensorUnit}>dB</Text>
                 <Text style={styles.sensorLabel}>Noise Level</Text>
               </View>
@@ -317,9 +363,9 @@ const getStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   sectionContainer: { marginBottom: 28, paddingHorizontal: 16 },
   sectionCard: {
-    backgroundColor: colors.background, 
-    borderRadius: radius.xl, 
-    padding: 16, 
+    backgroundColor: colors.background,
+    borderRadius: radius.xl,
+    padding: 16,
     ...neuSm,
     borderWidth: 1,
     borderColor: colors.border + '80',

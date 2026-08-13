@@ -14,7 +14,7 @@ export default function CaretakerProfileScreen({ navigation }: any) {
   const {
     darkMode, setDarkMode, highContrast,
     setUserId, setAccessToken, navigateTo,
-    recentlyViewedUserIds, mockUsers
+    recentlyViewedUserIds, mockUsers, primaryRole
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
@@ -76,7 +76,7 @@ export default function CaretakerProfileScreen({ navigation }: any) {
         </TouchableOpacity>
 
         {/* Connected User Card (Only for Personal Caretaker) */}
-        {caretakerType === 'personal-caretaker' && (
+        {primaryRole === 'caretaker' && (
           <TouchableOpacity
             style={[styles.menuCard, neuSm, cardStyle]}
             activeOpacity={0.8}
