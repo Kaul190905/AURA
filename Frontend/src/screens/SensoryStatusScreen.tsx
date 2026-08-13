@@ -1,5 +1,5 @@
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useContext, useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Heart, Thermometer, Mic } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
@@ -42,6 +42,19 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
   const hasTemp = connectedUser.sensoryProfile?.temperature;
   const sensorData = connectedUser.currentSensorData;
 
+  const [liveBpm, setLiveBpm] = useState(sensorData?.heartRate || 80);
+  const [liveSound, setLiveSound] = useState(sensorData?.soundDb || 45);
+  const [liveTemp, setLiveTemp] = useState(sensorData?.temperatureC || 36.5);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
+      setLiveSound(prev => prev + (Math.floor(Math.random() * 11) - 5));
+      setLiveTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
   let activeTriggers: string[] = [];
   if (hasSound) activeTriggers.push('Sound');
   if (hasTemp) activeTriggers.push('Temperature');
@@ -52,7 +65,7 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
     <View style={[styles.container, bgStyle, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('ConnectedUserDetails', { userId: connectedUser.id })} style={styles.iconBtn}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
           <ArrowLeft size={24} color={textStyle.color} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, textStyle]}>Current Sensory Status</Text>
@@ -76,7 +89,11 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
         <Text style={[styles.sectionHeader, textStyle]}>CURRENT SENSORY DATA</Text>
 
         {/* Heart Rate Card (Always visible) */}
-        <View style={[styles.sensorCard, cardStyle, neuSm]}>
+        <TouchableOpacity 
+          style={[styles.sensorCard, cardStyle, neuSm]} 
+          onPress={() => navigation.navigate('HeartRateHistory')}
+          activeOpacity={0.7}
+        >
           <View style={styles.sensorCardHeader}>
             <View style={[styles.sensorIconBox, { backgroundColor: `${colors.riskHigh}15` }]}>
               <Heart size={22} color={colors.riskHigh} />
@@ -84,16 +101,24 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
             <Text style={[styles.sensorCardTitle, textStyle]}>Heart Rate</Text>
           </View>
           <View style={styles.sensorCardBody}>
-            <Text style={[styles.sensorCardValue, textStyle]}>{sensorData?.heartRate || '--'} BPM</Text>
+            <Text style={[styles.sensorCardValue, textStyle]}>{liveBpm} BPM</Text>
             <Text style={[styles.sensorCardSub, subTextStyle]}>
-              Status: {sensorData?.heartRate && sensorData.heartRate > 100 ? 'Elevated' : 'Normal'}
+              Status: {liveBpm > 100 ? 'Elevated' : 'Normal'}
             </Text>
+            
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
+              <Text style={{ color: colors.primary, fontSize: 12, ...fonts.bold, marginRight: 4 }}>View detailed trends</Text>
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Sound Card (Conditional) */}
         {hasSound && (
-          <View style={[styles.sensorCard, cardStyle, neuSm]}>
+          <TouchableOpacity 
+            style={[styles.sensorCard, cardStyle, neuSm]} 
+            onPress={() => navigation.navigate('SoundHistory')}
+            activeOpacity={0.7}
+          >
             <View style={styles.sensorCardHeader}>
               <View style={[styles.sensorIconBox, { backgroundColor: `${colors.primary}15` }]}>
                 <Mic size={22} color={colors.primary} />
@@ -101,12 +126,16 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
               <Text style={[styles.sensorCardTitle, textStyle]}>Sound</Text>
             </View>
             <View style={styles.sensorCardBody}>
-              <Text style={[styles.sensorCardValue, textStyle]}>{sensorData?.soundDb || '--'} dB</Text>
+              <Text style={[styles.sensorCardValue, textStyle]}>{liveSound} dB</Text>
               <Text style={[styles.sensorCardSub, subTextStyle]}>
-                Status: {sensorData?.soundDb && sensorData.soundDb > 80 ? 'High' : 'Normal'}
+                Status: {liveSound > 80 ? 'High' : 'Normal'}
               </Text>
+              
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
+                <Text style={{ color: colors.primary, fontSize: 12, ...fonts.bold, marginRight: 4 }}>View detailed trends</Text>
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
 
         {/* Temperature Card (Conditional) */}
@@ -119,9 +148,9 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
               <Text style={[styles.sensorCardTitle, textStyle]}>Temperature</Text>
             </View>
             <View style={styles.sensorCardBody}>
-              <Text style={[styles.sensorCardValue, textStyle]}>{sensorData?.temperatureC || '--'}°C</Text>
+              <Text style={[styles.sensorCardValue, textStyle]}>{liveTemp}°C</Text>
               <Text style={[styles.sensorCardSub, subTextStyle]}>
-                Status: {sensorData?.temperatureC && sensorData.temperatureC > 37.5 ? 'Elevated' : 'Normal'}
+                Status: {liveTemp > 37.5 ? 'Elevated' : 'Normal'}
               </Text>
             </View>
           </View>

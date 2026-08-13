@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, User, ArrowUpRight, Activity, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, User, ArrowUpRight, Activity, ChevronRight, MapPin } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 
@@ -51,14 +51,14 @@ export default function ConnectedUserDetailsScreen({ navigation, route }: any) {
     <View style={[styles.container, bgStyle, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('Users')} style={styles.iconBtn}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
           <ArrowLeft size={24} color={textStyle.color} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, textStyle]}>User Details</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <View style={styles.fixedContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
         {/* Profile Avatar & Name */}
         <View style={styles.profileSection}>
@@ -119,24 +119,26 @@ export default function ConnectedUserDetailsScreen({ navigation, route }: any) {
           <ChevronRight size={20} color={colors.mutedForeground} />
         </TouchableOpacity>
 
-        {/* Location Card */}
-        <View style={[styles.card, cardStyle, neuSm]}>
-          <Text style={[styles.cardSuperTitle, subTextStyle]}>LOCATION</Text>
-          <View style={styles.compactRow}>
-            <Text style={[styles.infoLabel, subTextStyle]}>Status</Text>
-            <Text style={[styles.infoValue, { color: connectedUser.locationSharingStatus === 'Active' ? colors.primary : colors.mutedForeground, ...fonts.bold }]}>
-              {connectedUser.locationSharingStatus || 'Unknown'}
+        {/* Location Link Card */}
+        <TouchableOpacity 
+          style={[styles.statusLinkCard, cardStyle, neuSm]}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('LocationMap', { userId: connectedUser.id })}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.cardSuperTitle, subTextStyle]}>LOCATION</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+              <MapPin size={16} color={colors.primary} style={{ marginRight: 6 }} />
+              <Text style={[styles.conditionValue, textStyle]}>{connectedUser.phoneLocation || 'Unknown'}</Text>
+            </View>
+            <Text style={[styles.cardSubValue, subTextStyle]}>
+              Sharing: {connectedUser.locationSharingStatus || 'Unknown'}
             </Text>
           </View>
-          <View style={[styles.compactRow, { marginBottom: 0 }]}>
-            <Text style={[styles.infoLabel, subTextStyle]}>Current</Text>
-            <Text style={[styles.infoValue, textStyle]}>{connectedUser.phoneLocation || 'Unknown'}</Text>
-          </View>
-        </View>
+          <ChevronRight size={20} color={colors.mutedForeground} />
+        </TouchableOpacity>
 
-        <View style={{ flex: 1 }} />
-
-        {/* View History Card (Untouched behavior/appearance, just spaced correctly) */}
+        {/* View History Card */}
         <TouchableOpacity 
           style={[styles.historyCard, cardStyle, neuSm]} 
           activeOpacity={0.8}
@@ -153,8 +155,8 @@ export default function ConnectedUserDetailsScreen({ navigation, route }: any) {
             <Activity size={24} color={colors.mutedForeground} />
           </View>
         </TouchableOpacity>
-
-      </View>
+        
+      </ScrollView>
     </View>
   );
 }
@@ -168,11 +170,11 @@ const styles = StyleSheet.create({
   iconBtn: { padding: 8, marginLeft: -8 },
   headerTitle: { fontSize: 20, ...fonts.bold },
   
-  fixedContent: { flex: 1, paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
+  scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
   
   profileSection: {
     alignItems: 'center',
-    marginVertical: 8,
+    marginBottom: spacing.md,
   },
   avatar: {
     width: 60, height: 60, borderRadius: 30,
@@ -185,17 +187,16 @@ const styles = StyleSheet.create({
   dotLg: { width: 10, height: 10, borderRadius: 5, marginRight: 8 },
 
   card: {
-    padding: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
     borderRadius: radius.xl,
-    marginBottom: 8,
   },
   cardSuperTitle: {
-    fontSize: 10, ...fonts.bold, letterSpacing: 1, marginBottom: 6,
+    fontSize: 10, ...fonts.bold, letterSpacing: 1, marginBottom: 8,
   },
   compactRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   infoLabel: {
     fontSize: 13, ...fonts.medium,
@@ -205,10 +206,9 @@ const styles = StyleSheet.create({
   },
 
   statusLinkCard: {
-    padding: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
     borderRadius: radius.xl,
-    marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl, overflow: 'hidden',
   },
   historyCardContent: {
-    flexDirection: 'row', alignItems: 'center', padding: 16,
+    flexDirection: 'row', alignItems: 'center', padding: 20,
   },
   historyIconBox: {
     width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginRight: 12,
@@ -234,5 +234,5 @@ const styles = StyleSheet.create({
   },
   historySub: {
     fontSize: 12, ...fonts.medium,
-  },
+  }
 });
