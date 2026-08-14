@@ -51,14 +51,13 @@ export default function HeartRateHistoryScreen({ navigation }: any) {
     <View style={[styles.container, bgStyle, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.iconBtn, { flexDirection: 'row', alignItems: 'center' }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
           <ArrowLeft size={24} color={textStyle.color} />
-          <Text style={[styles.headerTitle, textStyle, { marginLeft: 8 }]}>Heart Rate</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        <View style={[styles.chartCard, cardStyle, neuSm]}>
+      <View style={[styles.content, { paddingBottom: spacing.lg }]}>
+        <View style={[styles.chartCard, neuSm, cardStyle]}>
           <Text style={[styles.cardTitle, textStyle]}>Heart Rate History</Text>
           
           <View style={styles.statsRow}>
@@ -125,23 +124,23 @@ export default function HeartRateHistoryScreen({ navigation }: any) {
 
         {/* Detailed Stats List */}
         <View style={styles.listContainer}>
-          <View style={[styles.listItem, cardStyle, neuSm]}>
+          <View style={[styles.listItem, neuSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Latest Reading</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.latest} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>
-          <View style={[styles.listItem, cardStyle, neuSm]}>
+          <View style={[styles.listItem, neuSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Range</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.min}-{stats.max} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>
-          <View style={[styles.listItem, cardStyle, neuSm]}>
+          <View style={[styles.listItem, neuSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Resting Rate</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.resting} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>
-          <View style={[styles.listItem, cardStyle, neuSm]}>
+          <View style={[styles.listItem, neuSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Average</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.avg} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>
-          </View>
+        </View>
       </View>
     </View>
   );
@@ -156,7 +155,7 @@ const styles = StyleSheet.create({
   iconBtn: { padding: 8, marginLeft: -8 },
   headerTitle: { fontSize: 18, ...fonts.bold },
   
-  content: { flex: 1, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+  content: { flex: 1, paddingHorizontal: spacing.lg },
   
   chartCard: {
     borderRadius: radius.xl,
@@ -207,9 +206,8 @@ const styles = StyleSheet.create({
   },
   
   listContainer: {
-    flex: 1,
-    justifyContent: 'space-evenly',
     paddingHorizontal: spacing.xs,
+    marginTop: spacing.sm,
   },
   listItem: {
     flexDirection: 'row',
@@ -217,7 +215,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
     borderRadius: radius.md,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.md,
   },
   listLabel: {
     fontSize: 16,

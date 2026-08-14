@@ -1,35 +1,25 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Info, AlertTriangle } from 'lucide-react-native';
+import { ArrowLeft, AlertTriangle } from 'lucide-react-native';
 import { BarChart } from 'react-native-gifted-charts';
-import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 
 const { width } = Dimensions.get('window');
 
 export default function SoundHistoryScreen({ navigation }: any) {
-  const { darkMode } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
-  const bgStyle = darkMode ? { backgroundColor: '#000000' } : { backgroundColor: '#F8F9FA' };
-  const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : { backgroundColor: '#ffffff' };
-  const textStyle = darkMode ? { color: '#ffffff' } : { color: colors.foreground };
-  const subTextStyle = darkMode ? { color: '#aaaaaa' } : { color: colors.mutedForeground };
-  const rulesColor = darkMode ? '#333333' : '#eeeeee';
   const barColor = '#3478F6';
 
-  // Generate mock data for the Sound dB graph matching the screenshot style
   const barData = useMemo(() => {
     const data = [];
     let current = 50;
     for (let i = 0; i < 24; i++) {
-      // Simulate sporadic audio exposure (some gaps, some clusters)
       let spike = Math.random() > 0.6 ? Math.random() * 40 : (Math.random() * 20 - 10);
       current = Math.max(0, Math.min(110, current + spike));
       
       if (Math.random() > 0.7) {
-        // Gap (no reading)
         data.push({ value: 0 });
       } else {
         data.push({ 
@@ -56,28 +46,31 @@ export default function SoundHistoryScreen({ navigation }: any) {
   const isLoud = stats.exposure > 80;
 
   return (
-    <View style={[styles.container, bgStyle, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.iconBtn, { flexDirection: 'row', alignItems: 'center' }]}>
-          <ArrowLeft size={24} color={textStyle.color} />
-          <Text style={[styles.headerTitle, textStyle, { marginLeft: 8 }]}>Sound</Text>
+          <ArrowLeft size={24} color={colors.foreground} />
+          <Text style={[styles.headerTitle, { marginLeft: 8 }]}>Sound</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        <View style={[styles.chartCard, cardStyle, neuSm]}>
-          <Text style={[styles.cardTitle, textStyle]}>Sound</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Chart Card */}
+        <View style={styles.card}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <Text style={styles.label}>Sound Exposure</Text>
+          </View>
 
           <View style={styles.exposureHeader}>
-            <Text style={[styles.statLabel, subTextStyle]}>EXPOSURE</Text>
+            <Text style={styles.statLabel}>EXPOSURE</Text>
             <View style={styles.exposureRow}>
               <View style={styles.exposureLeft}>
                 {isLoud && <AlertTriangle size={28} color="#FFCC00" style={{ marginRight: 8 }} />}
-                <Text style={[styles.statValue, textStyle]}>{isLoud ? 'Loud' : 'OK'}</Text>
+                <Text style={styles.statValue}>{isLoud ? 'Loud' : 'OK'}</Text>
               </View>
             </View>
-            <Text style={[styles.dateSub, subTextStyle]}>Today, 00:00 - Now</Text>
+            <Text style={styles.dateSub}>Today, 00:00 - Now</Text>
           </View>
 
           <View style={styles.chartWrapper}>
@@ -93,50 +86,53 @@ export default function SoundHistoryScreen({ navigation }: any) {
                 maxValue={120}
                 yAxisThickness={0}
                 xAxisThickness={0}
-                yAxisTextStyle={{ color: subTextStyle.color, fontSize: 10 }}
+                yAxisTextStyle={{ color: colors.mutedForeground, fontSize: 10 }}
                 rulesType="solid"
-                rulesColor={rulesColor}
+                rulesColor={colors.border}
                 yAxisLabelTexts={['0', '30', '60', '90', '120']}
               />
             </View>
             
             {/* X Axis Labels */}
             <View style={styles.xAxisLabels}>
-              <Text style={[styles.xAxisText, subTextStyle]}>10 AM</Text>
-              <Text style={[styles.xAxisText, subTextStyle]}>11 AM</Text>
-              <Text style={[styles.xAxisText, subTextStyle]}>12 PM</Text>
-              <Text style={[styles.xAxisText, subTextStyle]}>1 PM</Text>
-              <Text style={[styles.xAxisText, subTextStyle]}>Now</Text>
+              <Text style={styles.xAxisText}>10 AM</Text>
+              <Text style={styles.xAxisText}>11 AM</Text>
+              <Text style={styles.xAxisText}>12 PM</Text>
+              <Text style={styles.xAxisText}>1 PM</Text>
+              <Text style={styles.xAxisText}>Now</Text>
             </View>
           </View>
         </View>
 
-        {/* Detailed Stats List */}
-        <View style={styles.listContainer}>
-          <View style={[styles.listItem, cardStyle, neuSm]}>
-            <Text style={[styles.listLabel, textStyle]}>Exposure</Text>
-            <Text style={[styles.listValue, textStyle]}>{stats.exposure} <Text style={[styles.listUnit, subTextStyle]}>dB (1h 34m)</Text></Text>
+        {/* Detailed Stats Card */}
+        <View style={styles.card}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <Text style={styles.label}>Statistics</Text>
           </View>
-          <View style={[styles.listItem, cardStyle, neuSm]}>
-            <Text style={[styles.listLabel, textStyle]}>Hourly Average</Text>
-            <Text style={[styles.listValue, textStyle]}>{stats.min}-{stats.avg} <Text style={[styles.listUnit, subTextStyle]}>dB</Text></Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoKey}>Exposure</Text>
+            <Text style={styles.infoValue}>{stats.exposure} <Text style={styles.infoUnit}>dB (1h 34m)</Text></Text>
           </View>
-          <View style={[styles.listItem, cardStyle, neuSm]}>
-            <Text style={[styles.listLabel, textStyle]}>Latest: 16:07</Text>
-            <Text style={[styles.listValue, textStyle]}>{stats.latest} <Text style={[styles.listUnit, subTextStyle]}>dB</Text></Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoKey}>Hourly Average</Text>
+            <Text style={styles.infoValue}>{stats.min}–{stats.avg} <Text style={styles.infoUnit}>dB</Text></Text>
           </View>
-          <View style={[styles.listItem, cardStyle, neuSm]}>
-            <Text style={[styles.listLabel, textStyle]}>Range</Text>
-            <Text style={[styles.listValue, textStyle]}>0-{stats.max} <Text style={[styles.listUnit, subTextStyle]}>dB</Text></Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoKey}>Latest: 16:07</Text>
+            <Text style={styles.infoValue}>{stats.latest} <Text style={styles.infoUnit}>dB</Text></Text>
+          </View>
+          <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
+            <Text style={styles.infoKey}>Range</Text>
+            <Text style={styles.infoValue}>0–{stats.max} <Text style={styles.infoUnit}>dB</Text></Text>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: colors.background },
   header: { 
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md 
@@ -145,22 +141,23 @@ const styles = StyleSheet.create({
     padding: spacing.sm, marginLeft: -spacing.sm,
   },
   headerTitle: {
-    fontSize: 18, ...fonts.bold,
+    fontSize: 18, ...fonts.bold, color: colors.foreground,
   },
   content: {
-    flex: 1,
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
+    paddingBottom: 100,
+    gap: spacing.lg,
   },
-  chartCard: {
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+  card: {
+    width: '100%',
+    backgroundColor: colors.muted,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    ...neuSm,
   },
-  cardTitle: {
-    fontSize: 18,
-    ...fonts.bold,
-    marginBottom: spacing.sm,
+  label: {
+    fontSize: 12, color: colors.primary, ...fonts.bold,
+    textTransform: 'uppercase', letterSpacing: 1,
   },
   exposureHeader: {
     marginBottom: spacing.md,
@@ -168,6 +165,7 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     ...fonts.bold,
+    color: colors.mutedForeground,
     letterSpacing: 0.5,
     marginBottom: 2,
   },
@@ -183,13 +181,14 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 28,
     ...fonts.bold,
+    color: colors.foreground,
   },
   dateSub: {
     fontSize: 12,
     ...fonts.medium,
+    color: colors.mutedForeground,
     marginTop: 2,
   },
-  
   chartWrapper: {
     marginTop: spacing.sm,
     marginLeft: -10,
@@ -198,36 +197,33 @@ const styles = StyleSheet.create({
   xAxisLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingLeft: 30, // Offset for Y axis labels
+    paddingLeft: 30,
     marginTop: spacing.xs,
   },
   xAxisText: {
     fontSize: 10,
+    color: colors.mutedForeground,
   },
-  
-  listContainer: {
-    flex: 1,
-    justifyContent: 'space-evenly',
-    paddingHorizontal: spacing.xs,
-  },
-  listItem: {
+  infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: spacing.md,
-    borderRadius: radius.md,
-    marginBottom: spacing.xs,
+    paddingVertical: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
-  listLabel: {
-    fontSize: 16,
-    ...fonts.medium,
-  },
-  listValue: {
-    fontSize: 16,
-    ...fonts.bold,
-  },
-  listUnit: {
+  infoKey: {
     fontSize: 14,
+    color: colors.mutedForeground,
     ...fonts.medium,
-  }
+  },
+  infoValue: {
+    fontSize: 14,
+    color: colors.foreground,
+    ...fonts.semibold,
+  },
+  infoUnit: {
+    fontSize: 12,
+    color: colors.mutedForeground,
+    ...fonts.medium,
+  },
 });

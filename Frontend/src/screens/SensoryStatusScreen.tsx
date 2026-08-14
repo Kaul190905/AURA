@@ -45,6 +45,8 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
   const [liveBpm, setLiveBpm] = useState(sensorData?.heartRate || 80);
   const [liveSound, setLiveSound] = useState(sensorData?.soundDb || 45);
   const [liveTemp, setLiveTemp] = useState(sensorData?.temperatureC || 36.5);
+  const soundIconBg = `${liveSound > 80 ? colors.riskHigh : colors.primary}15`;
+  const soundIconColor = liveSound > 80 ? colors.riskHigh : colors.primary;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -114,14 +116,14 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
 
         {/* Sound Card (Conditional) */}
         {hasSound && (
-          <TouchableOpacity 
-            style={[styles.sensorCard, cardStyle, neuSm]} 
+          <TouchableOpacity
+            style={[styles.sensorCard, cardStyle, neuSm]}
             onPress={() => navigation.navigate('SoundHistory')}
             activeOpacity={0.7}
           >
             <View style={styles.sensorCardHeader}>
-              <View style={[styles.sensorIconBox, { backgroundColor: `${colors.primary}15` }]}>
-                <Mic size={22} color={colors.primary} />
+              <View style={[styles.sensorIconBox, { backgroundColor: soundIconBg }]}>
+                <Mic size={22} color={soundIconColor} />
               </View>
               <Text style={[styles.sensorCardTitle, textStyle]}>Sound</Text>
             </View>
@@ -130,7 +132,15 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
               <Text style={[styles.sensorCardSub, subTextStyle]}>
                 Status: {liveSound > 80 ? 'High' : 'Normal'}
               </Text>
-              
+              <View style={styles.progressContainer}>
+                <View style={[
+                  styles.progressBar,
+                  {
+                    width: `${Math.min(liveSound, 120) / 120 * 100}%`,
+                    backgroundColor: liveSound > 80 ? colors.riskHigh : colors.primary,
+                  }
+                ]} />
+              </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
                 <Text style={{ color: colors.primary, fontSize: 12, ...fonts.bold, marginRight: 4 }}>View detailed trends</Text>
               </View>
@@ -214,5 +224,12 @@ const styles = StyleSheet.create({
   },
   sensorCardSub: {
     fontSize: 15, ...fonts.medium,
+  },
+  progressContainer: {
+    marginVertical: 8,
+  },
+  progressBar: {
+    height: 4,
+    borderRadius: 2,
   },
 });
