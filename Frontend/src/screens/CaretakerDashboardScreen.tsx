@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
@@ -14,9 +14,9 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
 
   useEffect(() => {
     const ws = connectCaregiverIoTData(userId, (data) => {
-      if (data.bpm) setBpm(data.bpm);
-      if (data.temp) setTemp(data.temp);
-      if (data.soundLevel) setSoundLevel(data.soundLevel);
+      if (data.bpm) { setBpm(data.bpm); }
+      if (data.temp) { setTemp(data.temp); }
+      if (data.soundLevel) { setSoundLevel(data.soundLevel); }
     });
 
     // Fallback simulation if no real data is arriving yet (for UI demo purposes)
@@ -79,7 +79,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
     return pB - pA;
   });
 
-  const recentlyViewed = recentlyViewedUserIds.map(id => mockUsers.find(u => u.id === id)).filter(Boolean);
+  // const recentlyViewed = recentlyViewedUserIds.map(id => mockUsers.find(u => u.id === id)).filter(Boolean);
 
   const openUser = (id: string, initialTab: 'Overview' | 'Location' = 'Overview') => {
     const newIds = [id, ...recentlyViewedUserIds.filter(pid => pid !== id)];
@@ -93,8 +93,8 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
   };
 
   const getStatusText = (s: any) => {
-    if (s.isCrisis || s.risk >= 9) return 'CRITICAL';
-    if (s.risk >= 5) return 'HIGH';
+    if (s.isCrisis || s.risk >= 9) { return 'CRITICAL'; }
+    if (s.risk >= 5) { return 'HIGH'; }
     return 'SAFE';
   };
 

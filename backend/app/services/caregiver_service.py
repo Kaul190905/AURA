@@ -17,7 +17,7 @@ class CaregiverService:
 
     async def invite_caregiver(self, owner_user_id: UUID, caregiver_email: str) -> CaregiverAssignment:
         # Resolve email to user_id
-        caregiver_user = await self.user_repo.get_by_email(caregiver_email)
+        caregiver_user = await self.user_repo.get_user_by_email(caregiver_email)
         if not caregiver_user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Caregiver account not found.")
 
