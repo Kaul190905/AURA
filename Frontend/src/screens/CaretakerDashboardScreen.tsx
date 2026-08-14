@@ -5,20 +5,32 @@ import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 import { riskColor } from '../utils';
+import { connectCaregiverIoTData } from '../services/caregiverApi';
 
-function LiveSensorRow({ darkMode }: { darkMode: boolean }) {
+function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string }) {
   const [bpm, setBpm] = useState(82);
   const [temp, setTemp] = useState(98.4);
   const [soundLevel, setSoundLevel] = useState(45);
 
   useEffect(() => {
+    const ws = connectCaregiverIoTData(userId, (data) => {
+      if (data.bpm) setBpm(data.bpm);
+      if (data.temp) setTemp(data.temp);
+      if (data.soundLevel) setSoundLevel(data.soundLevel);
+    });
+
+    // Fallback simulation if no real data is arriving yet (for UI demo purposes)
     const interval = setInterval(() => {
       setBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
       setTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
       setSoundLevel(prev => prev + (Math.floor(Math.random() * 11) - 5));
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      ws.close();
+    };
+  }, [userId]);
 
   const textStyle = darkMode ? { color: '#fff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
@@ -177,7 +189,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
                     <Text style={[styles.alertCondition, subTextStyle]}>
                       {user.condition} {user.sensorValue && `• ${user.sensorValue}`}
                     </Text>
-                    <LiveSensorRow darkMode={darkMode} />
+                    <LiveSensorRow darkMode={darkMode} userId={user.id} />
                   </View>
                 </TouchableOpacity>
               );

@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, status
-from typing import List
+from fastapi import APIRouter, Depends, status, WebSocket, WebSocketDisconnect
+from typing import List, Dict
 from uuid import UUID
 
 from app.core.security import get_current_user
@@ -143,3 +143,47 @@ async def get_user_preferences(
     user_service = Depends(get_user_service)
 ):
     return await user_service.get_user_by_id(target_user_id)
+
+# ---------------------------------------------------------
+# REAL-TIME IOT DATA WEBSOCKET
+# ---------------------------------------------------------
+
+class ConnectionManager:
+    def __init__(self):
+        # Maps target_user_id to a list of connected caregiver WebSockets
+        self.active_connections: Dict[UUID, List[WebSocket]] = {}
+
+    async def connect(self, websocket: WebSocket, target_user_id: UUID):
+        await websocket.accept()
+        if target_user_id not in self.active_connections:
+            self.active_connections[target_user_id] = []
+        self.active_connections[target_user_id].append(websocket)
+
+    def disconnect(self, websocket: WebSocket, target_user_id: UUID):
+        if target_user_id in self.active_connections:
+            self.active_connections[target_user_id].remove(websocket)
+            if not self.active_connections[target_user_id]:
+                del self.active_connections[target_user_id]
+
+    async def broadcast_to_caregivers(self, target_user_id: UUID, message: dict):
+        if target_user_id in self.active_connections:
+            for connection in self.active_connections[target_user_id]:
+                await connection.send_json(message)
+
+manager = ConnectionManager()
+
+@router.websocket("/ws/{target_user_id}")
+async def websocket_endpoint(
+    websocket: WebSocket,
+    target_user_id: UUID,
+    # In a real app we'd authenticate the WS token here
+):
+    await manager.connect(websocket, target_user_id)
+    try:
+        while True:
+            # We expect to receive data from the IoT device or similar here, 
+            # and we broadcast it to the connected caregivers.
+            data = await websocket.receive_json()
+            await manager.broadcast_to_caregivers(target_user_id, data)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, target_user_id)

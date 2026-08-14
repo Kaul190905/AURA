@@ -145,3 +145,26 @@ export async function getCaregiverUserPreferences(userId: string) {
   const res = await authFetch(`/caregivers/users/${userId}/preferences`);
   return res.json();
 }
+
+// ── Real-Time IoT Data (WebSocket) ───────────────────────────────────────────
+
+export function connectCaregiverIoTData(userId: string, onMessage: (data: any) => void): WebSocket {
+  // Convert http/https to ws/wss
+  const wsUrl = API_BASE_URL.replace(/^http/, 'ws') + `/caregivers/ws/${userId}`;
+  const ws = new WebSocket(wsUrl);
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      onMessage(data);
+    } catch (e) {
+      console.error('Error parsing IoT websocket data', e);
+    }
+  };
+
+  ws.onerror = (error) => {
+    console.error('Caregiver IoT WebSocket error:', error);
+  };
+
+  return ws;
+}

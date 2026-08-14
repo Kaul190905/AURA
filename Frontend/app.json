@@ -9,9 +9,6 @@
   "owner": "sakthiselvams-team",
   "slug": "aura",
   "runtimeVersion": "1.0.0",
-  "updates": {
-    "url": "https://u.expo.dev/f1408090-c293-44ac-a9e7-8c15e6e12fe4"
-  },
   "android": {
     "package": "com.aura.mobile"
   },
