@@ -27,21 +27,21 @@ export async function signUp(email: string, password: string, username: string) 
       data: { name: username },
     },
   });
-  if (error) {throw error;}
+  if (error) { throw error; }
   return data;
 }
 
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {throw error;}
+  if (error) { throw error; }
   return data;
 }
 
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
-  if (error) {throw error;}
+  if (error) { throw error; }
   try {
-    const isSignedIntoGoogle = await GoogleSignin.hasPreviousSignIn();
+    const isSignedIntoGoogle = GoogleSignin.hasPreviousSignIn();
     if (isSignedIntoGoogle) {
       await GoogleSignin.revokeAccess();
       await GoogleSignin.signOut();
@@ -68,6 +68,13 @@ export async function getCurrentUserId(): Promise<string | null> {
 export async function signInWithGoogle() {
   try {
     await GoogleSignin.hasPlayServices();
+
+    // Clear any previous session to force the account picker to appear
+    const isSignedIntoGoogle = GoogleSignin.hasPreviousSignIn();
+    if (isSignedIntoGoogle) {
+      await GoogleSignin.signOut();
+    }
+
     const userInfo = await GoogleSignin.signIn();
 
     if (userInfo.data?.idToken) {
@@ -75,7 +82,7 @@ export async function signInWithGoogle() {
         provider: 'google',
         token: userInfo.data.idToken,
       });
-      if (error) {throw error;}
+      if (error) { throw error; }
       return data;
     } else {
       throw new Error('no ID token present!');

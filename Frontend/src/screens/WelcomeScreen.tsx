@@ -8,7 +8,7 @@ import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 
 interface Props {
-  onNext: (role: 'user' | 'caregiver') => void;
+  onNext: (role: 'user' | 'caretaker') => void;
 }
 
 export default function WelcomeScreen({ onNext }: Props) {
@@ -28,7 +28,7 @@ export default function WelcomeScreen({ onNext }: Props) {
         Animated.timing(breathe, { toValue: 0.85, duration: 4000, useNativeDriver: true }),
       ])
     ).start();
-  }, [reduceMotion]);
+  }, [reduceMotion, breathe]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}>
@@ -63,17 +63,17 @@ export default function WelcomeScreen({ onNext }: Props) {
             <User color={colors.primary} size={28} />
           </View>
           <View style={styles.roleTextContainer}>
-            <Text style={styles.roleTitle}>I am the User</Text>
+            <Text style={styles.roleTitle}>I'm a User</Text>
             <Text style={styles.roleDesc}>Continue to your personal sensory companion.</Text>
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => onNext('caregiver')} style={[styles.roleCard, neuSm]} activeOpacity={0.85}>
+        <TouchableOpacity onPress={() => onNext('caretaker')} style={[styles.roleCard, neuSm]} activeOpacity={0.85}>
           <View style={[styles.roleIconCaregiver]}>
             <Heart color={colors.riskLow} size={28} />
           </View>
           <View style={styles.roleTextContainer}>
-            <Text style={styles.roleTitle}>I am a Caregiver</Text>
+            <Text style={styles.roleTitle}>I'm a Caregiver</Text>
             <Text style={styles.roleDesc}>Monitor status and provide support.</Text>
           </View>
         </TouchableOpacity>

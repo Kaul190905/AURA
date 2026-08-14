@@ -26,14 +26,14 @@ interface AccItemProps {
 export function AccItem({ title, subtitle, icon, badge, children, defaultOpen = false }: AccItemProps) {
   const styles = getStyles();
   const [open, setOpen] = useState(defaultOpen);
-  const { darkMode, userRole } = useContext(AppContext);
+  const { darkMode, primaryRole } = useContext(AppContext);
 
   const toggle = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setOpen((v) => !v);
   };
 
-  const isDark = darkMode && userRole === 'caregiver';
+  const isDark = darkMode && primaryRole === 'caretaker';
   const dmCard = isDark ? { backgroundColor: '#1c1c1e' } : {};
   const dmText = isDark ? { color: '#ffffff' } : {};
 

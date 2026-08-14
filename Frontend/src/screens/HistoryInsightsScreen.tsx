@@ -3,11 +3,10 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TrendingUp, Zap, AudioWaveform, MapPin } from 'lucide-react-native';
+import { TrendingUp, Zap, AudioWaveform, MapPin, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { Accordion, AccItem } from '../components/Accordion';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { riskColor, timeAgo } from '../utils';
 import {
@@ -15,13 +14,15 @@ import {
   RiskTrendResponse, OverloadForecastResponse,
 } from '../services/api';
 
-export default function HistoryInsightsScreen() {
+export default function HistoryInsightsScreen({ route, navigation }: any) {
   const styles = getStyles();
-  const { history, userId } = useContext(AppContext);
+  const { history, userId: contextUserId } = useContext(AppContext);
   const insets = useSafeAreaInsets();
+  const userId = route?.params?.userId || contextUserId;
   const [range, setRange] = useState<'7d' | '30d'>('7d');
   const cutoff = Date.now() - (range === '7d' ? 7 : 30) * 86400000;
   const filtered = history.filter((h) => h.time >= cutoff);
+  const recentEvents = filtered.slice(0, 3); // Only show top 3 on summary
 
   // ── Backend data ────────────────────────────────────────────────────────────
   const [riskTrend, setRiskTrend] = useState<RiskTrendResponse | null>(null);
@@ -29,15 +30,15 @@ export default function HistoryInsightsScreen() {
   const [apiLoading, setApiLoading] = useState(false);
 
   const fetchBackendData = useCallback(async () => {
-    if (!userId) {return;}
+    if (!userId) { return; }
     setApiLoading(true);
     try {
       const [trendResult, fcResult] = await Promise.allSettled([
         getRiskTrend(userId, range === '7d' ? 7 : 30),
         getOverloadForecast(userId),
       ]);
-      if (trendResult.status === 'fulfilled') {setRiskTrend(trendResult.value);}
-      if (fcResult.status === 'fulfilled') {setForecast(fcResult.value);}
+      if (trendResult.status === 'fulfilled') { setRiskTrend(trendResult.value); }
+      if (fcResult.status === 'fulfilled') { setForecast(fcResult.value); }
     } catch (e) {
       console.warn('[AURA] History API fetch failed:', e);
     } finally {
@@ -76,7 +77,7 @@ export default function HistoryInsightsScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Header title="Insights" subtitle="Your patterns" />
+      <Header title="Analysis" subtitle="Your patterns" />
 
       {/* Range toggle */}
       <View style={styles.rangeWrap}>
@@ -114,9 +115,16 @@ export default function HistoryInsightsScreen() {
       )}
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-        <Accordion>
-          <AccItem id="avg" title="Average risk" defaultOpen icon={<TrendingUp size={18} color={colors.primary} />}>
-            <View style={{ marginTop: 8 }}>
+        {/* Average risk */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <TrendingUp size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Average risk</Text>
+            </View>
+          </View>
+          <View style={styles.sectionCard}>
+            <View style={{ alignItems: 'center', marginVertical: 8 }}>
               <LineChart
                 data={perDay}
                 height={120}
@@ -135,82 +143,27 @@ export default function HistoryInsightsScreen() {
                 maxValue={10}
               />
             </View>
-          </AccItem>
+          </View>
+        </View>
 
-          <AccItem id="top" title="Top triggers"
-            icon={<Zap size={18} color={colors.primary} />}
-            badge={<Text style={styles.badge}>{triggerBreakdown.length}</Text>}>
-            <View style={{ marginTop: 8 }}>
-              {triggerBreakdown.length > 0 ? (
-                <BarChart
-                  data={triggerBreakdown}
-                  height={120}
-                  width={280}
-                  barWidth={28}
-                  barBorderRadius={6}
-                  frontColor={colors.primary}
-                  xAxisLabelTextStyle={{ fontSize: 9, color: colors.mutedForeground }}
-                  hideYAxisText
-                  noOfSections={4}
-                />
-              ) : (
-                <Text style={styles.emptyText}>No events in this range.</Text>
-              )}
-            </View>
-          </AccItem>
-
-          <AccItem id="events" title="Past events"
-            icon={<AudioWaveform size={18} color={colors.primary} />}
-            badge={<Text style={styles.badge}>{filtered.length}</Text>}>
-            {filtered.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>No events in this range.</Text>
-              </View>
-            ) : (
-              <View style={{ gap: 8 }}>
-                {filtered.map((h) => {
-                  const c = riskColor(h.score);
-                  return (
-                    <View key={h.id} style={styles.eventRow}>
-                      <View style={[styles.eventDot, { borderColor: c }]} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.eventTitle}>
-                          {h.trigger} · <Text style={styles.eventAction}>{h.action}</Text>
-                        </Text>
-                        <Text style={styles.eventDate}>{new Date(h.time).toLocaleString()}</Text>
-                        {h.note && <Text style={styles.eventNote}>"{h.note}"</Text>}
-                      </View>
-                      <Text style={[styles.eventScore, { color: c }]}>{h.score}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
-          </AccItem>
-
-          {/* Most Dangerous Locations */}
-          <AccItem id="locations" title="High-Risk Locations" icon={<MapPin size={18} color={colors.primary} />}>
-            <View style={{ gap: 12, marginTop: 8 }}>
-              {[
-                { name: 'Downtown Subway', risk: 'High', visits: 4 },
-                { name: 'Shopping Mall', risk: 'Medium', visits: 2 },
-              ].map((loc, i) => (
-                <View key={i} style={[styles.eventRow, { justifyContent: 'space-between' }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <MapPin size={18} color={colors.riskHigh} />
-                    <View>
-                      <Text style={[styles.eventTitle, fonts.bold]}>{loc.name}</Text>
-                      <Text style={styles.eventDate}>{loc.visits} visits this week</Text>
-                    </View>
-                  </View>
-                  <View style={styles.riskBadge}>
-                    <Text style={styles.riskBadgeText}>{loc.risk}</Text>
-                  </View>
+        {/* Past events */}
+        <View style={styles.sectionContainer}>
+          <TouchableOpacity onPress={() => navigation.navigate('PastEvents')} activeOpacity={0.7}>
+            <View style={[styles.sectionCard, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 20 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={styles.iconContainer}>
+                  <AudioWaveform size={20} color={colors.primary} />
                 </View>
-              ))}
+                <View>
+                  <Text style={[styles.sectionTitle, { fontSize: 16 }]}>Past events</Text>
+                  <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 2 }}>{filtered.length} events in range</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color={colors.mutedForeground} />
             </View>
-          </AccItem>
-        </Accordion>
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
     </View>
   );
@@ -241,19 +194,47 @@ const getStyles = () => StyleSheet.create({
   },
   forecastTitle: { fontSize: 13, color: colors.foreground, ...fonts.bold },
   forecastDesc: { fontSize: 12, color: colors.mutedForeground, marginTop: 2 },
+  sectionContainer: { marginBottom: 28, paddingHorizontal: 16 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  sectionTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold },
+  sectionCard: {
+    backgroundColor: colors.background,
+    borderRadius: radius.xl,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border + '80',
+    shadowColor: colors.primary,
+    shadowOffset: { width: -2, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  navRow: {
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 4,
+  },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 12, opacity: 0.5 },
   eventRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     backgroundColor: colors.muted, borderRadius: radius.md, padding: 10,
   },
-  eventDot: { width: 28, height: 28, borderRadius: radius.full, borderWidth: 3, backgroundColor: colors.background },
-  eventTitle: { fontSize: 12, color: colors.foreground, textTransform: 'capitalize', ...fonts.medium },
+  eventDot: { width: 14, height: 14, borderRadius: radius.full, borderWidth: 3, backgroundColor: colors.background },
+  eventTitle: { fontSize: 13, color: colors.foreground, textTransform: 'capitalize', ...fonts.semibold },
   eventAction: { color: colors.mutedForeground },
-  eventDate: { fontSize: 10, color: colors.mutedForeground, marginTop: 1 },
-  eventNote: { fontSize: 10, color: colors.foreground, opacity: 0.7, marginTop: 2, fontStyle: 'italic' },
-  eventScore: { fontSize: 14, ...fonts.semibold },
+  eventDate: { fontSize: 11, color: colors.mutedForeground, marginTop: 1 },
+  eventNote: { fontSize: 11, color: colors.foreground, opacity: 0.8, marginTop: 4, fontStyle: 'italic' },
+  eventScore: { fontSize: 16, ...fonts.bold },
   riskBadge: {
     paddingHorizontal: 8, paddingVertical: 4,
     borderRadius: radius.sm, backgroundColor: `${colors.primary}20`,
   },
-  riskBadgeText: { fontSize: 10, color: colors.primary, ...fonts.semibold },
+  riskBadgeText: { fontSize: 11, color: colors.primary, ...fonts.bold },
+  viewAllText: { fontSize: 13, color: colors.primary, ...fonts.semibold },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    backgroundColor: colors.riskHigh + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

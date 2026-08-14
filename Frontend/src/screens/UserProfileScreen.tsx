@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, User, Phone, Mail, Calendar, Zap, AlertTriangle, Camera } from 'lucide-react-native';
+import { ArrowLeft, User, Phone, Mail, Calendar, Zap, AlertTriangle, Camera, Edit2, Check } from 'lucide-react-native';
 import { colors, fonts, radius, spacing, neuSm } from '../theme';
 import { supabase } from '../services/supabaseClient';
 import { AppContext } from '../AppContext';
@@ -11,8 +11,25 @@ interface Props { onBack: () => void; }
 
 export default function UserProfileScreen({ onBack }: Props) {
   const insets = useSafeAreaInsets();
-  const { caregiver, dob, primaryTrigger, profilePhoto, setProfilePhoto } = React.useContext(AppContext);
+  const { caregiver, dob, primaryTrigger, profilePhoto, setProfilePhoto, navigateTo } = React.useContext(AppContext);
   const [userName, setUserName] = useState<string>('User');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [updatingName, setUpdatingName] = useState(false);
+  const [aboutMe, setAboutMe] = useState<string>('I am using AURA to manage my sensory profile and stay connected with my caretaker.');
+  const [isEditingAboutMe, setIsEditingAboutMe] = useState(false);
+  const [updatingAboutMe, setUpdatingAboutMe] = useState(false);
+
+  const handleUpdateName = async () => {
+    if (!userName.trim()) return;
+    setUpdatingName(true);
+    try {
+      await supabase.auth.updateUser({ data: { name: userName.trim() } });
+      setIsEditingName(false);
+    } catch (e) {
+      console.error(e);
+    }
+    setUpdatingName(false);
+  };
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -23,9 +40,24 @@ export default function UserProfileScreen({ onBack }: Props) {
         } else if (data.user.email) {
           setUserName(data.user.email.split('@')[0]);
         }
+        const metadataAboutMe = data.user.user_metadata?.aboutMe;
+        if (metadataAboutMe) {
+          setAboutMe(metadataAboutMe);
+        }
       }
     });
   }, []);
+
+  const handleUpdateAboutMe = async () => {
+    setUpdatingAboutMe(true);
+    try {
+      await supabase.auth.updateUser({ data: { aboutMe: aboutMe.trim() } });
+      setIsEditingAboutMe(false);
+    } catch (e) {
+      console.error(e);
+    }
+    setUpdatingAboutMe(false);
+  };
 
   const handlePickImage = () => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (response) => {
@@ -61,25 +93,79 @@ export default function UserProfileScreen({ onBack }: Props) {
             <Camera size={16} color="#fff" />
           </View>
         </TouchableOpacity>
-        <Text style={styles.nameText}>{userName}</Text>
+        <View style={styles.nameRow}>
+          {isEditingName ? (
+            <TextInput
+              style={styles.nameInput}
+              value={userName}
+              onChangeText={setUserName}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={handleUpdateName}
+            />
+          ) : (
+            <Text style={styles.nameText}>{userName}</Text>
+          )}
+          {isEditingName ? (
+            updatingName ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <TouchableOpacity onPress={handleUpdateName} style={styles.editBtn}>
+                <Check size={20} color={colors.primary} />
+              </TouchableOpacity>
+            )
+          ) : (
+            <TouchableOpacity onPress={() => setIsEditingName(true)} style={styles.editBtn}>
+              <Edit2 size={18} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          )}
+        </View>
 
         <View style={styles.detailsContainer}>
           {/* About Me */}
           <View style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <User size={16} color={colors.primary} />
-              <Text style={styles.label}>About Me</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <User size={16} color={colors.primary} />
+                <Text style={styles.label}>About Me</Text>
+              </View>
+              {isEditingAboutMe ? (
+                updatingAboutMe ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <TouchableOpacity onPress={handleUpdateAboutMe} style={styles.editBtn}>
+                    <Check size={18} color={colors.primary} />
+                  </TouchableOpacity>
+                )
+              ) : (
+                <TouchableOpacity onPress={() => setIsEditingAboutMe(true)} style={styles.editBtn}>
+                  <Edit2 size={16} color={colors.mutedForeground} />
+                </TouchableOpacity>
+              )}
             </View>
-            <Text style={styles.desc}>
-              I am using AURA to manage my sensory profile and stay connected with my caretaker.
-            </Text>
+            {isEditingAboutMe ? (
+              <TextInput
+                style={{ fontSize: 14, minWidth: '100%', textAlign: 'left', fontWeight: 'normal', color: colors.foreground, borderBottomWidth: 1, borderBottomColor: colors.primary, paddingBottom: 4 }}
+                value={aboutMe}
+                onChangeText={setAboutMe}
+                multiline
+                autoFocus
+              />
+            ) : (
+              <Text style={styles.desc}>{aboutMe}</Text>
+            )}
           </View>
 
           {/* Sensory Info */}
           <View style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Zap size={16} color={colors.primary} />
-              <Text style={styles.label}>Sensory Profile</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Zap size={16} color={colors.primary} />
+                <Text style={styles.label}>Sensory Profile</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigateTo('profile')} style={styles.editBtn}>
+                <Edit2 size={16} color={colors.mutedForeground} />
+              </TouchableOpacity>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoKey}>Year of Birth:</Text>
@@ -93,9 +179,14 @@ export default function UserProfileScreen({ onBack }: Props) {
 
           {/* Caregiver Info */}
           <View style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <AlertTriangle size={16} color={colors.primary} />
-              <Text style={styles.label}>Emergency Caregiver</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <AlertTriangle size={16} color={colors.primary} />
+                <Text style={styles.label}>Emergency Caregiver</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigateTo('profile')} style={styles.editBtn}>
+                <Edit2 size={16} color={colors.mutedForeground} />
+              </TouchableOpacity>
             </View>
 
             <View style={styles.infoRow}>
@@ -156,9 +247,27 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.background,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    gap: 8,
+  },
+  nameInput: {
+    fontSize: 24,
+    color: colors.foreground,
+    ...fonts.bold,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary,
+    padding: 0,
+    minWidth: 150,
+    textAlign: 'center',
+  },
   nameText: {
     fontSize: 24, color: colors.foreground, ...fonts.bold,
-    marginBottom: spacing.xl,
+  },
+  editBtn: {
+    padding: 4,
   },
   detailsContainer: {
     width: '100%',

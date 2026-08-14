@@ -15,8 +15,8 @@ Your ONLY job is to rewrite each approved recommendation as a warm, concise, per
 1. Produce exactly as many recommendations as you were given, in the same order.
 2. Do not add, remove, merge, or invent recommendations beyond the approved list.
 3. Do not give medical diagnoses, medication advice, or claims beyond general comfort/wellness guidance.
-4. Keep each recommendation under 30 words.
-5. Respond with ONLY a JSON array of strings, and nothing else — no markdown, no explanation.
+4. Keep the description under 30 words and the title under 5 words.
+5. Respond with ONLY a JSON array of objects, where each object has a "title" string and a "description" string, and nothing else — no markdown, no explanation.
 """
 
 
@@ -60,7 +60,7 @@ class AIRecommendationEngine(IRecommendationEngine):
         else:
             self.client = None
 
-    async def generate_recommendations(self, user_id: UUID, context: Dict[str, Any]) -> List[str]:
+    async def generate_recommendations(self, user_id: UUID, context: Dict[str, Any]) -> List[Dict[str, str]]:
         eligible = await self.rule_engine.generate_recommendations(user_id, context)
 
         if not eligible:
@@ -81,7 +81,7 @@ class AIRecommendationEngine(IRecommendationEngine):
 
         return personalized
 
-    async def _personalize(self, eligible: List[str], context: Dict[str, Any]) -> List[str]:
+    async def _personalize(self, eligible: List[Dict[str, str]], context: Dict[str, Any]) -> List[Dict[str, str]]:
         user_prompt = self._build_prompt(eligible, context)
 
         response = await self.client.chat.completions.create(
@@ -106,7 +106,7 @@ class AIRecommendationEngine(IRecommendationEngine):
         return text.strip()
 
     @staticmethod
-    def _build_prompt(eligible: List[str], context: Dict[str, Any]) -> str:
+    def _build_prompt(eligible: List[Dict[str, str]], context: Dict[str, Any]) -> str:
         sensor_data = context.get("sensor_data", {})
         preferences = context.get("preferences", {})
         risk_score = context.get("risk_score")
@@ -127,11 +127,16 @@ class AIRecommendationEngine(IRecommendationEngine):
         )
 
     @staticmethod
-    def _is_valid(personalized: Any, eligible: List[str]) -> bool:
+    def _is_valid(personalized: Any, eligible: List[Dict[str, str]]) -> bool:
         return (
             isinstance(personalized, list)
             and len(personalized) == len(eligible)
-            and all(isinstance(item, str) and item.strip() for item in personalized)
+            and all(
+                isinstance(item, dict) 
+                and isinstance(item.get("title"), str) 
+                and isinstance(item.get("description"), str) 
+                for item in personalized
+            )
         )
 
     async def evaluate_recommendation_effectiveness(self, user_id: UUID, recommendation_id: UUID) -> float:

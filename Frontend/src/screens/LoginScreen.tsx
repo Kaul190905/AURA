@@ -35,7 +35,7 @@ export default function LoginScreen({ onSuccess }: Props) {
         Animated.timing(breathe, { toValue: 0.9, duration: 3800, useNativeDriver: true }),
       ])
     ).start();
-  }, []);
+  }, [breathe]);
 
   // Fade-in on mount
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -45,7 +45,7 @@ export default function LoginScreen({ onSuccess }: Props) {
       Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim]);
 
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
@@ -94,7 +94,7 @@ export default function LoginScreen({ onSuccess }: Props) {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={styles.keyboardAvoid}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
@@ -103,6 +103,8 @@ export default function LoginScreen({ onSuccess }: Props) {
           { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 32 },
         ]}
         keyboardShouldPersistTaps="handled"
+        bounces={false}
+        showsVerticalScrollIndicator={false}
       >
         {/* Logo */}
         <Animated.View
@@ -126,26 +128,27 @@ export default function LoginScreen({ onSuccess }: Props) {
           </Text>
 
           {/* Card */}
-          <View style={styles.card}>
-            {/* Tab switcher */}
-            <View style={styles.tabRow}>
-              <TouchableOpacity
-                style={[styles.tab, !isSignup && styles.tabActive]}
-                onPress={() => { setMode('signin'); setError(null); setSuccessMsg(null); }}
-              >
-                <Text style={[styles.tabText, !isSignup && styles.tabTextActive]}>
-                  Sign In
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tab, isSignup && styles.tabActive]}
-                onPress={() => { setMode('signup'); setError(null); setSuccessMsg(null); }}
-              >
-                <Text style={[styles.tabText, isSignup && styles.tabTextActive]}>
-                  Create Account
-                </Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionCard}>
+              {/* Tab switcher */}
+              <View style={styles.tabRow}>
+                <TouchableOpacity
+                  style={[styles.tab, !isSignup && styles.tabActive]}
+                  onPress={() => { setMode('signin'); setError(null); setSuccessMsg(null); }}
+                >
+                  <Text style={[styles.tabText, !isSignup && styles.tabTextActive]}>
+                    Sign In
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.tab, isSignup && styles.tabActive]}
+                  onPress={() => { setMode('signup'); setError(null); setSuccessMsg(null); }}
+                >
+                  <Text style={[styles.tabText, isSignup && styles.tabTextActive]}>
+                    Create Account
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
             {isSignup && (
               <View style={styles.fieldGroup}>
@@ -190,7 +193,7 @@ export default function LoginScreen({ onSuccess }: Props) {
               <View style={styles.inputRow}>
                 <Lock size={18} color={colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={[styles.input, { flex: 1 }]}
+                  style={styles.input}
                   value={password}
                   onChangeText={setPassword}
                   placeholder={isSignup ? 'At least 6 characters' : '••••••••'}
@@ -258,6 +261,7 @@ export default function LoginScreen({ onSuccess }: Props) {
               <Globe size={18} color={colors.foreground} />
               <Text style={styles.googleBtnText}>Continue with Google</Text>
             </TouchableOpacity>
+            </View>
           </View>
 
           <Text style={styles.footerText}>
@@ -275,6 +279,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
+  },
+  keyboardAvoid: {
+    flex: 1,
   },
   content: {
     width: '100%',
@@ -316,27 +323,25 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: -spacing.sm,
   },
-  card: {
-    width: '100%',
+  sectionContainer: { width: '100%', marginBottom: 28 },
+  sectionCard: {
     backgroundColor: colors.background,
     borderRadius: radius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
+    padding: 16,
     borderWidth: 1,
-    borderColor: colors.border,
-    marginTop: spacing.sm,
-    elevation: 4,
-    shadowColor: '#A3B1C6',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    borderColor: colors.border + '80',
+    shadowColor: colors.primary,
+    shadowOffset: { width: -2, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   tabRow: {
     flexDirection: 'row',
     backgroundColor: colors.muted,
-    borderRadius: radius.lg,
+    borderRadius: radius.full,
     padding: 4,
-    gap: 4,
+    marginBottom: spacing.xl,
   },
   tab: {
     flex: 1,

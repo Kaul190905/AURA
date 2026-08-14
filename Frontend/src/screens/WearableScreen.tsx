@@ -14,7 +14,7 @@ import { Device } from 'react-native-ble-plx';
 
 export default function WearableScreen() {
   const styles = getStyles();
-  const { bleConnected, setBleConnected, noise, setNoise, temperature, setTemperature, userId } = useContext(AppContext);
+  const { bleConnected, setBleConnected, noise, setNoise, temperature, setTemperature, heartRate, setHeartRate, userId } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [pairing, setPairing] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -34,7 +34,7 @@ export default function WearableScreen() {
       (device) => {
         if (device.name) {
           setDevices((prev) => {
-            if (prev.some((d) => d.id === device.id)) return prev;
+            if (prev.some((d) => d.id === device.id)) { return prev; }
             return [...prev, device];
           });
         }
@@ -65,13 +65,16 @@ export default function WearableScreen() {
           try {
             if (rawData.startsWith('{')) {
               const parsed = JSON.parse(rawData);
-              if (parsed.noise !== undefined) setNoise(parsed.noise);
-              if (parsed.temp !== undefined) setTemperature(parsed.temp);
+              if (parsed.noise !== undefined) { setNoise(parsed.noise); }
+              if (parsed.temp !== undefined) { setTemperature(parsed.temp); }
+              if (parsed.bpm !== undefined) { setHeartRate(parsed.bpm); }
             } else {
               const noiseMatch = rawData.match(/(?:noise|N)[:=]\s*(\d+)/i);
               const tempMatch = rawData.match(/(?:temp|T)[:=]\s*([\d.]+)/i);
-              if (noiseMatch) setNoise(parseInt(noiseMatch[1], 10));
-              if (tempMatch) setTemperature(parseFloat(tempMatch[1]));
+              const bpmMatch = rawData.match(/(?:bpm|H)[:=]\s*(\d+)/i);
+              if (noiseMatch) { setNoise(parseInt(noiseMatch[1], 10)); }
+              if (tempMatch) { setTemperature(parseFloat(tempMatch[1])); }
+              if (bpmMatch) { setHeartRate(parseInt(bpmMatch[1], 10)); }
             }
           } catch (e) {
             console.warn('[BLE] Error parsing data:', rawData, e);
@@ -103,17 +106,19 @@ export default function WearableScreen() {
       user_id: userId,
       noise,
       temperature,
-      heart_rate: null,
+      heart_rate: heartRate,
       blood_oxygen: null,
     }).catch((e) => console.warn('[AURA] Wearable sensor push failed:', e));
-  }, [bleConnected, userId, noise, temperature]);
+  }, [bleConnected, userId, noise, temperature, heartRate]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Header title="Wearable" subtitle="AURA band" />
 
       {/* Connection card */}
-      <View style={[styles.connectCard, neuSm]}>
+      <View style={styles.sectionContainer}>
+      <View style={styles.sectionCard}>
+        <View style={styles.connectRow}>
         <View style={[styles.bleIcon, bleConnected && { backgroundColor: colors.muted }]}>
           <Bluetooth size={22} color={colors.primary} />
         </View>
@@ -133,9 +138,12 @@ export default function WearableScreen() {
             {bleConnected ? 'Disconnect' : pairing ? '…' : 'Pair'}
           </Text>
         </TouchableOpacity>
+        </View>
+      </View>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+        <View style={styles.sectionContainer}>
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -157,13 +165,13 @@ export default function WearableScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.sliderCardTitle}>Noise</Text>
-                <Text style={styles.sliderCardHint}>{noise < 60 ? 'Quiet' : noise < 80 ? 'Busy' : 'Loud'}</Text>
+                <Text style={styles.sliderCardHint}>{noise === null ? 'No Data' : noise < 60 ? 'Quiet' : noise < 80 ? 'Busy' : 'Loud'}</Text>
               </View>
-              <Text style={styles.sliderValue}>{noise}<Text style={styles.sliderUnit}> dB</Text></Text>
+              <Text style={styles.sliderValue}>{noise !== null ? noise : '--'}<Text style={styles.sliderUnit}> dB</Text></Text>
             </View>
             <Slider
               minimumValue={40} maximumValue={100} step={1}
-              value={noise} onValueChange={(v) => !bleConnected && setNoise(Math.round(v))}
+              value={noise ?? 40} onValueChange={(v) => !bleConnected && setNoise(Math.round(v))}
               disabled={bleConnected}
               minimumTrackTintColor={colors.primary}
               maximumTrackTintColor={colors.border}
@@ -180,13 +188,13 @@ export default function WearableScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.sliderCardTitle}>Temperature</Text>
-                <Text style={styles.sliderCardHint}>{temperature < 97 ? 'Cold' : temperature < 100 ? 'Normal' : 'Fever'}</Text>
+                <Text style={styles.sliderCardHint}>{temperature === null ? 'No Data' : temperature < 97 ? 'Cold' : temperature < 100 ? 'Normal' : 'Fever'}</Text>
               </View>
-              <Text style={styles.sliderValue}>{Math.round(((temperature - 32) * 5) / 9)}<Text style={styles.sliderUnit}> °C</Text></Text>
+              <Text style={styles.sliderValue}>{temperature !== null ? Math.round(((temperature - 32) * 5) / 9) : '--'}<Text style={styles.sliderUnit}> °C</Text></Text>
             </View>
             <Slider
               minimumValue={30} maximumValue={110} step={1}
-              value={temperature} onValueChange={(v) => !bleConnected && setTemperature(Math.round(v))}
+              value={temperature ?? 98.6} onValueChange={(v) => !bleConnected && setTemperature(Math.round(v))}
               disabled={bleConnected}
               minimumTrackTintColor={colors.primary}
               maximumTrackTintColor={colors.border}
@@ -195,7 +203,9 @@ export default function WearableScreen() {
             />
           </View>
         </View>
+        </View>
 
+        <View style={styles.sectionContainer}>
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -213,6 +223,7 @@ export default function WearableScreen() {
               <Text style={styles.statValue}>{bleConnected ? 'Strong' : '—'}</Text>
             </View>
           </View>
+        </View>
         </View>
       </ScrollView>
 
@@ -280,16 +291,23 @@ export default function WearableScreen() {
 
 const getStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  sectionContainer: { marginBottom: 28, paddingHorizontal: 16 },
   sectionCard: {
-    backgroundColor: colors.background, borderRadius: radius.xl, padding: spacing.lg,
-    marginHorizontal: spacing.lg, marginBottom: spacing.md, ...neuSm,
+    backgroundColor: colors.background,
+    borderRadius: radius.xl,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border + '80',
+    shadowColor: colors.primary,
+    shadowOffset: { width: -2, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   sectionTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold },
-  connectCard: {
+  connectRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    marginHorizontal: spacing.lg, marginBottom: spacing.md,
-    borderRadius: radius.xl, padding: spacing.lg, backgroundColor: colors.background,
   },
   bleIcon: {
     width: 48, height: 48, borderRadius: radius.full,

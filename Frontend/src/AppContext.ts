@@ -15,11 +15,11 @@ export type AppScreen =
   | 'login' | 'welcome' | 'profile' | 'home' | 'crisis'
   | 'recovery' | 'settings' | 'speech' | 'plans'
   | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
-  | 'user_profile' | 'onboarding' | 'caregiver_management';
+  | 'user_profile' | 'accessibility' | 'device' | 'privacy' | 'onboarding' | 'caregiver_manager';
 
 export type AppState = {
-  userRole: 'user' | 'caregiver' | null;
-  setUserRole: (role: 'user' | 'caregiver' | null) => void;
+  primaryRole: 'user' | 'caretaker' | null;
+  setPrimaryRole: (role: 'user' | 'caretaker' | null) => void;
   isCrisisMode: boolean;
   setIsCrisisMode: (isCrisis: boolean) => void;
   crisisRiskBefore: number | null;
@@ -35,10 +35,12 @@ export type AppState = {
 
   dob: string;
   setDob: (d: string) => void;
-  noise: number;
-  setNoise: (n: number) => void;
-  temperature: number;
-  setTemperature: (v: number) => void;
+  noise: number | null;
+  setNoise: (n: number | null) => void;
+  temperature: number | null;
+  setTemperature: (v: number | null) => void;
+  heartRate: number | null;
+  setHeartRate: (v: number | null) => void;
   selfReport: number;
   setSelfReport: (n: number) => void;
   bleConnected: boolean;
@@ -74,12 +76,41 @@ export type AppState = {
   /** Current Supabase JWT — null until signed in */
   accessToken: string | null;
   setAccessToken: (token: string | null) => void;
-  // ── Teacher Mode ────────────────────────────────────────────────────────
-  teacherMode: boolean;
-  setTeacherMode: (val: boolean) => void;
-  selectedStudent: string | null;
-  setSelectedStudent: (id: string | null) => void;
-  mockStudents: Array<{ id: string; name: string; location: string; risk: number; isCrisis: boolean; rollNumber?: string; className?: string; recentActivity?: string; lastUpdated?: string }>;
+
+  recentlyViewedUserIds: string[];
+  setRecentlyViewedUserIds: (ids: string[]) => void;
+  mockUsers: Array<{
+    id: string;
+    name: string;
+    risk: number;
+    isCrisis: boolean;
+    condition?: string;
+    sensorValue?: string;
+    phoneLocation?: string;
+    locationSharingStatus?: 'Active' | 'Paused' | 'Unavailable';
+    lastUpdated?: string;
+    profileImage?: string;
+    sensoryProfile?: {
+      sound: boolean;
+      temperature: boolean;
+    };
+    currentSensorData?: {
+      heartRate: number | null;
+      soundDb: number | null;
+      temperatureC: number | null;
+    };
+    email?: string;
+    aboutMe?: string;
+    dob?: string;
+    emergencyCaregiver?: {
+      name: string;
+      phone: string;
+      email: string;
+    };
+  }>;
+  setMockUsers: (users: AppState['mockUsers']) => void;
+  isCaregiverOnline: boolean;
+  setIsCaregiverOnline: (val: boolean) => void;
 };
 
 export const AppContext = React.createContext<AppState>({} as AppState);

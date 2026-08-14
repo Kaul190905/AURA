@@ -9,6 +9,7 @@ import { Ear, Sun, User, Calendar, Phone, Mail } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
 import { TriggerKey } from '../types';
+import { supabase } from '../services/supabaseClient';
 
 interface Props {
   onDone: () => void;
@@ -59,6 +60,7 @@ export default function OnboardingScreen({ onDone }: Props) {
         return;
       }
       setErrors({});
+      supabase.auth.updateUser({ data: { name: name.trim() } }).catch(console.error);
       onDone();
     }
   };
@@ -138,7 +140,7 @@ export default function OnboardingScreen({ onDone }: Props) {
           <Text style={styles.gridCardDesc}>Sensitivity to heat or cold</Text>
         </TouchableOpacity>
       </View>
-      {errors.profile ? <Text style={[styles.errorText, { textAlign: 'center', marginTop: 16 }]}>{errors.profile}</Text> : null}
+      {errors.profile ? <Text style={[styles.errorText, styles.centerError]}>{errors.profile}</Text> : null}
     </View>
   );
 
@@ -191,7 +193,7 @@ export default function OnboardingScreen({ onDone }: Props) {
 
   return (
     <KeyboardAvoidingView style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
         {step === 1 && renderStep1()}
         {step === 2 && renderStep2()}
         {step === 3 && renderStep3()}
@@ -261,6 +263,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.foreground,
     ...fonts.medium,
+  },
+  centerError: {
+    textAlign: 'center',
+    marginTop: 16,
   },
   inputError: {
     borderColor: '#ff4444',
