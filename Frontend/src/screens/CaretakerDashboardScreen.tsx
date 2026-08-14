@@ -6,40 +6,6 @@ import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 import { riskColor } from '../utils';
 
-function LiveSensorRow({ darkMode }: { darkMode: boolean }) {
-  const [bpm, setBpm] = useState(82);
-  const [temp, setTemp] = useState(98.4);
-  const [soundLevel, setSoundLevel] = useState(45);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
-      setTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
-      setSoundLevel(prev => prev + (Math.floor(Math.random() * 11) - 5));
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
-
-  const textStyle = darkMode ? { color: '#fff' } : { color: colors.foreground };
-  const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
-  
-  return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, padding: 8, backgroundColor: darkMode ? '#333' : '#f8f9fa', borderRadius: 8 }}>
-      <View style={{ alignItems: 'center' }}>
-        <Text style={[subTextStyle, { fontSize: 10, ...fonts.bold }]}>BPM</Text>
-        <Text style={[textStyle, { fontSize: 13, ...fonts.bold, color: bpm > 100 ? colors.riskHigh : textStyle.color }]}>{bpm}</Text>
-      </View>
-      <View style={{ alignItems: 'center' }}>
-        <Text style={[subTextStyle, { fontSize: 10, ...fonts.bold }]}>TEMP</Text>
-        <Text style={[textStyle, { fontSize: 13, ...fonts.bold }]}>{temp}°</Text>
-      </View>
-      <View style={{ alignItems: 'center' }}>
-        <Text style={[subTextStyle, { fontSize: 10, ...fonts.bold }]}>NOISE</Text>
-        <Text style={[textStyle, { fontSize: 13, ...fonts.bold, color: soundLevel > 70 ? colors.riskMed : textStyle.color }]}>{soundLevel}dB</Text>
-      </View>
-    </View>
-  );
-}
 
 export default function CaretakerDashboardScreen({ navigation }: any) {
   const {
@@ -177,7 +143,6 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
                     <Text style={[styles.alertCondition, subTextStyle]}>
                       {user.condition} {user.sensorValue && `• ${user.sensorValue}`}
                     </Text>
-                    <LiveSensorRow darkMode={darkMode} />
                   </View>
                 </TouchableOpacity>
               );

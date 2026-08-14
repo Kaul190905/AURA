@@ -108,12 +108,6 @@ export default function CaretakerUsersScreen({ navigation, route }: any) {
       
       <View style={styles.header}>
         <Text style={[styles.headerTitle, textStyle, { marginLeft: 0 }]}>Users</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.addBtn} onPress={() => setIsAddModalOpen(true)}>
-            <Plus size={20} color={'#fff'} />
-            <Text style={styles.addBtnText}>Add User</Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       <View style={styles.filtersContainer}>
