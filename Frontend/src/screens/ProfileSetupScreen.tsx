@@ -73,11 +73,11 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
       <Header title="Your sensory profile" subtitle="Setup" onBack={onBack} />
       <Text style={styles.hint}>Tap a section to open it.</Text>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} bounces={false}>
         {/* Quick presets */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.rowCenterGap}>
               <Star size={18} color={colors.primary} />
               <Text style={styles.sectionTitle}>Quick start presets</Text>
             </View>
@@ -94,7 +94,7 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
         {/* Triggers */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.rowCenterGap}>
               <Ear size={18} color={colors.primary} />
               <Text style={styles.sectionTitle}>Triggers</Text>
             </View>
@@ -110,7 +110,7 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
                   <Icon size={20} color={selected ? colors.primary : colors.mutedForeground} />
                   <Text style={[styles.triggerLabel, selected && { color: colors.foreground }]}>{t.label}</Text>
                   {selected && (
-                    <View style={{ width: '100%', marginTop: 6 }}>
+                    <View style={styles.sliderContainer}>
                       <Slider
                         minimumValue={1} maximumValue={5} step={1}
                         value={profile[t.key] ?? 3}
@@ -131,13 +131,13 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
         {/* Date of Birth */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.rowCenterGap}>
               <Calendar size={18} color={colors.primary} />
               <Text style={styles.sectionTitle}>Year of Birth</Text>
             </View>
             <Text style={styles.badge}>{calculateAge(dob)}</Text>
           </View>
-          <View style={{ padding: 12 }}>
+          <View style={styles.padding12}>
             <TextInput
               style={[styles.input, errors.dob && styles.inputError]}
               placeholder="YYYY"
@@ -154,12 +154,12 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
         {/* Caregiver Information */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.rowCenterGap}>
               <User size={18} color={colors.primary} />
               <Text style={styles.sectionTitle}>Caregiver Information</Text>
             </View>
           </View>
-          <View style={{ padding: 12, gap: 12 }}>
+          <View style={styles.paddingGap12}>
             <View>
               <TextInput
                 style={[styles.input, errors.name && styles.inputError]}
@@ -204,7 +204,7 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
             </View>
           </View>
         </View>
-        <View style={{ height: 100 }} />
+        <View style={styles.spacer100} />
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
@@ -222,7 +222,7 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
         <View style={styles.modalBackground}>
           <View style={styles.modalPanel}>
             <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={styles.rowCenterGap}>
                 <Activity size={20} color={colors.riskHigh} />
                 <Text style={styles.modalTitle}>Invalid or Missing Input</Text>
               </View>
@@ -349,5 +349,24 @@ const getStyles = () => StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     ...fonts.semibold,
+  },
+  rowCenterGap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sliderContainer: {
+    width: '100%',
+    marginTop: 6,
+  },
+  padding12: {
+    padding: 12,
+  },
+  paddingGap12: {
+    padding: 12,
+    gap: 12,
+  },
+  spacer100: {
+    height: 100,
   },
 });

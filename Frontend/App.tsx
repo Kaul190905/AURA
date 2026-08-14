@@ -45,6 +45,9 @@ import ProfileDetailsScreen from './src/screens/ProfileDetailsScreen';
 import EmergencyContactsScreen from './src/screens/EmergencyContactsScreen';
 import ConnectedUserDetailsScreen from './src/screens/ConnectedUserDetailsScreen';
 import SensoryStatusScreen from './src/screens/SensoryStatusScreen';
+import LocationMapScreen from './src/screens/LocationMapScreen';
+import HeartRateHistoryScreen from './src/screens/HeartRateHistoryScreen';
+import SoundHistoryScreen from './src/screens/SoundHistoryScreen';
 import LiveAlertModal from './src/components/LiveAlertModal';
 
 import SettingsAccessibilityScreen from './src/screens/SettingsAccessibilityScreen';
@@ -161,7 +164,10 @@ function CaretakerRoot() {
     <CaretakerStack.Navigator screenOptions={{ headerShown: false }}>
       <CaretakerStack.Screen name="CaretakerTabs" component={CaretakerTabNavigator} />
       <CaretakerStack.Screen name="ConnectedUserDetails" component={ConnectedUserDetailsScreen} />
+      <CaretakerStack.Screen name="LocationMap" component={LocationMapScreen} />
       <CaretakerStack.Screen name="SensoryStatus" component={SensoryStatusScreen} />
+      <CaretakerStack.Screen name="HeartRateHistory" component={HeartRateHistoryScreen} />
+      <CaretakerStack.Screen name="SoundHistory" component={SoundHistoryScreen} />
       <CaretakerStack.Screen name="UserHistory" component={CaretakerUserHistoryScreen} />
     </CaretakerStack.Navigator>
   );
@@ -176,6 +182,9 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
       <ProfileStack.Screen name="EmergencyContacts" component={EmergencyContactsScreen} />
       <ProfileStack.Screen name="ConnectedUserDetails" component={ConnectedUserDetailsScreen} />
+      <ProfileStack.Screen name="LocationMap" component={LocationMapScreen} />
+      <ProfileStack.Screen name="HeartRateHistory" component={HeartRateHistoryScreen} />
+      <ProfileStack.Screen name="SoundHistory" component={SoundHistoryScreen} />
       <ProfileStack.Screen name="HistoryInsights" component={HistoryInsightsScreen} />
     </ProfileStack.Navigator>
   );

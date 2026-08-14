@@ -1,10 +1,45 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 import { riskColor } from '../utils';
+
+function LiveSensorRow({ darkMode }: { darkMode: boolean }) {
+  const [bpm, setBpm] = useState(82);
+  const [temp, setTemp] = useState(98.4);
+  const [soundLevel, setSoundLevel] = useState(45);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
+      setTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
+      setSoundLevel(prev => prev + (Math.floor(Math.random() * 11) - 5));
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  const textStyle = darkMode ? { color: '#fff' } : { color: colors.foreground };
+  const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
+  
+  return (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, padding: 8, backgroundColor: darkMode ? '#333' : '#f8f9fa', borderRadius: 8 }}>
+      <View style={{ alignItems: 'center' }}>
+        <Text style={[subTextStyle, { fontSize: 10, ...fonts.bold }]}>BPM</Text>
+        <Text style={[textStyle, { fontSize: 13, ...fonts.bold, color: bpm > 100 ? colors.riskHigh : textStyle.color }]}>{bpm}</Text>
+      </View>
+      <View style={{ alignItems: 'center' }}>
+        <Text style={[subTextStyle, { fontSize: 10, ...fonts.bold }]}>TEMP</Text>
+        <Text style={[textStyle, { fontSize: 13, ...fonts.bold }]}>{temp}°</Text>
+      </View>
+      <View style={{ alignItems: 'center' }}>
+        <Text style={[subTextStyle, { fontSize: 10, ...fonts.bold }]}>NOISE</Text>
+        <Text style={[textStyle, { fontSize: 13, ...fonts.bold, color: soundLevel > 70 ? colors.riskMed : textStyle.color }]}>{soundLevel}dB</Text>
+      </View>
+    </View>
+  );
+}
 
 export default function CaretakerDashboardScreen({ navigation }: any) {
   const {
@@ -34,10 +69,15 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
 
   const recentlyViewed = recentlyViewedUserIds.map(id => mockUsers.find(u => u.id === id)).filter(Boolean);
 
-  const openUser = (id: string) => {
+  const openUser = (id: string, initialTab: 'Overview' | 'Location' = 'Overview') => {
     const newIds = [id, ...recentlyViewedUserIds.filter(pid => pid !== id)];
     setRecentlyViewedUserIds(newIds.slice(0, 10));
-    navigation.navigate('ConnectedUserDetails', { userId: id });
+    
+    if (initialTab === 'Location') {
+      navigation.navigate('LocationMap', { userId: id });
+    } else {
+      navigation.navigate('ConnectedUserDetails', { userId: id });
+    }
   };
 
   const getStatusText = (s: any) => {
@@ -119,7 +159,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
             {criticalUsers.map(user => {
               const rColor = riskColor(user.risk);
               return (
-                <TouchableOpacity key={user.id} style={styles.alertItem} onPress={() => openUser(user.id)}>
+                <TouchableOpacity key={user.id} style={styles.alertItem} onPress={() => openUser(user.id, 'Location')}>
                   <View style={[styles.avatarSm, { backgroundColor: `${rColor}20` }]}>
                     <User size={20} color={rColor} />
                   </View>
@@ -130,13 +170,14 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
                         <Text style={[styles.riskBadgeText, { color: rColor }]}>{getStatusText(user)}</Text>
                       </View>
                     </View>
-                    <Text style={[styles.alertCondition, textStyle]}>
-                      {user.condition} {user.sensorValue && `• ${user.sensorValue}`}
-                    </Text>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                      <Text style={[styles.alertLocation, subTextStyle]}>📍 {user.phoneLocation}</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, marginBottom: 4 }}>
+                      <Text style={[styles.alertLocation, textStyle, { fontWeight: 'bold' }]}>📍 {user.phoneLocation}</Text>
                       <Text style={[styles.alertTime, subTextStyle]}>{user.lastUpdated}</Text>
                     </View>
+                    <Text style={[styles.alertCondition, subTextStyle]}>
+                      {user.condition} {user.sensorValue && `• ${user.sensorValue}`}
+                    </Text>
+                    <LiveSensorRow darkMode={darkMode} />
                   </View>
                 </TouchableOpacity>
               );
