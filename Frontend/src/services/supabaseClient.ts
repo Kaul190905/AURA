@@ -19,12 +19,12 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 // ── Auth helpers ───────────────────────────────────────────────────────────────
-export async function signUp(email: string, password: string, username: string) {
+export async function signUp(email: string, password: string, username: string, role: 'user' | 'caretaker' = 'user') {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { name: username },
+      data: { name: username, role, roleSelected: true },
     },
   });
   if (error) { throw error; }

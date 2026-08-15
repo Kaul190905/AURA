@@ -5,7 +5,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, Globe, User } from 'lucide-react-native';
+import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, Globe, User, Heart } from 'lucide-react-native';
 import { signIn, signUp, signInWithGoogle } from '../services/supabaseClient';
 import { colors, fonts, radius, spacing } from '../theme';
 
@@ -18,6 +18,7 @@ type Mode = 'signin' | 'signup';
 export default function LoginScreen({ onSuccess }: Props) {
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<Mode>('signin');
+  const [role, setRole] = useState<'user' | 'caretaker'>('user');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,7 +63,7 @@ export default function LoginScreen({ onSuccess }: Props) {
           setLoading(false);
           return;
         }
-        await signUp(email.trim(), password, username.trim());
+        await signUp(email.trim(), password, username.trim(), role);
         setSuccessMsg('Account created! Check your email to confirm, then sign in.');
         setMode('signin');
       } else {
@@ -126,6 +127,26 @@ export default function LoginScreen({ onSuccess }: Props) {
               ? 'Create your account to get started'
               : 'Welcome back to your sensory companion'}
           </Text>
+
+          {/* Role Toggle */}
+          <View style={styles.roleToggleRow}>
+            <TouchableOpacity
+              style={[styles.roleToggleBtn, role === 'user' && styles.roleToggleActive]}
+              onPress={() => setRole('user')}
+              activeOpacity={0.8}
+            >
+              <User size={16} color={role === 'user' ? colors.foreground : colors.mutedForeground} />
+              <Text style={[styles.roleToggleText, role === 'user' && styles.roleToggleTextActive]}>User</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.roleToggleBtn, role === 'caretaker' && styles.roleToggleActive]}
+              onPress={() => setRole('caretaker')}
+              activeOpacity={0.8}
+            >
+              <Heart size={16} color={role === 'caretaker' ? colors.foreground : colors.mutedForeground} />
+              <Text style={[styles.roleToggleText, role === 'caretaker' && styles.roleToggleTextActive]}>Caregiver</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Card */}
           <View style={styles.sectionContainer}>
@@ -287,6 +308,41 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     gap: spacing.lg,
+  },
+  roleToggleRow: {
+    flexDirection: 'row',
+    backgroundColor: colors.muted,
+    borderRadius: radius.full,
+    padding: 4,
+    marginBottom: spacing.xs,
+    width: '80%',
+    alignSelf: 'center',
+  },
+  roleToggleBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: radius.full,
+    gap: spacing.sm,
+  },
+  roleToggleActive: {
+    backgroundColor: colors.background,
+    elevation: 2,
+    shadowColor: '#A3B1C6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  roleToggleText: {
+    fontSize: 14,
+    color: colors.mutedForeground,
+    ...fonts.medium,
+  },
+  roleToggleTextActive: {
+    color: colors.foreground,
+    ...fonts.bold,
   },
   logoOuter: {
     width: 100,

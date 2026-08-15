@@ -37,18 +37,24 @@ class CaregiverRepository:
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_pending_invitations_for_caregiver(self, caregiver_id: UUID) -> List[CaregiverAssignment]:
+    async def get_pending_invitations_for_caregiver(self, caregiver_id: UUID, caregiver_email: Optional[str] = None) -> List[CaregiverAssignment]:
+        from sqlalchemy import or_
+        conditions = [CaregiverAssignment.caregiver_id == caregiver_id]
+        if caregiver_email:
+            conditions.append(CaregiverAssignment.caregiver_email == caregiver_email)
+            
         stmt = select(CaregiverAssignment).where(
-            CaregiverAssignment.caregiver_id == caregiver_id,
+            or_(*conditions),
             CaregiverAssignment.status == CaregiverStatus.PENDING
         )
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def create(self, user_id: UUID, caregiver_id: UUID) -> CaregiverAssignment:
+    async def create(self, user_id: UUID, caregiver_id: Optional[UUID] = None, caregiver_email: Optional[str] = None) -> CaregiverAssignment:
         assignment = CaregiverAssignment(
             user_id=user_id,
             caregiver_id=caregiver_id,
+            caregiver_email=caregiver_email,
             status=CaregiverStatus.PENDING,
             can_view_preferences=False,
             can_view_speech_diary=False

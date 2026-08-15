@@ -3,7 +3,7 @@ export type TriggerKey = 'sound' | 'temp';
 
 export type Screen =
   | 'welcome' | 'profile' | 'home' | 'alert' | 'crisis' | 'library'
-  | 'history' | 'caretaker-gate' | 'caretaker' | 'wearable' | 'settings';
+  | 'history' | 'caretaker' | 'wearable' | 'settings';
 
 export type HistoryEvent = {
   id: string;

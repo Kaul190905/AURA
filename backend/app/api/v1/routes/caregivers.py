@@ -66,7 +66,7 @@ async def list_pending_invitations(
     current_user = Depends(get_current_user),
     caregiver_service: CaregiverService = Depends(get_caregiver_service)
 ):
-    return await caregiver_service.get_pending_invitations(current_user.id)
+    return await caregiver_service.get_pending_invitations(current_user.id, current_user.email)
 
 @router.post("/{assignment_id}/accept", response_model=CaregiverResponse)
 async def accept_invitation(

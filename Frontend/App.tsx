@@ -35,7 +35,6 @@ import { NotificationModal } from './src/components/NotificationModal';
 import SpeechDiaryScreen from './src/screens/SpeechDiaryScreen';
 import UserProfileScreen from './src/screens/UserProfileScreen';
 import PlansScreen from './src/screens/PlansScreen';
-import CaretakerGateScreen from './src/screens/CaretakerGateScreen';
 import CaretakerDashboardScreen from './src/screens/CaretakerDashboardScreen';
 import CaretakerUsersScreen from './src/screens/CaretakerUsersScreen';
 import CaregiverManagementScreen from './src/screens/CaregiverManagementScreen';
@@ -297,32 +296,7 @@ export default function App() {
   // ── Monitoring Modes state ────────────────────────────────────────────────────
   const [recentlyViewedUserIds, setRecentlyViewedUserIds] = useState<string[]>([]);
   const [isCaregiverOnline, setIsCaregiverOnline] = useState(true);
-  const [mockUsers, setMockUsers] = useState<AppState['mockUsers']>([
-    {
-      id: 'u1', name: 'Rahul', risk: 9, isCrisis: true, condition: 'High Noise', sensorValue: '92 dB', phoneLocation: 'School Campus', locationSharingStatus: 'Active', lastUpdated: '2 min ago',
-      sensoryProfile: { sound: true, temperature: true },
-      currentSensorData: { heartRate: 112, soundDb: 92, temperatureC: 36.5 },
-      aboutMe: 'I am sensitive to loud noises and extreme temperatures.',
-      dob: '2010',
-      emergencyCaregiver: { name: 'Dr. Smith', phone: '555-0192', email: 'smith@example.com' },
-    },
-    {
-      id: 'u2', name: 'Nisha', risk: 1, isCrisis: false, condition: 'Safe', phoneLocation: 'Home', locationSharingStatus: 'Active', lastUpdated: 'Just now',
-      sensoryProfile: { sound: true, temperature: false },
-      currentSensorData: { heartRate: 78, soundDb: 55, temperatureC: null },
-      aboutMe: 'I prefer quiet environments.',
-      dob: '2008',
-      emergencyCaregiver: { name: 'Mrs. Davis', phone: '555-0188', email: 'davis@example.com' },
-    },
-    {
-      id: 'u3', name: 'Aarav', risk: 6, isCrisis: false, condition: 'High Temperature', sensorValue: '39°C', phoneLocation: 'Library', locationSharingStatus: 'Paused', lastUpdated: '15 min ago',
-      sensoryProfile: { sound: false, temperature: true },
-      currentSensorData: { heartRate: 95, soundDb: null, temperatureC: 39.0 },
-      aboutMe: 'I get overwhelmed when it is too hot.',
-      dob: '2012',
-      emergencyCaregiver: { name: 'Mr. Patel', phone: '555-0211', email: 'patel@example.com' },
-    },
-  ]);
+  const [mockUsers, setMockUsers] = useState<AppState['mockUsers']>([]);
 
   useEffect(() => {
     if (!userId || primaryRole !== 'caretaker') {return;}
@@ -666,7 +640,6 @@ export default function App() {
           {userId && appScreen === 'device' && <SettingsDeviceScreen />}
           {userId && appScreen === 'privacy' && <SettingsPrivacyScreen />}
           {userId && appScreen === 'caregiver_manager' && <CaregiverManagementScreen />}
-          {userId && appScreen === 'caretaker-gate' && <CaretakerGateScreen onBack={() => setAppScreen('settings')} onSuccess={() => { setPrimaryRole('caretaker'); setAppScreen('caretaker-home'); }} />}
           {userId && appScreen === 'caretaker-home' && (
             <View style={styles.flex1}>
               <CaretakerRoot />
