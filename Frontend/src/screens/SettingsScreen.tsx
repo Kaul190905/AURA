@@ -1,9 +1,9 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator,
+  View, Text, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Users, Eye, Shield, ChevronRight, Watch, LogOut, Check, User } from 'lucide-react-native';
+import { Users, Eye, Shield, ChevronRight, Watch, LogOut, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 import { colors, neuSm, radius, fonts } from '../theme';
@@ -14,30 +14,13 @@ export default function SettingsScreen() {
   const { navigateTo, setUserId, setAccessToken } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
-  const [newName, setNewName] = useState('');
-  const [updatingName, setUpdatingName] = useState(false);
-  const [nameSuccess, setNameSuccess] = useState(false);
 
-  const handleUpdateName = async () => {
-    if (!newName.trim()) {return;}
-    setUpdatingName(true);
-    setNameSuccess(false);
-    try {
-      await supabase.auth.updateUser({ data: { name: newName.trim() } });
-      setNameSuccess(true);
-      setNewName('');
-      setTimeout(() => setNameSuccess(false), 3000);
-    } catch (e) {
-      console.error(e);
-    }
-    setUpdatingName(false);
-  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Header title="Settings" subtitle="Personalize AURA" />
       <View style={styles.scrollContent}>
-        
+
         {/* Profile Section */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
@@ -77,7 +60,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Preferences & Device</Text>
           </View>
           <View style={styles.sectionCard}>
-            
+
             <TouchableOpacity onPress={() => navigateTo('accessibility')} style={styles.navRow} activeOpacity={0.7}>
               <View style={styles.navRowInnerLg}>
                 <View style={styles.iconContainer}>
@@ -88,7 +71,7 @@ export default function SettingsScreen() {
               <ChevronRight size={18} color={colors.mutedForeground} />
             </TouchableOpacity>
             <View style={styles.divider} />
-            
+
             <TouchableOpacity onPress={() => navigateTo('device')} style={styles.navRow} activeOpacity={0.7}>
               <View style={styles.navRowInnerLg}>
                 <View style={styles.iconContainer}>
@@ -120,17 +103,17 @@ export default function SettingsScreen() {
 
 const getStyles = () => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  
+
   sectionContainer: { marginBottom: 28, paddingHorizontal: 16 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12, paddingHorizontal: 4 },
   sectionTitle: { fontSize: 18, color: colors.foreground, ...fonts.bold },
-  sectionCard: { 
-    backgroundColor: colors.background, 
-    borderRadius: radius.xl, 
-    padding: 16, 
+  sectionCard: {
+    backgroundColor: colors.background,
+    borderRadius: radius.xl,
+    padding: 16,
     ...neuSm,
     borderWidth: 1,
-    borderColor: colors.border + '80'
+    borderColor: colors.border + '80',
   },
 
   navRow: {
@@ -140,7 +123,7 @@ const getStyles = () => StyleSheet.create({
   iconContainer: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: colors.muted,
-    alignItems: 'center', justifyContent: 'center'
+    alignItems: 'center', justifyContent: 'center',
   },
   navRowText: { fontSize: 14, color: colors.foreground, ...fonts.medium },
   navRowTextLg: { fontSize: 15, color: colors.foreground, ...fonts.semibold },

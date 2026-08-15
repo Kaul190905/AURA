@@ -14,7 +14,7 @@ export type AppNotification = {
 export type AppScreen =
   | 'login' | 'welcome' | 'profile' | 'home' | 'crisis'
   | 'recovery' | 'settings' | 'speech' | 'plans'
-  | 'caretaker-gate' | 'caretaker' | 'caretaker-home'
+  | 'caretaker' | 'caretaker-home'
   | 'user_profile' | 'accessibility' | 'device' | 'privacy' | 'onboarding' | 'caregiver_manager';
 
 export type AppState = {
