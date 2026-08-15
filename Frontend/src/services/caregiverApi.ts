@@ -18,7 +18,8 @@ export interface CaregiverUpdate {
 export interface CaregiverResponse extends CaregiverBase {
   id: string;
   user_id: string;
-  caregiver_id: string;
+  caregiver_id: string | null;
+  caregiver_email?: string | null;
   status: 'pending' | 'active' | 'revoked';
   created_at: string;
   updated_at: string;

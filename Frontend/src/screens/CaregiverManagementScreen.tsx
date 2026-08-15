@@ -71,7 +71,7 @@ export default function CaregiverManagementScreen() {
 
   const renderItem = ({ item }: { item: CaregiverResponse }) => (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>Caregiver ID: {item.caregiver_id}</Text>
+      <Text style={styles.cardTitle}>{item.caregiver_email ? `Caregiver Email: ${item.caregiver_email}` : `Caregiver ID: ${item.caregiver_id}`}</Text>
       <Text style={styles.status}>Status: {item.status.toUpperCase()}</Text>
       
       {item.status !== 'revoked' && (

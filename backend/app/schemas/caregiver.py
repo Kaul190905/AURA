@@ -17,7 +17,8 @@ class CaregiverUpdate(BaseModel):
 class CaregiverResponse(CaregiverBase):
     id: UUID
     user_id: UUID
-    caregiver_id: UUID
+    caregiver_id: Optional[UUID] = None
+    caregiver_email: Optional[str] = None
     status: str
     created_at: datetime
     updated_at: datetime
