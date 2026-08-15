@@ -5,7 +5,7 @@ import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 import { riskColor } from '../utils';
-import { connectCaregiverIoTData } from '../services/caregiverApi';
+import { connectCaregiverIoTData, getPendingInvitations, acceptInvitation, CaregiverResponse } from '../services/caregiverApi';
 
 function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string }) {
   const [bpm, setBpm] = useState(82);
@@ -59,6 +59,31 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
     darkMode, setIsNotificationCenterOpen, isCaregiverOnline
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
+  const [pendingInvitations, setPendingInvitations] = useState<CaregiverResponse[]>([]);
+
+  const fetchPendingInvitations = async () => {
+    try {
+      const pending = await getPendingInvitations();
+      setPendingInvitations(pending);
+    } catch (e) {
+      console.warn('Failed to fetch pending invitations:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingInvitations();
+  }, []);
+
+  const handleAccept = async (assignmentId: string) => {
+    try {
+      await acceptInvitation(assignmentId);
+      // Immediately remove from list
+      setPendingInvitations(prev => prev.filter(inv => inv.id !== assignmentId));
+      // In a real app we might trigger a refresh of mockUsers via context here, but they refresh every 30s anyway.
+    } catch (e: any) {
+      alert('Failed to accept invitation: ' + e.message);
+    }
+  };
 
   const bgStyle = darkMode ? { backgroundColor: '#000000' } : { backgroundColor: colors.background };
   const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : { backgroundColor: '#fff' };
@@ -127,6 +152,24 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+        {/* Pending Invitations Section */}
+        {pendingInvitations.length > 0 && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, textStyle]}>Pending Invitations</Text>
+            {pendingInvitations.map(inv => (
+              <View key={inv.id} style={[styles.pendingCard, cardStyle, neuSm]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.pendingTitle, textStyle]}>New Request</Text>
+                  <Text style={[styles.pendingText, subTextStyle]}>You have been invited to be a caregiver by User ID: {inv.user_id}</Text>
+                </View>
+                <TouchableOpacity style={styles.acceptBtn} onPress={() => handleAccept(inv.id)}>
+                  <Text style={styles.acceptBtnText}>Accept</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Overview Section */}
         <View style={styles.section}>
@@ -227,6 +270,12 @@ const styles = StyleSheet.create({
 
   section: {},
   sectionTitle: { fontSize: 16, ...fonts.bold, marginBottom: 12 },
+
+  pendingCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: radius.lg, marginBottom: 12 },
+  pendingTitle: { fontSize: 15, ...fonts.bold, marginBottom: 4 },
+  pendingText: { fontSize: 12 },
+  acceptBtn: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, marginLeft: 12 },
+  acceptBtnText: { color: '#fff', fontSize: 14, ...fonts.bold },
 
   overviewGrid: { flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
   statCard: {
