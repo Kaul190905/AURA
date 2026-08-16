@@ -48,14 +48,16 @@ export default function CaregiverManagementScreen() {
   const handleRevoke = async (assignmentId: string) => {
     Alert.alert('Confirm Revocation', 'Are you sure you want to revoke this caregiver?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Revoke', style: 'destructive', onPress: async () => {
-        try {
-          await revokeCaregiver(assignmentId);
-          fetchCaregivers();
-        } catch (err: any) {
-          Alert.alert('Error', err.message || 'Failed to revoke caregiver');
+      {
+        text: 'Revoke', style: 'destructive', onPress: async () => {
+          try {
+            await revokeCaregiver(assignmentId);
+            fetchCaregivers();
+          } catch (err: any) {
+            Alert.alert('Error', err.message || 'Failed to revoke caregiver');
+          }
         }
-      }},
+      },
     ]);
   };
 
@@ -73,12 +75,11 @@ export default function CaregiverManagementScreen() {
     <View style={styles.card}>
       <Text style={styles.cardTitle}>{item.caregiver_email ? `Caregiver Email: ${item.caregiver_email}` : `Caregiver ID: ${item.caregiver_id}`}</Text>
       <Text style={styles.status}>Status: {item.status.toUpperCase()}</Text>
-      
       {item.status !== 'revoked' && (
         <>
           <View style={styles.toggleRow}>
             <Text style={styles.toggleText}>View Preferences</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.toggleBtn, item.can_view_preferences ? styles.toggleOn : styles.toggleOff]}
               onPress={() => togglePermission(item.id, 'can_view_preferences', item.can_view_preferences)}
             >
@@ -88,7 +89,7 @@ export default function CaregiverManagementScreen() {
 
           <View style={styles.toggleRow}>
             <Text style={styles.toggleText}>View Speech Diary</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.toggleBtn, item.can_view_speech_diary ? styles.toggleOn : styles.toggleOff]}
               onPress={() => togglePermission(item.id, 'can_view_speech_diary', item.can_view_speech_diary)}
             >
@@ -114,7 +115,6 @@ export default function CaregiverManagementScreen() {
         </TouchableOpacity>
         <Text style={styles.header}>Caregiver Management</Text>
       </View>
-      
       <View style={styles.inviteSection}>
         <TextInput
           style={styles.input}
@@ -245,5 +245,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     color: '#666',
-  }
+  },
 });
