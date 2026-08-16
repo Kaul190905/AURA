@@ -19,6 +19,11 @@ class WellnessService:
         checkin = await self.wellness_checkin_repo.create(user_id, data_in)
         return WellnessCheckinResponse.model_validate(checkin)
 
+    async def get_recent_checkins(self, user_id: UUID) -> list:
+        """Get recent checkins for the user."""
+        checkins = await self.wellness_checkin_repo.get_recent(user_id)
+        return [WellnessCheckinResponse.model_validate(c) for c in checkins]
+
     async def get_score(self, user_id: UUID) -> Dict[str, Any]:
         """Compute the current aggregate wellness score and its components."""
         breakdown = await self.wellness_engine.get_wellness_breakdown(user_id)
