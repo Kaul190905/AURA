@@ -98,7 +98,7 @@ async def get_user_sensor_data(
     assignment = Depends(require_active_caregiver_access),
     sensor_data_service = Depends(get_sensor_data_service)
 ):
-    return await sensor_data_service.get_sensor_data_for_user(target_user_id)
+    return await sensor_data_service.get_history(user_id=target_user_id)
 
 @router.get("/users/{target_user_id}/alerts")
 async def get_user_alerts(
@@ -106,7 +106,7 @@ async def get_user_alerts(
     assignment = Depends(require_active_caregiver_access),
     alert_service = Depends(get_alert_service)
 ):
-    return await alert_service.get_alerts_for_user(target_user_id)
+    return await alert_service.get_alerts(user_id=target_user_id)
 
 @router.get("/users/{target_user_id}/wellness")
 async def get_user_wellness(
@@ -114,7 +114,7 @@ async def get_user_wellness(
     assignment = Depends(require_active_caregiver_access),
     wellness_service = Depends(get_wellness_service)
 ):
-    return await wellness_service.get_wellness_checkins_for_user(target_user_id)
+    return await wellness_service.get_recent_checkins(target_user_id)
 
 @router.get("/users/{target_user_id}/strategies")
 async def get_user_strategies(
@@ -122,7 +122,7 @@ async def get_user_strategies(
     assignment = Depends(require_active_caregiver_access),
     strategy_service = Depends(get_strategy_service)
 ):
-    return await strategy_service.get_strategies_for_user(target_user_id)
+    return await strategy_service.get_user_strategies(target_user_id)
 
 @router.get("/users/{target_user_id}/accommodations")
 async def get_user_accommodations(
@@ -130,7 +130,7 @@ async def get_user_accommodations(
     assignment = Depends(require_active_caregiver_access),
     accommodation_service = Depends(get_accommodation_service)
 ):
-    return await accommodation_service.get_accommodations_for_user(target_user_id)
+    return await accommodation_service.get_user_accommodations(target_user_id)
 
 # ---------------------------------------------------------
 # SENSITIVE DATA ROUTES
