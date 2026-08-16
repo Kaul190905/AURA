@@ -37,5 +37,3 @@ class User(Base):
     wellness_checkins: Mapped[List["WellnessCheckin"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     strategies: Mapped[List["Strategy"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     accommodations: Mapped[List["Accommodation"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    speech_diary_entries: Mapped[List["SpeechDiaryEntry"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    routines: Mapped[List["Routine"]] = relationship(back_populates="user", cascade="all, delete-orphan")
