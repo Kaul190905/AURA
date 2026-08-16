@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
@@ -34,20 +34,20 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
 
   const textStyle = darkMode ? { color: '#fff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
-  
+
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, padding: 8, backgroundColor: darkMode ? '#333' : '#f8f9fa', borderRadius: 8 }}>
-      <View style={{ alignItems: 'center' }}>
-        <Text style={[subTextStyle, { fontSize: 10, ...fonts.bold }]}>BPM</Text>
-        <Text style={[textStyle, { fontSize: 13, ...fonts.bold, color: bpm > 100 ? colors.riskHigh : textStyle.color }]}>{bpm}</Text>
+    <View style={[styles.sensorRow, darkMode ? styles.bgDark333 : styles.bgLightF8]}>
+      <View style={styles.alignCenter}>
+        <Text style={[subTextStyle, styles.font10Bold]}>BPM</Text>
+        <Text style={[textStyle, styles.font13Bold, bpm > 100 ? styles.colorRiskHigh : undefined]}>{bpm}</Text>
       </View>
-      <View style={{ alignItems: 'center' }}>
-        <Text style={[subTextStyle, { fontSize: 10, ...fonts.bold }]}>TEMP</Text>
-        <Text style={[textStyle, { fontSize: 13, ...fonts.bold }]}>{temp}°</Text>
+      <View style={styles.alignCenter}>
+        <Text style={[subTextStyle, styles.font10Bold]}>TEMP</Text>
+        <Text style={[textStyle, styles.font13Bold]}>{temp}°</Text>
       </View>
-      <View style={{ alignItems: 'center' }}>
-        <Text style={[subTextStyle, { fontSize: 10, ...fonts.bold }]}>NOISE</Text>
-        <Text style={[textStyle, { fontSize: 13, ...fonts.bold, color: soundLevel > 70 ? colors.riskMed : textStyle.color }]}>{soundLevel}dB</Text>
+      <View style={styles.alignCenter}>
+        <Text style={[subTextStyle, styles.font10Bold]}>NOISE</Text>
+        <Text style={[textStyle, styles.font13Bold, soundLevel > 70 ? styles.colorRiskMed : undefined]}>{soundLevel}dB</Text>
       </View>
     </View>
   );
@@ -56,7 +56,7 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
 export default function CaretakerDashboardScreen({ navigation }: any) {
   const {
     mockUsers, recentlyViewedUserIds, setRecentlyViewedUserIds,
-    darkMode, setIsNotificationCenterOpen, isCaregiverOnline
+    darkMode, setIsNotificationCenterOpen, isCaregiverOnline,
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [pendingInvitations, setPendingInvitations] = useState<CaregiverResponse[]>([]);
@@ -81,7 +81,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
       setPendingInvitations(prev => prev.filter(inv => inv.id !== assignmentId));
       // In a real app we might trigger a refresh of mockUsers via context here, but they refresh every 30s anyway.
     } catch (e: any) {
-      alert('Failed to accept invitation: ' + e.message);
+      Alert.alert('Error', 'Failed to accept invitation: ' + e.message);
     }
   };
 
@@ -109,7 +109,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
   const openUser = (id: string, initialTab: 'Overview' | 'Location' = 'Overview') => {
     const newIds = [id, ...recentlyViewedUserIds.filter(pid => pid !== id)];
     setRecentlyViewedUserIds(newIds.slice(0, 10));
-    
+
     if (initialTab === 'Location') {
       navigation.navigate('LocationMap', { userId: id });
     } else {
@@ -128,10 +128,10 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
 
       {/* Header */}
       <View style={styles.header}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={styles.headerTop}>
           <Text style={[styles.headerTitle, textStyle]}>Dashboard</Text>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={styles.headerStatus}>
             {isCaregiverOnline ? (
               <>
                 <View style={[styles.onlineDot, { backgroundColor: colors.primary }]} />
@@ -159,7 +159,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
             <Text style={[styles.sectionTitle, textStyle]}>Pending Invitations</Text>
             {pendingInvitations.map(inv => (
               <View key={inv.id} style={[styles.pendingCard, cardStyle, neuSm]}>
-                <View style={{ flex: 1 }}>
+                <View style={styles.flex1}>
                   <Text style={[styles.pendingTitle, textStyle]}>New Request</Text>
                   <Text style={[styles.pendingText, subTextStyle]}>You have been invited to be a caregiver by User ID: {inv.user_id}</Text>
                 </View>
@@ -177,22 +177,22 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
           <View style={styles.overviewGrid}>
             <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Users', { filter: 'All' })}>
               <Text style={[styles.statLabel, { color: colors.primary }]}>Total Users</Text>
-              <Users size={20} color={colors.primary} style={{ marginVertical: 4 }} />
+              <Users size={20} color={colors.primary} style={styles.marginV4} />
               <Text style={[styles.statValue, { color: colors.primary }]}>{stats.total}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Users', { filter: 'Safe' })}>
               <Text style={[styles.statLabel, { color: colors.riskLow }]}>Safe</Text>
-              <Users size={20} color={colors.riskLow} style={{ marginVertical: 4 }} />
+              <Users size={20} color={colors.riskLow} style={styles.marginV4} />
               <Text style={[styles.statValue, { color: colors.riskLow }]}>{stats.safe}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Users', { filter: 'Need Attention' })}>
               <Text style={[styles.statLabel, { color: colors.riskMed }]}>Need Attention</Text>
-              <Users size={20} color={colors.riskMed} style={{ marginVertical: 4 }} />
+              <Users size={20} color={colors.riskMed} style={styles.marginV4} />
               <Text style={[styles.statValue, { color: colors.riskMed }]}>{stats.needAttention}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.statCard, cardStyle]} onPress={() => navigation.navigate('Users', { filter: 'Critical' })}>
               <Text style={[styles.statLabel, { color: colors.riskHigh }]}>Critical</Text>
-              <Users size={20} color={colors.riskHigh} style={{ marginVertical: 4 }} />
+              <Users size={20} color={colors.riskHigh} style={styles.marginV4} />
               <Text style={[styles.statValue, { color: colors.riskHigh }]}>{stats.critical}</Text>
             </TouchableOpacity>
           </View>
@@ -202,9 +202,9 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
         {criticalUsers.length > 0 && (
           <View style={[styles.criticalContainer, neuSm, cardStyle]}>
             <View style={styles.criticalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={styles.criticalHeaderLeft}>
                 <AlertTriangle size={20} color={colors.riskHigh} />
-                <Text style={[styles.sectionTitle, { color: colors.riskHigh, marginBottom: 0 }]}>Critical Users</Text>
+                <Text style={[styles.sectionTitle, styles.criticalTitle]}>Critical Users</Text>
               </View>
               <View style={[styles.criticalCountBadge, { backgroundColor: `${colors.riskHigh}15` }]}>
                 <Text style={[styles.criticalCountText, { color: colors.riskHigh }]}>{stats.critical + stats.needAttention}</Text>
@@ -218,15 +218,15 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
                   <View style={[styles.avatarSm, { backgroundColor: `${rColor}20` }]}>
                     <User size={20} color={rColor} />
                   </View>
-                  <View style={[styles.alertInfo, { borderBottomColor: darkMode ? '#333' : '#f0f0f0' }]}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={[styles.alertInfo, darkMode ? styles.borderDark333 : styles.borderLightF0]}>
+                    <View style={styles.rowBetweenCenter}>
                       <Text style={[styles.alertName, textStyle]}>{user.name}</Text>
                       <View style={[styles.riskBadge, { backgroundColor: `${rColor}15` }]}>
                         <Text style={[styles.riskBadgeText, { color: rColor }]}>{getStatusText(user)}</Text>
                       </View>
                     </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, marginBottom: 4 }}>
-                      <Text style={[styles.alertLocation, textStyle, { fontWeight: 'bold' }]}>📍 {user.phoneLocation}</Text>
+                    <View style={styles.alertLocationRow}>
+                      <Text style={[styles.alertLocation, textStyle, styles.fontWeightBold]}>📍 {user.phoneLocation}</Text>
                       <Text style={[styles.alertTime, subTextStyle]}>{user.lastUpdated}</Text>
                     </View>
                     <Text style={[styles.alertCondition, subTextStyle]}>
@@ -238,7 +238,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
               );
             })}
 
-            <TouchableOpacity style={[styles.viewAllBtn, { borderTopColor: darkMode ? '#333' : '#f0f0f0' }]} onPress={() => navigation.navigate('Users', { filter: 'Critical' })}>
+            <TouchableOpacity style={[styles.viewAllBtn, darkMode ? styles.borderTopDark333 : styles.borderTopLightF0]} onPress={() => navigation.navigate('Users', { filter: 'Critical' })}>
               <Text style={styles.viewAllText}>View All Alerts</Text>
             </TouchableOpacity>
           </View>
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md
+    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
   },
   superText: { fontSize: 10, ...fonts.bold, letterSpacing: 0.5 },
   onlineBadge: { backgroundColor: `${colors.primary}20`, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1, padding: 12, borderRadius: radius.lg,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   statLabel: { fontSize: 10, ...fonts.bold, textAlign: 'center', height: 28 },
   statValue: { fontSize: 20, ...fonts.bold },
@@ -305,4 +305,26 @@ const styles = StyleSheet.create({
   viewAllText: { color: colors.primary, ...fonts.bold, fontSize: 14 },
 
 
+
+  sensorRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, padding: 8, borderRadius: 8 },
+  bgDark333: { backgroundColor: '#333' },
+  bgLightF8: { backgroundColor: '#f8f9fa' },
+  alignCenter: { alignItems: 'center' },
+  font10Bold: { fontSize: 10, ...fonts.bold },
+  font13Bold: { fontSize: 13, ...fonts.bold },
+  colorRiskHigh: { color: colors.riskHigh },
+  colorRiskMed: { color: colors.riskMed },
+  headerTop: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerStatus: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  flex1: { flex: 1 },
+  marginV4: { marginVertical: 4 },
+  criticalHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  criticalTitle: { color: colors.riskHigh, marginBottom: 0 },
+  borderDark333: { borderBottomColor: '#333' },
+  borderLightF0: { borderBottomColor: '#f0f0f0' },
+  borderTopDark333: { borderTopColor: '#333' },
+  borderTopLightF0: { borderTopColor: '#f0f0f0' },
+  rowBetweenCenter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  alertLocationRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, marginBottom: 4 },
+  fontWeightBold: { fontWeight: 'bold' },
 });
