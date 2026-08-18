@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, KeyboardAvoidingView, Platform, Animated,
-  ScrollView,
+  ScrollView, Image
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, Globe, User, Heart } from 'lucide-react-native';
@@ -118,7 +118,11 @@ export default function LoginScreen({ onSuccess }: Props) {
             <Animated.View
               style={[styles.breatheRing, { transform: [{ scale: breathe }] }]}
             />
-            <Star size={40} color={colors.primary} strokeWidth={1.8} />
+            <Image 
+              source={require('../../assets/AURA.jpg')} 
+              style={{ width: 40, height: 40, borderRadius: 20 }} 
+              resizeMode="cover" 
+            />
           </View>
 
           <Text style={styles.appName}>AURA</Text>

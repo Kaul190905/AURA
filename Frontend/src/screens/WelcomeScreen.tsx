@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useContext } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Animated,
+  View, Text, StyleSheet, TouchableOpacity, Animated, Image
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Star, Shield, User, Heart } from 'lucide-react-native';
@@ -36,7 +36,11 @@ export default function WelcomeScreen({ onNext }: Props) {
       <View style={styles.top}>
         <View style={styles.logoOuter}>
           <Animated.View style={[styles.breatheRing, { transform: [{ scale: breathe }] }]} />
-          <Star size={44} color={colors.primary} strokeWidth={1.8} />
+          <Image 
+            source={require('../../assets/AURA.jpg')} 
+            style={{ width: 44, height: 44, borderRadius: 22 }} 
+            resizeMode="cover" 
+          />
         </View>
 
         <View style={styles.textBlock}>

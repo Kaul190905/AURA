@@ -1,6 +1,6 @@
 {
-  "name": "AuraMobile",
-  "displayName": "AuraMobile",
+  "name": "AURA",
+  "displayName": "AURA",
   "extra": {
     "eas": {
       "projectId": "f1408090-c293-44ac-a9e7-8c15e6e12fe4"
@@ -9,8 +9,18 @@
   "owner": "sakthiselvams-team",
   "slug": "aura",
   "runtimeVersion": "1.0.0",
+  "icon": "./assets/AURA.jpg",
+  "splash": {
+    "image": "./assets/AURA.jpg",
+    "resizeMode": "contain",
+    "backgroundColor": "#ffffff"
+  },
   "android": {
-    "package": "com.aura.mobile"
+    "package": "com.aura.mobile",
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/AURA.jpg",
+      "backgroundColor": "#ffffff"
+    }
   },
   "plugins": [
     "react-native-ble-plx"
