@@ -40,6 +40,7 @@ async def trigger_sos(
     # 1. Create Critical Alert in DB
     alert_data = AlertCreate(
         user_id=str(req.user_id),
+        type="SOS",
         severity="critical",
         message="🚨 EMERGENCY SOS TRIGGERED 🚨"
     )
