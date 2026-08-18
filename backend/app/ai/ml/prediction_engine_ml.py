@@ -8,8 +8,10 @@ import numpy as np
 from app.ai.prediction_engine import RulePredictionEngine
 from app.ai.ml.prediction_features import TRAJECTORY_FEATURE_KEYS, build_trajectory_features
 
+from pathlib import Path
+_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_MODEL_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "artifacts", "prediction_model.joblib"
+    str(_ROOT), "models", "prediction_model.joblib"
 )
 
 

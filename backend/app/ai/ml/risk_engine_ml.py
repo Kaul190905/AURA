@@ -10,8 +10,10 @@ from app.ai.risk_engine import IRiskEngine
 from app.ai.ml.risk_features import RISK_FEATURE_KEYS, build_risk_feature_dict
 from app.repositories.sensor_data_repository import SensorDataRepository
 
+from pathlib import Path
+_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_MODEL_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "artifacts", "risk_model.joblib"
+    str(_ROOT), "models", "risk_model.joblib"
 )
 
 # Calm/neutral baseline used to weight feature importances into per-prediction

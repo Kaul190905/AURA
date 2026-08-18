@@ -8,8 +8,10 @@ import numpy as np
 from app.ai.wellness_engine import RuleWellnessEngine
 from app.ai.ml.wellness_features import WELLNESS_FEATURE_KEYS, build_wellness_feature_dict
 
+from pathlib import Path
+_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_MODEL_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "artifacts", "wellness_model.joblib"
+    str(_ROOT), "models", "wellness_model.joblib"
 )
 
 
