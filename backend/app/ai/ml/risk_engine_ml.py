@@ -70,7 +70,7 @@ class MLRiskEngine(IRiskEngine):
                 )
             artifact = joblib.load(model_path)
             self.model = artifact["model"]
-            self.scaler = artifact["scaler"]
+            self.scaler = artifact.get("scaler")
 
     @staticmethod
     def _determine_level(score: float) -> str:
@@ -83,7 +83,7 @@ class MLRiskEngine(IRiskEngine):
     async def evaluate_current_risk(self, telemetry: Dict[str, Any], preferences: Dict[str, Any]) -> Dict[str, Any]:
         feats = build_risk_feature_dict(telemetry, preferences)
         vector = np.array([[feats[k] for k in RISK_FEATURE_KEYS]], dtype=float)
-        scaled = self.scaler.transform(vector)
+        scaled = self.scaler.transform(vector) if self.scaler else vector
 
         raw_score = float(self.model.predict(scaled)[0])
         score = round(min(max(raw_score, 0.0), 100.0), 1)

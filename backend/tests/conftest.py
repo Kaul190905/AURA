@@ -5,6 +5,9 @@ from uuid import uuid4
 
 from httpx import AsyncClient, ASGITransport
 
+import os
+os.environ["IS_TESTING"] = "1"
+
 from app.main import app
 from app.core.security import get_current_user
 

@@ -98,7 +98,7 @@ async def get_alerts(
     end_date: Optional[datetime] = Query(None, description="Filter by end date"),
     skip: int = Query(0, ge=0, description="Pagination skip"),
     limit: int = Query(100, ge=1, le=1000, description="Pagination limit"),
-    sort_by: str = Query("desc", regex="^(asc|desc)$", description="Sort by timestamp (asc/desc)"),
+    sort_by: str = Query("desc", pattern="^(asc|desc)$", description="Sort by timestamp (asc/desc)"),
     alert_service: AlertService = Depends(get_alert_service)
 ):
     """

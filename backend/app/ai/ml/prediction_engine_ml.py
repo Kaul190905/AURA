@@ -50,7 +50,7 @@ class MLPredictionEngine(RulePredictionEngine):
                 )
             artifact = joblib.load(model_path)
             self.model = artifact["model"]
-            self.scaler = artifact["scaler"]
+            self.scaler = artifact.get("scaler")
 
     async def forecast_overload_event(self, user_id: UUID, current_trajectory: Dict[str, Any]) -> Dict[str, Any]:
         risk_scores = [v for v in (current_trajectory.get("risk_scores") or []) if v is not None]
@@ -65,7 +65,7 @@ class MLPredictionEngine(RulePredictionEngine):
 
         feats = build_trajectory_features(risk_scores)
         vector = np.array([[feats[k] for k in TRAJECTORY_FEATURE_KEYS]], dtype=float)
-        scaled = self.scaler.transform(vector)
+        scaled = self.scaler.transform(vector) if self.scaler else vector
 
         raw_probability = float(self.model.predict(scaled)[0])
         probability = round(min(max(raw_probability, 0.0), 1.0), 3)

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 from uuid import UUID, uuid4
 
 from app.main import app
+from app.schemas.sensor_data import SensorDataAnalysisResponse, SensorDataResponse
 from app.api.dependencies.services import get_sensor_data_service
 
 
@@ -33,20 +34,20 @@ def make_sensor_data(user_id):
 
 
 def make_analysis(user_id, risk_level="LOW", risk_score=10.0, reasons=None, recommendations=None):
-    return {
-        "sensor_data": make_sensor_data(user_id),
-        "risk_score": risk_score,
-        "risk_level": risk_level,
-        "reasons": reasons or ["All metrics are within optimal and preferred ranges."],
-        "recommendations": recommendations or [],
-    }
+    return SensorDataAnalysisResponse(
+        sensor_data=SensorDataResponse(**make_sensor_data(user_id)),
+        risk_score=risk_score,
+        risk_level=risk_level,
+        reasons=reasons or ["All metrics are within optimal and preferred ranges."],
+        recommendations=recommendations or [],
+    )
 
 
 # ---- submit_sensor_data ----
 
 @pytest.mark.asyncio
-async def test_submit_sensor_data_success(client, mock_sensor_service):
-    user_id = uuid4()
+async def test_submit_sensor_data_success(client, override_auth, mock_sensor_service):
+    user_id = override_auth.id
     mock_sensor_service.create_sensor_data.return_value = make_analysis(user_id)
 
     resp = await client.post(
@@ -63,8 +64,8 @@ async def test_submit_sensor_data_success(client, mock_sensor_service):
 
 
 @pytest.mark.asyncio
-async def test_submit_sensor_data_high_risk_includes_recommendations(client, mock_sensor_service):
-    user_id = uuid4()
+async def test_submit_sensor_data_high_risk_includes_recommendations(client, override_auth, mock_sensor_service):
+    user_id = override_auth.id
     mock_sensor_service.create_sensor_data.return_value = make_analysis(
         user_id,
         risk_level="HIGH",
@@ -82,8 +83,8 @@ async def test_submit_sensor_data_high_risk_includes_recommendations(client, moc
 
 
 @pytest.mark.asyncio
-async def test_submit_sensor_data_without_dev_user_id_generates_random_uuid(client, mock_sensor_service):
-    mock_sensor_service.create_sensor_data.return_value = make_analysis(uuid4())
+async def test_submit_sensor_data_without_dev_user_id_generates_random_uuid(client, override_auth, mock_sensor_service):
+    mock_sensor_service.create_sensor_data.return_value = make_analysis(override_auth.id)
 
     resp = await client.post("/api/v1/sensor-data/", json={})
 
@@ -93,7 +94,7 @@ async def test_submit_sensor_data_without_dev_user_id_generates_random_uuid(clie
 
 
 @pytest.mark.asyncio
-async def test_submit_sensor_data_invalid_payload_returns_422(client, mock_sensor_service):
+async def test_submit_sensor_data_invalid_payload_returns_422(client, override_auth, mock_sensor_service):
     resp = await client.post("/api/v1/sensor-data/", json={"heart_rate": "not-a-number"})
     assert resp.status_code == 422
     mock_sensor_service.create_sensor_data.assert_not_awaited()

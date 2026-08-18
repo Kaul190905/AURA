@@ -20,6 +20,12 @@ class SensorDataRepository:
         
         new_data = SensorData(**data_dict)
         self.db.add(new_data)
+        
+        if data_in.latitude is not None and data_in.longitude is not None:
+            from app.domain.models.location import UserLocation
+            loc = UserLocation(user_id=user_id, latitude=data_in.latitude, longitude=data_in.longitude)
+            await self.db.merge(loc)
+            
         await self.db.commit()
         await self.db.refresh(new_data)
         return new_data

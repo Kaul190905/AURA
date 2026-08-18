@@ -54,7 +54,7 @@ async def test_empty_eligible_list_skips_llm_call_entirely(rule_engine):
 @pytest.mark.asyncio
 async def test_valid_llm_response_is_used(rule_engine):
     eligible = await rule_engine.generate_recommendations(uuid4(), HIGH_RISK_CONTEXT)
-    personalized = [f"Personalized: {r}" for r in eligible]
+    personalized = [{"title": f"Personalized: {r['title']}", "description": f"Personalized: {r['description']}"} for r in eligible]
 
     mock_client = AsyncMock()
     mock_client.chat.completions.create.return_value = _make_groq_response(json.dumps(personalized))
@@ -69,7 +69,7 @@ async def test_valid_llm_response_is_used(rule_engine):
 @pytest.mark.asyncio
 async def test_llm_response_wrapped_in_code_fence_is_parsed(rule_engine):
     eligible = await rule_engine.generate_recommendations(uuid4(), HIGH_RISK_CONTEXT)
-    personalized = [f"Personalized: {r}" for r in eligible]
+    personalized = [{"title": f"Personalized: {r['title']}", "description": f"Personalized: {r['description']}"} for r in eligible]
     fenced = "```json\n" + json.dumps(personalized) + "\n```"
 
     mock_client = AsyncMock()
@@ -90,7 +90,7 @@ async def test_wrong_count_falls_back_to_rule_text(rule_engine):
     mock_client = AsyncMock()
     # Model invented an extra recommendation not in the approved set.
     mock_client.chat.completions.create.return_value = _make_groq_response(
-        json.dumps(eligible + ["Take unapproved medication X."])
+        json.dumps(eligible + [{"title": "Bad", "description": "Take unapproved medication X."}])
     )
 
     engine = AIRecommendationEngine(rule_engine=rule_engine, client=mock_client)

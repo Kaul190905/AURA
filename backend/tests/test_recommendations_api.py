@@ -21,7 +21,7 @@ async def test_get_recommendations_success(client, mock_recommendation_service):
         "user_id": user_id,
         "risk_score": 45.0,
         "risk_level": "MEDIUM",
-        "recommendations": ["Take a short break in a quieter space."],
+        "recommendations": [{"title": "Take a Break", "description": "Take a short break in a quieter space."}],
         "method": "RecommendationEngine",
     }
 
@@ -41,7 +41,7 @@ async def test_get_recommendations_reports_ai_method_when_used(client, mock_reco
         "user_id": user_id,
         "risk_score": 80.0,
         "risk_level": "HIGH",
-        "recommendations": ["Your surroundings are loud right now — noise-cancelling headphones could help."],
+        "recommendations": [{"title": "Headphones", "description": "Your surroundings are loud right now — noise-cancelling headphones could help."}],
         "method": "AIRecommendationEngine",
     }
 

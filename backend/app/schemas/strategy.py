@@ -1,11 +1,11 @@
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from uuid import UUID
 
 class StrategyBase(BaseModel):
-    title: str = Field(..., example="Put on noise-cancelling headphones")
-    trigger: str = Field(..., example="sound")
+    title: str = Field(..., json_schema_extra={"example": "Put on noise-cancelling headphones"})
+    trigger: str = Field(..., json_schema_extra={"example": "sound"})
     helped: int = Field(default=0)
     tried: int = Field(default=0)
 
@@ -24,5 +24,4 @@ class StrategyResponse(StrategyBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
