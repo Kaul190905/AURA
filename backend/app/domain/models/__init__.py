@@ -8,9 +8,11 @@ from app.domain.models.wellness_checkin import WellnessCheckin
 from app.domain.models.strategy import Strategy
 from app.domain.models.accommodation import Accommodation
 from app.domain.models.caregiver import CaregiverAssignment
+from app.domain.models.location import UserLocation
+from app.domain.models.push_token import UserPushToken
 
 __all__ = [
     "User", "SensorData", "Alert", "Recommendation", "OverloadEvent",
     "UserPreference", "WellnessCheckin", "Strategy", "Accommodation",
-    "CaregiverAssignment"
+    "CaregiverAssignment", "UserLocation", "UserPushToken"
 ]

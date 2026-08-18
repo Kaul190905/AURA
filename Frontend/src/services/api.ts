@@ -346,3 +346,10 @@ export async function getWellnessScore(userId: string): Promise<WellnessScoreRes
   return res.json();
 }
 
+// ── Locations ─────────────────────────────────────────────────────────────────
+
+export async function getUserHighRiskLocations(userId: string) {
+  const res = await authFetch(`/locations/high-risk?user_id=${userId}`);
+  return res.json();
+}
+

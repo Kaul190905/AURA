@@ -16,6 +16,8 @@ import { computeRisk } from './src/utils';
 import { getAssignedUsers, getCaregiverUserPreferences, getCaregiverUserSensorData } from './src/services/caregiverApi';
 import { supabase } from './src/services/supabaseClient';
 import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEvents, getAlerts } from './src/services/api';
+import { registerForPushNotificationsAsync, scheduleLocalNotification } from './src/services/NotificationService';
+import { startLocationTracking, stopLocationTracking } from './src/services/LocationService';
 import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
 
 import WelcomeScreen from './src/screens/WelcomeScreen';
@@ -232,8 +234,12 @@ export default function App() {
       setStrategies([]);
       setHistory([]);
       setNotifications([]);
+      stopLocationTracking();
       return;
     }
+
+    registerForPushNotificationsAsync();
+    startLocationTracking();
 
     const loadInitialData = async () => {
       try {
@@ -534,6 +540,8 @@ export default function App() {
         type: 'alert',
       }, ...prev]);
 
+      scheduleLocalNotification('High Noise Alert', `Noise level reached ${noise}dB, exceeding safe limits.`);
+
       setPopupState({ visible: true, message: `Noise level reached ${noise}dB. An alert has been sent to your caretaker.` });
       setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
     } else if (noise !== null && noise <= 75 && highNoiseAlerted) {
@@ -555,6 +563,8 @@ export default function App() {
         read: false,
         type: 'alert',
       }, ...prev]);
+
+      scheduleLocalNotification('Dangerous Temperature Alert', `Core body temperature is ${temperature}°F (${condition}).`);
 
       setPopupState({ visible: true, message: `Core temperature is ${temperature}°F. An alert has been sent to your caretaker.` });
       setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);

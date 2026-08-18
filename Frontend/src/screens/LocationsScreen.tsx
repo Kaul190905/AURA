@@ -1,22 +1,33 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState, useContext } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, MapPin } from 'lucide-react-native';
 import { colors, fonts, spacing, radius } from '../theme';
+import { AppContext } from '../AppContext';
+import { getUserHighRiskLocations } from '../services/api';
 
-// Mock location data for the prototype until backend supports spatial queries
-const MOCK_LOCATIONS = [
-  { id: '1', name: 'Downtown Transit Center', riskScore: 8, visits: 12, reason: 'High sustained noise levels' },
-  { id: '2', name: 'University Cafeteria', riskScore: 7, visits: 45, reason: 'Crowded, unpredictable noise' },
-  { id: '3', name: 'Shopping Mall', riskScore: 6, visits: 8, reason: 'Bright lights, echoing' },
-];
+
 
 export default function LocationsScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
+  const { userId } = useContext(AppContext);
+  const [locations, setLocations] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (userId) {
+      getUserHighRiskLocations(userId)
+        .then(data => {
+          if (Array.isArray(data)) {
+            setLocations(data);
+          }
+        })
+        .catch(err => console.warn('Failed to fetch locations', err));
+    }
+  }, [userId]);
 
   const sortedLocations = useMemo(() => {
-    return [...MOCK_LOCATIONS].sort((a, b) => b.riskScore - a.riskScore);
-  }, []);
+    return [...locations].sort((a, b) => b.riskScore - a.riskScore);
+  }, [locations]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>

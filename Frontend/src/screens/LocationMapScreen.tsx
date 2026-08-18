@@ -1,10 +1,11 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, MapPin } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing } from 'react-native-reanimated';
 import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { getCaregiverUserLocation } from '../services/caregiverApi';
 
 export default function LocationMapScreen({ navigation, route }: any) {
   const { mockUsers, darkMode } = useContext(AppContext);
@@ -15,6 +16,20 @@ export default function LocationMapScreen({ navigation, route }: any) {
 
   const pulseScale = useSharedValue(1);
   const pulseOpacity = useSharedValue(0.8);
+
+  const [locationData, setLocationData] = useState<{ latitude: number, longitude: number, updated_at: string } | null>(null);
+
+  useEffect(() => {
+    if (userId) {
+      getCaregiverUserLocation(userId)
+        .then(data => {
+          if (data && data.latitude) {
+            setLocationData(data);
+          }
+        })
+        .catch(err => console.warn('Failed to fetch user location', err));
+    }
+  }, [userId]);
 
   useEffect(() => {
     pulseScale.value = withRepeat(
@@ -87,8 +102,12 @@ export default function LocationMapScreen({ navigation, route }: any) {
           </View>
 
           <View style={[styles.mapOverlayLabel, cardStyle, neuSm]}>
-            <Text style={[styles.mapOverlayText, textStyle]}>{connectedUser.phoneLocation || 'Unknown Location'}</Text>
-            <Text style={[styles.mapOverlaySub, subTextStyle]}>Lat: 34.0522  •  Lng: -118.2437</Text>
+            <Text style={[styles.mapOverlayText, textStyle]}>{connectedUser.phoneLocation || 'Current Location'}</Text>
+            <Text style={[styles.mapOverlaySub, subTextStyle]}>
+              {locationData 
+                ? `Lat: ${locationData.latitude.toFixed(4)}  •  Lng: ${locationData.longitude.toFixed(4)}`
+                : 'Waiting for GPS signal...'}
+            </Text>
           </View>
         </View>
 
@@ -102,7 +121,9 @@ export default function LocationMapScreen({ navigation, route }: any) {
           </View>
           <View style={[styles.compactRow, { marginBottom: 0 }]}>
             <Text style={[styles.infoLabel, subTextStyle]}>Last Updated</Text>
-            <Text style={[styles.infoValue, textStyle]}>{connectedUser.lastUpdated || 'Just now'}</Text>
+            <Text style={[styles.infoValue, textStyle]}>
+              {locationData ? new Date(locationData.updated_at).toLocaleTimeString() : (connectedUser.lastUpdated || 'Just now')}
+            </Text>
           </View>
         </View>
       </View>

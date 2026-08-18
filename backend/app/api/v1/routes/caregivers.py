@@ -3,6 +3,7 @@ from typing import List, Dict
 from uuid import UUID
 
 from app.core.security import get_current_user
+from app.db.database import get_db
 from app.api.dependencies.services import get_caregiver_service, get_sensor_data_service, get_alert_service, get_wellness_service, get_strategy_service, get_accommodation_service, get_user_service
 from app.services.caregiver_service import CaregiverService
 from app.schemas.caregiver import CaregiverInviteRequest, CaregiverResponse, CaregiverUpdate
@@ -131,6 +132,21 @@ async def get_user_accommodations(
     accommodation_service = Depends(get_accommodation_service)
 ):
     return await accommodation_service.get_user_accommodations(target_user_id)
+
+@router.get("/users/{target_user_id}/location")
+async def get_user_location(
+    target_user_id: UUID,
+    assignment = Depends(require_active_caregiver_access),
+    db = Depends(get_db)
+):
+    from sqlalchemy import select
+    from app.domain.models.location import UserLocation
+    
+    result = await db.execute(select(UserLocation).where(UserLocation.user_id == target_user_id))
+    loc = result.scalars().first()
+    if loc:
+        return {"latitude": loc.latitude, "longitude": loc.longitude, "updated_at": loc.updated_at}
+    return {}
 
 # ---------------------------------------------------------
 # SENSITIVE DATA ROUTES

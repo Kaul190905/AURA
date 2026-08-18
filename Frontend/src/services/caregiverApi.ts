@@ -147,6 +147,11 @@ export async function getCaregiverUserPreferences(userId: string) {
   return res.json();
 }
 
+export async function getCaregiverUserLocation(userId: string) {
+  const res = await authFetch(`/caregivers/users/${userId}/location`);
+  return res.json();
+}
+
 // ── Real-Time IoT Data (WebSocket) ───────────────────────────────────────────
 
 export function connectCaregiverIoTData(userId: string, onMessage: (data: any) => void): WebSocket {
