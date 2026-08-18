@@ -6,12 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Star, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { triggerSosAlert } from '../services/api';
 
 interface Props { onExit: () => void; }
 
 export default function CrisisModeScreen({ onExit }: Props) {
   const styles = getStyles();
-  const { suggestions, reduceMotion } = useContext(AppContext);
+  const { suggestions, reduceMotion, userId } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
@@ -57,11 +58,20 @@ export default function CrisisModeScreen({ onExit }: Props) {
     return () => clearInterval(id);
   }, [running, onExit]);
 
-  const handleSos = () => {
-    setSosSent(true);
-    setTimeout(() => {
-      setSosSent(false);
-    }, 10000); // auto hide after 10 seconds
+  const handleSos = async () => {
+    try {
+      if (userId) {
+        await triggerSosAlert(userId);
+      }
+      setSosSent(true);
+      setTimeout(() => {
+        setSosSent(false);
+      }, 10000); // auto hide after 10 seconds
+    } catch (e) {
+      console.error('Failed to trigger SOS:', e);
+      setSosSent(true);
+      setTimeout(() => setSosSent(false), 5000);
+    }
   };
 
   const remaining = 300 - seconds;

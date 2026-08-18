@@ -15,7 +15,7 @@ import { computeRisk } from './src/utils';
 // Backend services
 import { getAssignedUsers, getCaregiverUserPreferences, getCaregiverUserSensorData } from './src/services/caregiverApi';
 import { supabase } from './src/services/supabaseClient';
-import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEvents, getAlerts } from './src/services/api';
+import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEvents, getAlerts, triggerSosAlert } from './src/services/api';
 import { registerForPushNotificationsAsync, scheduleLocalNotification } from './src/services/NotificationService';
 import { startLocationTracking, stopLocationTracking } from './src/services/LocationService';
 import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
@@ -573,12 +573,23 @@ export default function App() {
     }
   }, [temperature, dangerousTempAlerted]);
 
-  const handleSos = () => {
-    setSosConfirmOpen(false);
-    setSosSent(true);
-    setTimeout(() => {
-      setSosSent(false);
-    }, 10000);
+  const handleSos = async () => {
+    try {
+      if (userId) {
+        await triggerSosAlert(userId);
+      }
+      setSosConfirmOpen(false);
+      setSosSent(true);
+      setTimeout(() => {
+        setSosSent(false);
+      }, 10000);
+    } catch (e) {
+      console.error('Failed to trigger SOS:', e);
+      // fallback if network fails
+      setSosConfirmOpen(false);
+      setSosSent(true);
+      setTimeout(() => setSosSent(false), 5000);
+    }
   };
 
   const appState: AppState = {

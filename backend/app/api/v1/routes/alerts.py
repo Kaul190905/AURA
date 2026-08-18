@@ -6,6 +6,14 @@ from uuid import UUID
 from app.schemas.alert import AlertCreate, AlertResponse, AlertFeedback
 from app.services.alert_service import AlertService
 from app.api.dependencies.services import get_alert_service
+from app.db.database import get_db
+from app.core.security import get_current_user
+from app.api.v1.routes.caregivers import manager
+from sqlalchemy import select
+from app.domain.models.push_token import UserPushToken
+from app.domain.models.caregiver import CaregiverAssignment
+import httpx
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -18,6 +26,69 @@ async def create_alert(
     Create a new alert.
     """
     return await alert_service.create_alert(data_in)
+
+class SosRequest(BaseModel):
+    user_id: UUID
+
+@router.post("/sos", summary="Trigger SOS Emergency Alert")
+async def trigger_sos(
+    req: SosRequest,
+    alert_service: AlertService = Depends(get_alert_service),
+    db = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    # 1. Create Critical Alert in DB
+    alert_data = AlertCreate(
+        user_id=str(req.user_id),
+        severity="critical",
+        message="🚨 EMERGENCY SOS TRIGGERED 🚨"
+    )
+    alert = await alert_service.create_alert(alert_data)
+
+    # 2. Broadcast via WebSocket to connected caregivers
+    await manager.broadcast_to_caregivers(req.user_id, {
+        "type": "SOS_ALERT",
+        "alert": alert.model_dump(mode="json")
+    })
+
+    # 3. Send Expo Push Notifications to all assigned caregivers
+    # Find all caregiver IDs assigned to this user
+    cg_result = await db.execute(
+        select(CaregiverAssignment.caregiver_id)
+        .where(CaregiverAssignment.user_id == req.user_id)
+        .where(CaregiverAssignment.status == "active")
+    )
+    caregiver_ids = cg_result.scalars().all()
+
+    if caregiver_ids:
+        # Get their push tokens
+        token_result = await db.execute(
+            select(UserPushToken.token)
+            .where(UserPushToken.user_id.in_(caregiver_ids))
+        )
+        tokens = token_result.scalars().all()
+
+        if tokens:
+            messages = []
+            for token in tokens:
+                messages.append({
+                    "to": token,
+                    "sound": "default",
+                    "title": "🚨 EMERGENCY SOS 🚨",
+                    "body": "Your assigned patient has triggered an SOS alert. Please check the dashboard immediately.",
+                    "data": {"type": "SOS_ALERT", "user_id": str(req.user_id)}
+                })
+            
+            async with httpx.AsyncClient() as client:
+                try:
+                    await client.post(
+                        "https://exp.host/--/api/v2/push/send",
+                        json=messages
+                    )
+                except Exception as e:
+                    print(f"Failed to send Expo push: {e}")
+
+    return {"status": "success", "alert_id": alert.id}
 
 @router.get("/", response_model=List[AlertResponse], summary="Get Alerts")
 async def get_alerts(

@@ -225,6 +225,18 @@ export async function confirmAlert(
   return res.json();
 }
 
+/**
+ * POST /alerts/sos
+ * Trigger a high-priority SOS emergency alert.
+ */
+export async function triggerSosAlert(userId: string) {
+  const res = await authFetch('/alerts/sos', {
+    method: 'POST',
+    body: JSON.stringify({ user_id: userId }),
+  });
+  return res.json();
+}
+
 // ── Overload Events ───────────────────────────────────────────────────────────
 
 /**
