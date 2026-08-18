@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Users, Phone, Moon, LogOut, ChevronRight, User } from 'lucide-react-native';
+import { Phone, Moon, LogOut, ChevronRight, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
@@ -35,8 +35,7 @@ export default function CaretakerProfileScreen({ navigation }: any) {
   const textStyle = darkMode ? { color: '#ffffff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
 
-  const activeUserId = recentlyViewedUserIds[0] || 'u1';
-  const activeUser = mockUsers.find(u => u.id === activeUserId) || mockUsers[0];
+
 
   return (
     <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
@@ -75,23 +74,6 @@ export default function CaretakerProfileScreen({ navigation }: any) {
           <ChevronRight size={20} color={colors.mutedForeground} />
         </TouchableOpacity>
 
-        {/* Connected User Card (Only for Personal Caretaker) */}
-        {primaryRole === 'caretaker' && (
-          <TouchableOpacity
-            style={[styles.menuCard, neuSm, cardStyle]}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('ConnectedUserDetails')}
-          >
-            <View style={[styles.iconBox, { backgroundColor: `${colors.primary}20` }]}>
-              <Users size={22} color={colors.primary} />
-            </View>
-            <View style={styles.menuTextContainer}>
-              <Text style={[styles.menuTitle, textStyle]}>Connected User</Text>
-              <Text style={[styles.menuSubtitle, subTextStyle]}>View condition and inputs</Text>
-            </View>
-            <ChevronRight size={20} color={colors.mutedForeground} />
-          </TouchableOpacity>
-        )}
 
         <Text style={[styles.sectionHeader, textStyle]}>Preferences</Text>
 
