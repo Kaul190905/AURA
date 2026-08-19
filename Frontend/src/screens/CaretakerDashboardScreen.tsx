@@ -5,7 +5,7 @@ import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 import { riskColor } from '../utils';
-import { connectCaregiverIoTData, getPendingInvitations, acceptInvitation, CaregiverResponse } from '../services/caregiverApi';
+import { connectCaregiverIoTData, getPendingInvitations, acceptInvitation, CaregiverResponse, getAssignedUsersDetails } from '../services/caregiverApi';
 
 function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string }) {
   const [bpm, setBpm] = useState(82);
@@ -55,23 +55,30 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
 
 export default function CaretakerDashboardScreen({ navigation }: any) {
   const {
-    mockUsers, recentlyViewedUserIds, setRecentlyViewedUserIds,
+    mockUsers, setMockUsers, recentlyViewedUserIds, setRecentlyViewedUserIds,
     darkMode, setIsNotificationCenterOpen, isCaregiverOnline,
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [pendingInvitations, setPendingInvitations] = useState<CaregiverResponse[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
 
-  const fetchPendingInvitations = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const pending = await getPendingInvitations();
+      const [pending, details] = await Promise.all([
+        getPendingInvitations(),
+        getAssignedUsersDetails()
+      ]);
       setPendingInvitations(pending);
+      setMockUsers(details);
     } catch (e) {
-      console.warn('Failed to fetch pending invitations:', e);
+      console.warn('Failed to fetch dashboard data:', e);
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
   useEffect(() => {
-    fetchPendingInvitations();
+    fetchDashboardData();
   }, []);
 
   const handleAccept = async (assignmentId: string) => {
@@ -79,7 +86,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
       await acceptInvitation(assignmentId);
       // Immediately remove from list
       setPendingInvitations(prev => prev.filter(inv => inv.id !== assignmentId));
-      // In a real app we might trigger a refresh of mockUsers via context here, but they refresh every 30s anyway.
+      fetchDashboardData(); // Refresh the list
     } catch (e: any) {
       Alert.alert('Error', 'Failed to accept invitation: ' + e.message);
     }

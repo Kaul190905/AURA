@@ -85,20 +85,31 @@ export default function ConnectedUserDetailsScreen({ navigation, route }: any) {
             <Text style={[styles.infoLabel, subTextStyle]}>Email</Text>
             <Text style={[styles.infoValue, textStyle]}>{connectedUser.email || 'Not set'}</Text>
           </View>
-          <View style={styles.compactRow}>
-            <Text style={[styles.infoLabel, subTextStyle]}>Condition</Text>
-            <Text style={[styles.infoValue, textStyle]}>{primaryTriggerText || 'Not set'}</Text>
-          </View>
+          
+          {connectedUser.assignment?.can_view_preferences === false ? (
+            <View style={[styles.compactRow, { marginTop: 10 }]}>
+              <Text style={[styles.infoLabel, { color: colors.riskMed, ...fonts.medium }]}>
+                🔒 Preferences hidden by user
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.compactRow}>
+              <Text style={[styles.infoLabel, subTextStyle]}>Condition</Text>
+              <Text style={[styles.infoValue, textStyle]}>{primaryTriggerText || 'Not set'}</Text>
+            </View>
+          )}
         </View>
 
         {/* Sensory Profile Card */}
-        <View style={[styles.card, cardStyle, neuSm]}>
-          <Text style={[styles.cardSuperTitle, subTextStyle]}>SENSORY PROFILE</Text>
-          <View style={styles.compactRow}>
-            <Text style={[styles.infoLabel, subTextStyle]}>Primary Trigger{activeTriggers.length > 1 ? 's' : ''}</Text>
-            <Text style={[styles.infoValue, textStyle]}>{primaryTriggerText}</Text>
+        {connectedUser.assignment?.can_view_preferences !== false && (
+          <View style={[styles.card, cardStyle, neuSm]}>
+            <Text style={[styles.cardSuperTitle, subTextStyle]}>SENSORY PROFILE</Text>
+            <View style={styles.compactRow}>
+              <Text style={[styles.infoLabel, subTextStyle]}>Primary Trigger{activeTriggers.length > 1 ? 's' : ''}</Text>
+              <Text style={[styles.infoValue, textStyle]}>{primaryTriggerText}</Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Current Sensory Status Link Card */}
         <TouchableOpacity 

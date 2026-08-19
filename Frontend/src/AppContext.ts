@@ -107,6 +107,7 @@ export type AppState = {
       phone: string;
       email: string;
     };
+    assignment?: any;
   }>;
   setMockUsers: (users: AppState['mockUsers']) => void;
   isCaregiverOnline: boolean;
