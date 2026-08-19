@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, Globe, User, Heart } from 'lucide-react-native';
-import Logo from '../../assets/AURA.svg';
+import Logo from '../../assets/AURA.png';
 import { signIn, signUp, signInWithGoogle } from '../services/supabaseClient';
 import { colors, fonts, radius, spacing } from '../theme';
 
@@ -119,10 +119,9 @@ export default function LoginScreen({ onSuccess }: Props) {
             <Animated.View
               style={[styles.breatheRing, { transform: [{ scale: breathe }] }]}
             />
-            <Logo 
-              width={40} 
-              height={40} 
-              style={{ borderRadius: 20 }} 
+            <Image 
+              source={Logo}
+              style={{ width: 40, height: 40, borderRadius: 20 }} 
             />
           </View>
 
