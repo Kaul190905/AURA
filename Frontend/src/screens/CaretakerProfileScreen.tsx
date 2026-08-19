@@ -22,10 +22,14 @@ export default function CaretakerProfileScreen({ navigation }: any) {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user && user.email) {
-        const prefix = user.email.split('@')[0];
-        const formattedName = prefix.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
-        setUserName(formattedName);
+      if (user) {
+        if (user.user_metadata?.name) {
+          setUserName(user.user_metadata.name);
+        } else if (user.email) {
+          const prefix = user.email.split('@')[0];
+          const formattedName = prefix.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+          setUserName(formattedName);
+        }
       }
     });
   }, []);

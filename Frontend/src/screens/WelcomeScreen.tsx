@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Star, Shield, User, Heart } from 'lucide-react-native';
+import Logo from '../../assets/AURA.svg';
 import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 
@@ -36,10 +37,10 @@ export default function WelcomeScreen({ onNext }: Props) {
       <View style={styles.top}>
         <View style={styles.logoOuter}>
           <Animated.View style={[styles.breatheRing, { transform: [{ scale: breathe }] }]} />
-          <Image 
-            source={require('../../assets/AURA.jpg')} 
-            style={{ width: 44, height: 44, borderRadius: 22 }} 
-            resizeMode="cover" 
+          <Logo 
+            width={44} 
+            height={44} 
+            style={{ borderRadius: 22 }} 
           />
         </View>
 
