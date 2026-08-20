@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ear, Sun, Star, Calendar, User, Activity, X } from 'lucide-react-native';
+import { Ear, Sun, Star, Calendar, Activity, X } from 'lucide-react-native';
 
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
@@ -21,7 +21,7 @@ interface Props { onDone: () => void; onBack?: () => void; }
 
 export default function ProfileSetupScreen({ onDone, onBack }: Props) {
   const styles = getStyles();
-  const { profile, setProfile, dob, setDob, caregiver, setCaregiver } = useContext(AppContext);
+  const { profile, setProfile, dob, setDob } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -44,19 +44,6 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
     let newErrors: Record<string, string> = {};
     if (!dob || dob.length !== 4 || isNaN(parseInt(dob, 10))) {
       newErrors.dob = 'Year of Birth is required (e.g., 1995)';
-    }
-    if (!caregiver?.name) {newErrors.name = 'Caregiver Name is required';}
-
-    if (!caregiver?.phone) {
-      newErrors.phone = 'Caregiver Phone is required';
-    } else if (!/^\d{10}$/.test(caregiver.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Phone number must be 10 digits';
-    }
-
-    if (!caregiver?.email) {
-      newErrors.email = 'Caregiver Email is required';
-    } else if (!/^[a-zA-Z0-9._%+-]+@(gmail\.com|edu\.in)$/i.test(caregiver.email)) {
-      newErrors.email = 'Must be a @gmail.com or @edu.in address';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -151,59 +138,7 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
           </View>
         </View>
 
-        {/* Caregiver Information */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.rowCenterGap}>
-              <User size={18} color={colors.primary} />
-              <Text style={styles.sectionTitle}>Caregiver Information</Text>
-            </View>
-          </View>
-          <View style={styles.paddingGap12}>
-            <View>
-              <TextInput
-                style={[styles.input, errors.name && styles.inputError]}
-                placeholder="Caregiver Name *"
-                placeholderTextColor={colors.mutedForeground}
-                value={caregiver?.name}
-                onChangeText={(t) => { setCaregiver({ ...caregiver, name: t }); setErrors(prev => ({ ...prev, name: '' })); }}
-              />
-              {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
-            </View>
-            <View>
-              <TextInput
-                style={styles.input}
-                placeholder="Relationship (e.g., Parent, Spouse)"
-                placeholderTextColor={colors.mutedForeground}
-                value={caregiver?.relationship}
-                onChangeText={(t) => setCaregiver({ ...caregiver, relationship: t })}
-              />
-            </View>
-            <View>
-              <TextInput
-                style={[styles.input, errors.phone && styles.inputError]}
-                placeholder="Phone Number *"
-                placeholderTextColor={colors.mutedForeground}
-                value={caregiver?.phone}
-                onChangeText={(t) => { setCaregiver({ ...caregiver, phone: t }); setErrors(prev => ({ ...prev, phone: '' })); }}
-                keyboardType="phone-pad"
-              />
-              {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
-            </View>
-            <View>
-              <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
-                placeholder="Caregiver Email ID *"
-                placeholderTextColor={colors.mutedForeground}
-                value={caregiver?.email}
-                onChangeText={(t) => { setCaregiver({ ...caregiver, email: t }); setErrors(prev => ({ ...prev, email: '' })); }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
-            </View>
-          </View>
-        </View>
+
         <View style={styles.spacer100} />
       </ScrollView>
 

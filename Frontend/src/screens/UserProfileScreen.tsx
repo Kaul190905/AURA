@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, User, Phone, Mail, Calendar, Zap, AlertTriangle, Camera, Edit2, Check } from 'lucide-react-native';
+import { ArrowLeft, User, Zap, AlertTriangle, Camera, Edit2, Check } from 'lucide-react-native';
 import { colors, fonts, radius, spacing, neuSm } from '../theme';
 import { supabase } from '../services/supabaseClient';
 import { AppContext } from '../AppContext';
@@ -11,7 +11,7 @@ interface Props { onBack: () => void; }
 
 export default function UserProfileScreen({ onBack }: Props) {
   const insets = useSafeAreaInsets();
-  const { caregiver, dob, primaryTrigger, profilePhoto, setProfilePhoto, navigateTo } = React.useContext(AppContext);
+  const { caregiver, dob, primaryTrigger, profilePhoto, setProfilePhoto } = React.useContext(AppContext);
   const [userName, setUserName] = useState<string>('User');
   const [isEditingName, setIsEditingName] = useState(false);
   const [updatingName, setUpdatingName] = useState(false);
@@ -20,7 +20,7 @@ export default function UserProfileScreen({ onBack }: Props) {
   const [updatingAboutMe, setUpdatingAboutMe] = useState(false);
 
   const handleUpdateName = async () => {
-    if (!userName.trim()) return;
+    if (!userName.trim()) { return; }
     setUpdatingName(true);
     try {
       await supabase.auth.updateUser({ data: { name: userName.trim() } });
@@ -79,7 +79,7 @@ export default function UserProfileScreen({ onBack }: Props) {
           <ArrowLeft size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Profile</Text>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -124,8 +124,8 @@ export default function UserProfileScreen({ onBack }: Props) {
         <View style={styles.detailsContainer}>
           {/* About Me */}
           <View style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.sectionHeaderMb8}>
+              <View style={styles.rowCenterGap8}>
                 <User size={16} color={colors.primary} />
                 <Text style={styles.label}>About Me</Text>
               </View>
@@ -145,7 +145,7 @@ export default function UserProfileScreen({ onBack }: Props) {
             </View>
             {isEditingAboutMe ? (
               <TextInput
-                style={{ fontSize: 14, minWidth: '100%', textAlign: 'left', fontWeight: 'normal', color: colors.foreground, borderBottomWidth: 1, borderBottomColor: colors.primary, paddingBottom: 4 }}
+                style={styles.aboutMeInput}
                 value={aboutMe}
                 onChangeText={setAboutMe}
                 multiline
@@ -158,14 +158,11 @@ export default function UserProfileScreen({ onBack }: Props) {
 
           {/* Sensory Info */}
           <View style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.sectionHeaderMb12}>
+              <View style={styles.rowCenterGap8}>
                 <Zap size={16} color={colors.primary} />
                 <Text style={styles.label}>Sensory Profile</Text>
               </View>
-              <TouchableOpacity onPress={() => navigateTo('profile')} style={styles.editBtn}>
-                <Edit2 size={16} color={colors.mutedForeground} />
-              </TouchableOpacity>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoKey}>Year of Birth:</Text>
@@ -179,14 +176,11 @@ export default function UserProfileScreen({ onBack }: Props) {
 
           {/* Caregiver Info */}
           <View style={styles.card}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.sectionHeaderMb12}>
+              <View style={styles.rowCenterGap8}>
                 <AlertTriangle size={16} color={colors.primary} />
                 <Text style={styles.label}>Emergency Caregiver</Text>
               </View>
-              <TouchableOpacity onPress={() => navigateTo('profile')} style={styles.editBtn}>
-                <Edit2 size={16} color={colors.mutedForeground} />
-              </TouchableOpacity>
             </View>
 
             <View style={styles.infoRow}>
@@ -303,5 +297,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.foreground,
     ...fonts.semibold,
+  },
+  headerSpacer: {
+    width: 24,
+  },
+  sectionHeaderMb8: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  sectionHeaderMb12: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  rowCenterGap8: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  aboutMeInput: {
+    fontSize: 14,
+    minWidth: '100%',
+    textAlign: 'left',
+    fontWeight: 'normal',
+    color: colors.foreground,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary,
+    paddingBottom: 4,
   },
 });

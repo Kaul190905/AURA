@@ -72,7 +72,18 @@ export default function LoginScreen({ onSuccess }: Props) {
         onSuccess();
       }
     } catch (err: any) {
-      setError(err?.message ?? 'Authentication failed. Please try again.');
+      let msg = err?.message ?? 'Authentication failed. Please try again.';
+      if (typeof msg === 'string' && msg.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(msg);
+          msg = parsed.msg || parsed.message || parsed.error_description || (parsed.status === 500 ? 'Server error: Email sending may have failed. Please check your Supabase SMTP settings.' : 'Authentication failed.');
+        } catch (e) {
+          if (msg.includes('"status":500')) {
+            msg = 'Server error (500). Please check your Supabase SMTP or project settings.';
+          }
+        }
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

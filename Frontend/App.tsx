@@ -335,7 +335,7 @@ export default function App() {
 
             return {
               id: assignment.user_id,
-              name: metadata.name || prefs.email || 'Unknown User',
+              name: metadata.name || (prefs.email ? prefs.email.split('@')[0] : 'Unknown User'),
               risk,
               isCrisis,
               condition,

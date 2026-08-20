@@ -12,6 +12,12 @@ def get_supabase_client() -> Client:
     """Initialize and return the Supabase client."""
     return create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
 
+import time
+
+# Simple token cache to prevent Supabase GoTrue concurrent request flakiness
+# Maps token -> (user_object, expiry_timestamp)
+_token_cache = {}
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     Dependency to get the current authenticated user from Supabase.
@@ -19,6 +25,13 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     Handles expired and invalid tokens gracefully.
     """
     token = credentials.credentials
+    
+    # Check cache first (cache for 60 seconds)
+    if token in _token_cache:
+        cached_user, expiry = _token_cache[token]
+        if time.time() < expiry:
+            return cached_user
+            
     supabase = get_supabase_client()
     
     try:
@@ -32,6 +45,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
                 headers={"WWW-Authenticate": "Bearer"},
             )
             
+        # Cache the successful validation for 60 seconds
+        _token_cache[token] = (user_response.user, time.time() + 60)
         return user_response.user
 
     except Exception as e:
