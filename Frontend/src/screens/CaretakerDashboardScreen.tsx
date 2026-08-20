@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
-import { AppContext } from '../AppContext';
+import { AppContext, AppNotification } from '../AppContext';
 import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 import { riskColor } from '../utils';
 import { connectCaregiverIoTData, getPendingInvitations, acceptInvitation, CaregiverResponse, getAssignedUsersDetails } from '../services/caregiverApi';
@@ -12,8 +12,24 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
   const [temp, setTemp] = useState(98.4);
   const [soundLevel, setSoundLevel] = useState(45);
 
+  const { setNotifications } = useContext(AppContext);
+
   useEffect(() => {
     const ws = connectCaregiverIoTData(userId, (data) => {
+      if (data.type === 'SOS_ALERT' && data.alert) {
+        setNotifications((prev: AppNotification[]) => {
+          const exists = prev.find((n: AppNotification) => n.id === data.alert.id);
+          if (exists) { return prev; }
+          return [{
+            id: data.alert.id,
+            title: 'Critical Alert',
+            description: data.alert.message,
+            time: new Date(data.alert.created_at).getTime(),
+            read: false,
+            type: 'alert' as const,
+          }, ...prev].sort((a, b) => b.time - a.time);
+        });
+      }
       if (data.bpm) { setBpm(data.bpm); }
       if (data.temp) { setTemp(data.temp); }
       if (data.soundLevel) { setSoundLevel(data.soundLevel); }
@@ -30,7 +46,7 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
       clearInterval(interval);
       ws.close();
     };
-  }, [userId]);
+  }, [userId, setNotifications]);
 
   const textStyle = darkMode ? { color: '#fff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
@@ -60,26 +76,22 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [pendingInvitations, setPendingInvitations] = useState<CaregiverResponse[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = React.useCallback(async () => {
     try {
       const [pending, details] = await Promise.all([
         getPendingInvitations(),
-        getAssignedUsersDetails()
+        getAssignedUsersDetails(),
       ]);
       setPendingInvitations(pending);
-      setMockUsers(details);
+      setMockUsers(details as any);
     } catch (e) {
       console.warn('Failed to fetch dashboard data:', e);
-    } finally {
-      setLoadingUsers(false);
     }
-  };
+  }, [setMockUsers]);
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
   const handleAccept = async (assignmentId: string) => {
     try {
@@ -206,7 +218,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
         </View>
 
         {/* Critical Alerts Section */}
-        {criticalUsers.length > 0 && (
+        {criticalUsers.length > 0 ? (
           <View style={[styles.criticalContainer, shadowSm, cardStyle]}>
             <View style={styles.criticalHeader}>
               <View style={styles.criticalHeaderLeft}>
@@ -249,6 +261,39 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
               <Text style={styles.viewAllText}>View All Alerts</Text>
             </TouchableOpacity>
           </View>
+        ) : (
+          stats.safe > 0 && (
+            <View style={[styles.criticalContainer, shadowSm, cardStyle]}>
+              <View style={styles.criticalHeader}>
+                <View style={styles.criticalHeaderLeft}>
+                  <User size={20} color={colors.riskLow} />
+                  <Text style={[styles.sectionTitle, styles.safeTitle]}>Safe Users</Text>
+                </View>
+                <View style={[styles.criticalCountBadge, { backgroundColor: `${colors.riskLow}15` }]}>
+                  <Text style={[styles.criticalCountText, { color: colors.riskLow }]}>{stats.safe}</Text>
+                </View>
+              </View>
+              
+              {mockUsers.filter(u => !u.isCrisis && u.risk < 5).map(user => {
+                const rColor = riskColor(user.risk);
+                return (
+                  <TouchableOpacity key={user.id} style={styles.alertItem} onPress={() => openUser(user.id, 'Overview')}>
+                    <View style={[styles.avatarSm, { backgroundColor: `${rColor}20` }]}>
+                      <User size={20} color={rColor} />
+                    </View>
+                    <View style={[styles.alertInfo, darkMode ? styles.borderDark333 : styles.borderLightF0]}>
+                      <View style={styles.rowBetweenCenter}>
+                        <Text style={[styles.alertName, textStyle]}>{user.name}</Text>
+                        <View style={[styles.riskBadge, { backgroundColor: `${rColor}15` }]}>
+                          <Text style={[styles.riskBadgeText, { color: rColor }]}>SAFE</Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )
         )}
 
 
@@ -297,6 +342,7 @@ const styles = StyleSheet.create({
   criticalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingHorizontal: 4 },
   criticalCountBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 },
   criticalCountText: { fontSize: 12, ...fonts.bold },
+  safeTitle: { color: colors.riskLow, marginBottom: 0, marginLeft: 8 },
 
   alertItem: { flexDirection: 'row', marginBottom: 16, paddingHorizontal: 4 },
   avatarSm: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginRight: 12 },

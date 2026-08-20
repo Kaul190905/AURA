@@ -13,7 +13,7 @@ import { TriggerKey, HistoryEvent, Strategy, Accommodation } from './src/types';
 import { computeRisk } from './src/utils';
 
 // Backend services
-import { getAssignedUsers, getCaregiverUserPreferences, getCaregiverUserSensorData } from './src/services/caregiverApi';
+import { getAssignedUsers, getCaregiverUserPreferences, getCaregiverUserSensorData, getCaregiverUserAlerts } from './src/services/caregiverApi';
 import { supabase } from './src/services/supabaseClient';
 import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEvents, getAlerts, triggerSosAlert } from './src/services/api';
 import { registerForPushNotificationsAsync, scheduleLocalNotification } from './src/services/NotificationService';
@@ -220,7 +220,7 @@ export default function App() {
 
   const [sosConfirmOpen, setSosConfirmOpen] = useState(false);
   const [sosSent, setSosSent] = useState(false);
-  const [currentTab, setCurrentTab] = useState('House');
+
 
   // ── Auth / Backend state ────────────────────────────────────────────────────
   const [userId, setUserId] = useState<string | null>(null);
@@ -310,13 +310,26 @@ export default function App() {
     const loadCaretakerData = async () => {
       try {
         const assigned = await getAssignedUsers();
+        let allAlerts: AppNotification[] = [];
 
         const userPromises = assigned.map(async (assignment) => {
           try {
-            const [prefs, sensors] = await Promise.all([
+            const [prefs, sensors, userAlerts] = await Promise.all([
               getCaregiverUserPreferences(assignment.user_id),
               getCaregiverUserSensorData(assignment.user_id).catch(() => null),
+              getCaregiverUserAlerts(assignment.user_id).catch(() => []),
             ]);
+
+            if (Array.isArray(userAlerts)) {
+              allAlerts.push(...userAlerts.map((a: any) => ({
+                id: a.id,
+                title: a.severity === 'critical' ? 'Critical Alert' : 'Alert',
+                description: a.message,
+                time: new Date(a.created_at).getTime(),
+                read: a.confirmed ?? false,
+                type: 'alert' as const,
+              })));
+            }
 
             const metadata = prefs.user_metadata || {};
             const userProfile = metadata.sensory_profile || {};
@@ -348,6 +361,7 @@ export default function App() {
               aboutMe: metadata.aboutMe || '',
               dob: metadata.dob || '',
               emergencyCaregiver: metadata.caregiver || null,
+              email: prefs.email || '',
             };
           } catch (err) {
             console.warn(`Failed to load data for assigned user ${assignment.user_id}:`, err);
@@ -357,6 +371,14 @@ export default function App() {
 
         const loadedUsers = (await Promise.all(userPromises)).filter(Boolean) as AppState['mockUsers'];
         setMockUsers(loadedUsers);
+
+        if (allAlerts.length > 0) {
+          setNotifications(prev => {
+            const map = new Map(prev.map(n => [n.id, n]));
+            allAlerts.forEach(a => map.set(a.id, a));
+            return Array.from(map.values()).sort((a, b) => b.time - a.time);
+          });
+        }
 
       } catch (err) {
         console.error('[AURA] Error loading caretaker data:', err);
@@ -635,17 +657,6 @@ export default function App() {
       <SafeAreaProvider>
         <NavigationContainer
           key={`${darkMode}-${colorVisionMode}-${appScreen}`}
-          onStateChange={(state) => {
-            if (!state) { return; }
-            const currentRoute = state.routes[state.index];
-            if (currentRoute.state && currentRoute.state.routes) {
-              const idx = currentRoute.state.index ?? 0;
-              const nestedRoute = currentRoute.state.routes[idx];
-              if (nestedRoute) { setCurrentTab(nestedRoute.name); }
-            } else {
-              setCurrentTab(currentRoute.name);
-            }
-          }}
         >
           {/* Route to Login if not authenticated, Welcome once signed in */}
           {!sessionLoading && !userId && (
@@ -684,20 +695,6 @@ export default function App() {
           {userId && (appScreen === 'home' || appScreen === 'settings') && (
             <View style={styles.flex1}>
               <TabNavigator initialRouteName={appScreen === 'settings' ? 'Settings' : 'House'} />
-              {currentTab !== 'House' && (
-                <TouchableOpacity
-                  onPress={goCrisis}
-                  // eslint-disable-next-line react-native/no-inline-styles
-                  style={[styles.overloadBtn, {
-                    backgroundColor: risk.score <= 2 ? '#4CAF82' : risk.score <= 4 ? '#E0A83A' : risk.score <= 6 ? '#E08A3A' : '#E06B3A',
-                  }]}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.overloadBtnText}>
-                    {risk.score <= 2 ? 'Calm' : risk.score <= 4 ? 'Stable' : risk.score <= 6 ? 'Elevated Response' : 'High Stress'}
-                  </Text>
-                </TouchableOpacity>
-              )}
             </View>
           )}
           <NotificationModal />

@@ -1,6 +1,7 @@
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { supabase } from './supabaseClient';
 
 Notifications.setNotificationHandler({
@@ -37,7 +38,8 @@ export async function registerForPushNotificationsAsync() {
     // Note: in a real managed Expo app, you need a projectId. Since this is bare React Native
     // we may need device push tokens. But we use getExpoPushTokenAsync() for now.
     try {
-      token = (await Notifications.getExpoPushTokenAsync()).data;
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId || 'f1408090-c293-44ac-a9e7-8c15e6e12fe4';
+      token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
       console.log('Push token:', token);
       
       const { data: { session } } = await supabase.auth.getSession();

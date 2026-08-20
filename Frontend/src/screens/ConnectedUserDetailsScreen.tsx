@@ -95,7 +95,7 @@ export default function ConnectedUserDetailsScreen({ navigation, route }: any) {
           ) : (
             <View style={styles.compactRow}>
               <Text style={[styles.infoLabel, subTextStyle]}>Condition</Text>
-              <Text style={[styles.infoValue, textStyle]}>{primaryTriggerText || 'Not set'}</Text>
+              <Text style={[styles.infoValue, textStyle]}>{connectedUser.condition || 'Not set'}</Text>
             </View>
           )}
         </View>
