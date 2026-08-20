@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Heart, Thermometer, Mic } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 import { getCaregiverUserSensorData } from '../services/caregiverApi';
 
 export default function SensoryStatusScreen({ navigation, route }: any) {
@@ -102,7 +102,7 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
       <View style={styles.fixedContent}>
         
         {/* Overall Status Summary */}
-        <View style={[styles.summaryCard, cardStyle, neuSm]}>
+        <View style={[styles.summaryCard, cardStyle, shadowSm]}>
           <Text style={[styles.cardSuperTitle, subTextStyle]}>CURRENT CONDITION</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, marginTop: 4 }}>
             <View style={[styles.dotLg, { backgroundColor: isElevated ? colors.riskHigh : colors.primary }]} />
@@ -117,7 +117,7 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
 
         {/* Heart Rate Card (Always visible) */}
         <TouchableOpacity 
-          style={[styles.sensorCard, cardStyle, neuSm]} 
+          style={[styles.sensorCard, cardStyle, shadowSm]} 
           onPress={() => navigation.navigate('HeartRateHistory', { userId })}
           activeOpacity={0.7}
         >
@@ -142,7 +142,7 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
         {/* Sound Card (Conditional) */}
         {hasSound && (
           <TouchableOpacity
-            style={[styles.sensorCard, cardStyle, neuSm]}
+            style={[styles.sensorCard, cardStyle, shadowSm]}
             onPress={() => navigation.navigate('SoundHistory')}
             activeOpacity={0.7}
           >
@@ -175,7 +175,7 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
 
         {/* Temperature Card (Conditional) */}
         {hasTemp && (
-          <View style={[styles.sensorCard, cardStyle, neuSm]}>
+          <View style={[styles.sensorCard, cardStyle, shadowSm]}>
             <View style={styles.sensorCardHeader}>
               <View style={[styles.sensorIconBox, { backgroundColor: `${colors.riskMed}15` }]}>
                 <Thermometer size={22} color={colors.riskMed} />

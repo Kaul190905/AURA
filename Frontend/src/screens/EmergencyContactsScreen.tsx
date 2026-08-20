@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking } from 'r
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Phone, MessageCircle, Plus } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 
 export default function EmergencyContactsScreen({ navigation }: any) {
   const { darkMode } = useContext(AppContext);
@@ -43,7 +43,7 @@ export default function EmergencyContactsScreen({ navigation }: any) {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {contacts.map((contact) => (
-          <View key={contact.id} style={[styles.contactCard, neuSm, cardStyle]}>
+          <View key={contact.id} style={[styles.contactCard, shadowSm, cardStyle]}>
             <View style={styles.contactInfo}>
               <Text style={[styles.contactName, textStyle]}>{contact.name}</Text>
               <Text style={[styles.contactRole, subTextStyle]}>{contact.role}</Text>

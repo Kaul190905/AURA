@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Modal, Te
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, Bell, Clock, Trash2, CheckCircle2, Circle, X } from 'lucide-react-native';
 import { Header } from '../components/Header';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 
 interface Task {
   id: string;
@@ -102,7 +102,7 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-        <View style={[styles.settingRow, neuSm]}>
+        <View style={[styles.settingRow, shadowSm]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Bell size={18} color={colors.primary} />
             <Text style={styles.settingText}>Routine Reminders</Text>
@@ -122,7 +122,7 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
           const progress = r.tasks.length > 0 ? completedCount / r.tasks.length : 0;
 
           return (
-            <View key={r.id} style={[styles.card, neuSm, !r.active && { opacity: 0.6 }]}>
+            <View key={r.id} style={[styles.card, shadowSm, !r.active && { opacity: 0.6 }]}>
               <View style={styles.cardHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Clock size={16} color={r.active ? colors.primary : colors.mutedForeground} />
@@ -175,7 +175,7 @@ export default function PlansScreen({ onBack }: { onBack: () => void }) {
       {/* Add Modal */}
       <Modal visible={isAddModalOpen} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, neuSm]}>
+          <View style={[styles.modalCard, shadowSm]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>New Routine</Text>
               <TouchableOpacity onPress={() => { setIsAddModalOpen(false); setNewTasks(['']); }}>

@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, ArrowUp } from 'lucide-react-native';
 import { LineChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 import { getCaregiverUserSensorData } from '../services/caregiverApi';
 
 const { width } = Dimensions.get('window');
@@ -75,7 +75,7 @@ export default function HeartRateHistoryScreen({ navigation, route }: any) {
       </View>
 
       <View style={[styles.content, { paddingBottom: spacing.lg }]}>
-        <View style={[styles.chartCard, neuSm, cardStyle]}>
+        <View style={[styles.chartCard, shadowSm, cardStyle]}>
           <Text style={[styles.cardTitle, textStyle]}>Heart Rate History</Text>
           
           <View style={styles.statsRow}>
@@ -148,19 +148,19 @@ export default function HeartRateHistoryScreen({ navigation, route }: any) {
 
         {/* Detailed Stats List */}
         <View style={styles.listContainer}>
-          <View style={[styles.listItem, neuSm, cardStyle]}>
+          <View style={[styles.listItem, shadowSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Latest Reading</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.latest} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>
-          <View style={[styles.listItem, neuSm, cardStyle]}>
+          <View style={[styles.listItem, shadowSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Range</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.min}-{stats.max} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>
-          <View style={[styles.listItem, neuSm, cardStyle]}>
+          <View style={[styles.listItem, shadowSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Resting Rate</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.resting} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>
-          <View style={[styles.listItem, neuSm, cardStyle]}>
+          <View style={[styles.listItem, shadowSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Average</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.avg} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>

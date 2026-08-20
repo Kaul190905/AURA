@@ -2,7 +2,7 @@ import React, { useState, ReactNode, useContext } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager,
 } from 'react-native';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { ChevronDown } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 
@@ -86,7 +86,7 @@ const getStyles = () => StyleSheet.create({
     borderRadius: radius.xl,
     backgroundColor: colors.background,
     marginBottom: 10,
-    ...neuSm,
+    ...shadowSm,
   },
   cardOpen: {
     backgroundColor: colors.background,
@@ -105,7 +105,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    ...neuSm,
+    ...shadowSm,
   },
   labelWrap: {
     flex: 1,

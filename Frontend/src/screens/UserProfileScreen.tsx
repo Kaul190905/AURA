@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, User, Zap, AlertTriangle, Camera, Edit2, Check } from 'lucide-react-native';
-import { colors, fonts, radius, spacing, neuSm } from '../theme';
+import { colors, fonts, radius, spacing, shadowSm } from '../theme';
 import { supabase } from '../services/supabaseClient';
 import { AppContext } from '../AppContext';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.muted,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    ...neuSm,
+    ...shadowSm,
   },
   label: {
     fontSize: 12, color: colors.primary, ...fonts.bold,

@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Phone, Moon, LogOut, ChevronRight, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { supabase } from '../services/supabaseClient';
 
 export default function CaretakerProfileScreen({ navigation }: any) {
@@ -48,7 +48,7 @@ export default function CaretakerProfileScreen({ navigation }: any) {
 
         {/* Profile Card */}
         <TouchableOpacity
-          style={[styles.menuCard, neuSm, cardStyle]}
+          style={[styles.menuCard, shadowSm, cardStyle]}
           activeOpacity={0.8}
           onPress={() => navigation.navigate('ProfileDetails')}
         >
@@ -64,7 +64,7 @@ export default function CaretakerProfileScreen({ navigation }: any) {
 
         {/* Emergency Contacts Card */}
         <TouchableOpacity
-          style={[styles.menuCard, neuSm, cardStyle]}
+          style={[styles.menuCard, shadowSm, cardStyle]}
           activeOpacity={0.8}
           onPress={() => navigation.navigate('EmergencyContacts')}
         >
@@ -82,7 +82,7 @@ export default function CaretakerProfileScreen({ navigation }: any) {
         <Text style={[styles.sectionHeader, textStyle]}>Preferences</Text>
 
         {/* Accessibility (Flat Card) */}
-        <View style={[styles.menuCard, neuSm, cardStyle, { paddingVertical: 12 }]}>
+        <View style={[styles.menuCard, shadowSm, cardStyle, { paddingVertical: 12 }]}>
           <ToggleRow
             icon={<Moon size={20} color={colors.primary} />}
             label="Dark Mode"

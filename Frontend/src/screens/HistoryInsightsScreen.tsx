@@ -7,7 +7,7 @@ import { TrendingUp, Zap, AudioWaveform, MapPin, ChevronLeft, ChevronRight } fro
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { riskColor, timeAgo } from '../utils';
 import {
   getRiskTrend, getOverloadForecast,
@@ -176,7 +176,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.muted, borderRadius: radius.xl, padding: 6,
   },
   rangeBtn: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: radius.lg },
-  rangeBtnActive: { backgroundColor: colors.background, ...neuSm },
+  rangeBtnActive: { backgroundColor: colors.background, ...shadowSm },
   rangeBtnText: { fontSize: 12, color: colors.mutedForeground, ...fonts.semibold },
   badge: { fontSize: 12, color: colors.mutedForeground, marginRight: 4 },
   emptyCard: { backgroundColor: colors.muted, borderRadius: radius.md, padding: 12 },

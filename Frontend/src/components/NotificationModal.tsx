@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { AppContext, AppNotification } from '../AppContext';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { X, Bell, Zap, BrainCircuit, Activity, Trash2, Check } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -60,7 +60,7 @@ export function NotificationModal() {
 
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
               {sortedNotifications.map(n => (
-                  <View key={n.id} style={[styles.notifCard, neuSm, !n.read && styles.unreadCard, { marginBottom: spacing.md }]}>
+                  <View key={n.id} style={[styles.notifCard, shadowSm, !n.read && styles.unreadCard, { marginBottom: spacing.md }]}>
                     <View style={[styles.iconContainer, !n.read && styles.unreadIconBg]}>
                       {getIcon(n.type)}
                     </View>

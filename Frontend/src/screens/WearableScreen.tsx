@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bluetooth, Zap, Volume2, Sun, Shield, RefreshCw } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { submitSensorData } from '../services/api';
 import { bleManagerService } from '../services/bleManagerService';
 import { Device } from 'react-native-ble-plx';
@@ -160,7 +160,7 @@ export default function WearableScreen() {
           {/* Noise slider */}
           <View style={[styles.sliderCard, { marginTop: 12 }]}>
             <View style={styles.sliderCardTop}>
-              <View style={[styles.sliderIcon, neuSm]}>
+              <View style={[styles.sliderIcon, shadowSm]}>
                 <Volume2 size={18} color={colors.primary} />
               </View>
               <View style={{ flex: 1 }}>
@@ -183,7 +183,7 @@ export default function WearableScreen() {
           {/* Temperature slider */}
           <View style={[styles.sliderCard, { marginTop: 10 }]}>
             <View style={styles.sliderCardTop}>
-              <View style={[styles.sliderIcon, neuSm]}>
+              <View style={[styles.sliderIcon, shadowSm]}>
                 <Sun size={18} color={colors.primary} />
               </View>
               <View style={{ flex: 1 }}>
@@ -214,11 +214,11 @@ export default function WearableScreen() {
             </View>
           </View>
           <View style={styles.statsRow}>
-            <View style={[styles.statCard, neuSm]}>
+            <View style={[styles.statCard, shadowSm]}>
               <Text style={styles.statLabel}>BATTERY</Text>
               <Text style={styles.statValue}>{bleConnected ? '82%' : '—'}</Text>
             </View>
-            <View style={[styles.statCard, neuSm]}>
+            <View style={[styles.statCard, shadowSm]}>
               <Text style={styles.statLabel}>SIGNAL</Text>
               <Text style={styles.statValue}>{bleConnected ? 'Strong' : '—'}</Text>
             </View>
@@ -311,13 +311,13 @@ const getStyles = () => StyleSheet.create({
   },
   bleIcon: {
     width: 48, height: 48, borderRadius: radius.full,
-    backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...neuSm,
+    backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...shadowSm,
   },
   deviceName: { fontSize: 15, color: colors.foreground, ...fonts.semibold },
   deviceStatus: { fontSize: 12, color: colors.mutedForeground },
   pairBtn: {
     height: 40, paddingHorizontal: 16, borderRadius: radius.full,
-    alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, ...neuSm,
+    alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, ...shadowSm,
   },
   pairBtnActive: {
     backgroundColor: colors.primary,

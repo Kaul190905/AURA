@@ -5,7 +5,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Star, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { triggerSosAlert } from '../services/api';
 
 interface Props { onExit: () => void; }
@@ -98,7 +98,7 @@ export default function CrisisModeScreen({ onExit }: Props) {
       {/* Suggestions */}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: 8 }}>
         {suggestions.map((s) => (
-          <View key={s.id} style={[styles.suggRow, neuSm]}>
+          <View key={s.id} style={[styles.suggRow, shadowSm]}>
             <View style={styles.suggIcon}>
               <Star size={16} color={colors.primary} />
             </View>
@@ -108,7 +108,7 @@ export default function CrisisModeScreen({ onExit }: Props) {
       </ScrollView>
 
       {/* Timer */}
-      <View style={[styles.timerRow, neuSm]}>
+      <View style={[styles.timerRow, shadowSm]}>
         <View>
           <Text style={styles.timerLabel}>RESET TIMER</Text>
           <Text style={styles.timerValue}>{mm}:{ss}</Text>
@@ -186,7 +186,7 @@ const getStyles = () => StyleSheet.create({
   },
   suggIcon: {
     width: 36, height: 36, borderRadius: radius.full,
-    backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...neuSm,
+    backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...shadowSm,
   },
   suggText: { flex: 1, fontSize: 13, color: colors.foreground, ...fonts.medium },
   timerRow: {
@@ -225,7 +225,7 @@ const getStyles = () => StyleSheet.create({
     width: '100%',
     borderRadius: radius.xl,
     padding: spacing.lg,
-    ...neuSm,
+    ...shadowSm,
     alignItems: 'center',
   },
   modalHeader: {

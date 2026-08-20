@@ -8,7 +8,7 @@ import { View, StyleSheet, TouchableOpacity, Text, Modal, Linking } from 'react-
 import { House, Library, TrendingUp, Bluetooth, Settings, AlertTriangle, CheckCircle2, Users } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { colors, fonts, applyColorVisionMode } from './src/theme';
+import { colors, fonts, applyTheme } from './src/theme';
 import { TriggerKey, HistoryEvent, Strategy, Accommodation } from './src/types';
 import { computeRisk } from './src/utils';
 
@@ -466,14 +466,23 @@ export default function App() {
 
 
   useEffect(() => {
-    AsyncStorage.getItem('colorVisionMode').then(val => {
-      if (val === 'protanopia' || val === 'deuteranopia' || val === 'tritanopia' || val === 'default') {
-        setColorVisionMode(val);
-        applyColorVisionMode(val);
+    Promise.all([
+      AsyncStorage.getItem('colorVisionMode'),
+      AsyncStorage.getItem('darkMode'),
+      AsyncStorage.getItem('profilePhoto'),
+    ]).then(([cvMode, dMode, photo]) => {
+      let isDark = false;
+      if (dMode === 'true') {
+        setDarkMode(true);
+        isDark = true;
       }
-    });
-    AsyncStorage.getItem('profilePhoto').then(val => {
-      if (val) { setProfilePhoto(val); }
+      if (cvMode === 'protanopia' || cvMode === 'deuteranopia' || cvMode === 'tritanopia' || cvMode === 'default') {
+        setColorVisionMode(cvMode as any);
+        applyTheme(isDark, cvMode as any);
+      } else {
+        applyTheme(isDark, 'default');
+      }
+      if (photo) { setProfilePhoto(photo); }
     });
   }, []);
 
@@ -488,9 +497,15 @@ export default function App() {
 
   const handleSetColorVisionMode = (mode: 'default' | 'protanopia' | 'deuteranopia' | 'tritanopia') => {
     setColorVisionMode(mode);
-    applyColorVisionMode(mode);
+    applyTheme(darkMode, mode);
     AsyncStorage.setItem('colorVisionMode', mode);
   };
+
+  // Re-apply theme when dark mode changes
+  useEffect(() => {
+    applyTheme(darkMode, colorVisionMode);
+    AsyncStorage.setItem('darkMode', darkMode ? 'true' : 'false');
+  }, [darkMode, colorVisionMode]);
 
   const suggestions = useMemo(() => {
     const matched = strategies.filter((s) => s.trigger === primaryTrigger);
@@ -619,7 +634,7 @@ export default function App() {
     <AppContext.Provider value={appState}>
       <SafeAreaProvider>
         <NavigationContainer
-          key={`${colorVisionMode}-${appScreen}`}
+          key={`${darkMode}-${colorVisionMode}-${appScreen}`}
           onStateChange={(state) => {
             if (!state) { return; }
             const currentRoute = state.routes[state.index];

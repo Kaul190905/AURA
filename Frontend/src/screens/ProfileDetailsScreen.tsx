@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Camera, User, Mail, Shield, Users, Pencil, Check, X } from 'lucide-react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 import { supabase } from '../services/supabaseClient';
 
 export default function ProfileDetailsScreen({ navigation }: any) {
@@ -110,7 +110,7 @@ export default function ProfileDetailsScreen({ navigation }: any) {
 
         {/* Details List */}
         <View style={styles.infoSection}>
-          <View style={[styles.infoRow, neuSm, cardStyle]}>
+          <View style={[styles.infoRow, shadowSm, cardStyle]}>
             <View style={[styles.iconBox, { backgroundColor: `${colors.primary}20` }]}>
               <User size={20} color={colors.primary} />
             </View>
@@ -151,7 +151,7 @@ export default function ProfileDetailsScreen({ navigation }: any) {
             )}
           </View>
 
-          <View style={[styles.infoRow, neuSm, cardStyle]}>
+          <View style={[styles.infoRow, shadowSm, cardStyle]}>
             <View style={[styles.iconBox, { backgroundColor: `${colors.primary}20` }]}>
               <Mail size={20} color={colors.primary} />
             </View>
@@ -161,7 +161,7 @@ export default function ProfileDetailsScreen({ navigation }: any) {
             </View>
           </View>
 
-          <View style={[styles.infoRow, neuSm, cardStyle]}>
+          <View style={[styles.infoRow, shadowSm, cardStyle]}>
             <View style={[styles.iconBox, { backgroundColor: `${colors.primary}20` }]}>
               <Shield size={20} color={colors.primary} />
             </View>
@@ -171,7 +171,7 @@ export default function ProfileDetailsScreen({ navigation }: any) {
             </View>
           </View>
 
-          <View style={[styles.infoRow, neuSm, cardStyle]}>
+          <View style={[styles.infoRow, shadowSm, cardStyle]}>
             <View style={[styles.iconBox, { backgroundColor: `${colors.primary}20` }]}>
               <Users size={20} color={colors.primary} />
             </View>

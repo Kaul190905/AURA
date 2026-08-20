@@ -9,7 +9,7 @@ import { Ear, Sun, Star, Calendar, Activity, X } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { TriggerKey } from '../types';
 import { TRIGGERS, PRESETS } from '../data';
 
@@ -185,7 +185,7 @@ const getStyles = () => StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingTop: 8 },
   triggerBtn: {
     width: '47%', minHeight: 80, backgroundColor: colors.background,
-    borderRadius: radius.lg, padding: 12, alignItems: 'flex-start', ...neuSm,
+    borderRadius: radius.lg, padding: 12, alignItems: 'flex-start', ...shadowSm,
   },
   triggerBtnActive: { backgroundColor: colors.muted },
   triggerLabel: { fontSize: 13, color: colors.mutedForeground, marginTop: 4, ...fonts.semibold },
@@ -193,14 +193,14 @@ const getStyles = () => StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingTop: 8 },
   chip: {
     paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.background,
-    borderRadius: radius.full, ...neuSm,
+    borderRadius: radius.full, ...shadowSm,
   },
   chipActive: { backgroundColor: colors.muted },
   chipText: { fontSize: 12, color: colors.foreground, ...fonts.medium },
   badge: { fontSize: 12, color: colors.mutedForeground },
   sectionCard: {
     backgroundColor: colors.background, borderRadius: radius.xl, padding: spacing.lg,
-    marginHorizontal: spacing.lg, marginBottom: spacing.md, ...neuSm,
+    marginHorizontal: spacing.lg, marginBottom: spacing.md, ...shadowSm,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   sectionTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold },
@@ -219,7 +219,7 @@ const getStyles = () => StyleSheet.create({
     color: colors.foreground,
     borderWidth: 1,
     borderColor: 'transparent',
-    ...neuSm,
+    ...shadowSm,
   },
   inputError: {
     borderColor: '#ff4444',
@@ -250,7 +250,7 @@ const getStyles = () => StyleSheet.create({
     width: '100%',
     borderRadius: radius.xl,
     padding: spacing.lg,
-    ...neuSm,
+    ...shadowSm,
   },
   modalHeader: {
     flexDirection: 'row',

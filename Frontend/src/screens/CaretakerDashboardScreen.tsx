@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 import { riskColor } from '../utils';
 import { connectCaregiverIoTData, getPendingInvitations, acceptInvitation, CaregiverResponse, getAssignedUsersDetails } from '../services/caregiverApi';
 
@@ -165,7 +165,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, textStyle]}>Pending Invitations</Text>
             {pendingInvitations.map(inv => (
-              <View key={inv.id} style={[styles.pendingCard, cardStyle, neuSm]}>
+              <View key={inv.id} style={[styles.pendingCard, cardStyle, shadowSm]}>
                 <View style={styles.flex1}>
                   <Text style={[styles.pendingTitle, textStyle]}>New Request</Text>
                   <Text style={[styles.pendingText, subTextStyle]}>You have been invited to be a caregiver by User ID: {inv.user_id}</Text>
@@ -207,7 +207,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
 
         {/* Critical Alerts Section */}
         {criticalUsers.length > 0 && (
-          <View style={[styles.criticalContainer, neuSm, cardStyle]}>
+          <View style={[styles.criticalContainer, shadowSm, cardStyle]}>
             <View style={styles.criticalHeader}>
               <View style={styles.criticalHeaderLeft}>
                 <AlertTriangle size={20} color={colors.riskHigh} />

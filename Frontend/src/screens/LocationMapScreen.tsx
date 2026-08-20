@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, MapPin } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing } from 'react-native-reanimated';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 import { getCaregiverUserLocation } from '../services/caregiverApi';
 
 export default function LocationMapScreen({ navigation, route }: any) {
@@ -85,7 +85,7 @@ export default function LocationMapScreen({ navigation, route }: any) {
       </View>
 
       <View style={styles.content}>
-        <View style={[styles.mapPlaceholder, cardStyle, neuSm, { backgroundColor: mapBg, overflow: 'hidden' }]}>
+        <View style={[styles.mapPlaceholder, cardStyle, shadowSm, { backgroundColor: mapBg, overflow: 'hidden' }]}>
           {/* Grid lines for map feel */}
           <View style={[styles.gridLineH, { top: '25%', backgroundColor: gridColor }]} />
           <View style={[styles.gridLineH, { top: '50%', backgroundColor: gridColor }]} />
@@ -101,7 +101,7 @@ export default function LocationMapScreen({ navigation, route }: any) {
             </View>
           </View>
 
-          <View style={[styles.mapOverlayLabel, cardStyle, neuSm]}>
+          <View style={[styles.mapOverlayLabel, cardStyle, shadowSm]}>
             <Text style={[styles.mapOverlayText, textStyle]}>Current Location</Text>
             <Text style={[styles.mapOverlaySub, subTextStyle]}>
               {locationData 
@@ -111,7 +111,7 @@ export default function LocationMapScreen({ navigation, route }: any) {
           </View>
         </View>
 
-        <View style={[styles.card, cardStyle, neuSm, { marginTop: spacing.md }]}>
+        <View style={[styles.card, cardStyle, shadowSm, { marginTop: spacing.md }]}>
           <Text style={[styles.cardSuperTitle, subTextStyle]}>LOCATION DETAILS</Text>
           <View style={styles.compactRow}>
             <Text style={[styles.infoLabel, subTextStyle]}>Sharing Status</Text>

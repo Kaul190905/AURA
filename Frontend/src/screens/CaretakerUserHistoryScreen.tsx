@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Filter } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 import { getCaregiverUserAlerts } from '../services/caregiverApi';
 
 const formatTime = (ts: number) => {
@@ -74,7 +74,7 @@ export default function CaretakerUserHistoryScreen({ navigation, route }: any) {
         
         {/* History & Insights Overview */}
         <Text style={[styles.sectionHeader, textStyle]}>HISTORY & INSIGHTS</Text>
-        <View style={[styles.overviewCard, cardStyle, neuSm]}>
+        <View style={[styles.overviewCard, cardStyle, shadowSm]}>
           <View style={styles.filterRow}>
             <Text style={[styles.overviewTitle, textStyle]}>Overview</Text>
             <TouchableOpacity style={styles.filterBtn}>
@@ -103,11 +103,11 @@ export default function CaretakerUserHistoryScreen({ navigation, route }: any) {
         <Text style={[styles.sectionHeader, textStyle]}>TIMELINE</Text>
         
         {loading ? (
-          <View style={[styles.emptyState, cardStyle, neuSm]}>
+          <View style={[styles.emptyState, cardStyle, shadowSm]}>
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
         ) : history.length === 0 ? (
-          <View style={[styles.emptyState, cardStyle, neuSm]}>
+          <View style={[styles.emptyState, cardStyle, shadowSm]}>
             <Text style={[styles.emptyStateTitle, textStyle]}>No sensory history yet</Text>
             <Text style={[styles.emptyStateSub, subTextStyle]}>
               AURA will show sensory events here as they are recorded.
@@ -120,7 +120,7 @@ export default function CaretakerUserHistoryScreen({ navigation, route }: any) {
             const riskLabel = event.severity || 'Normal';
 
             return (
-              <View key={event.id || index} style={[styles.timelineEvent, cardStyle, neuSm]}>
+              <View key={event.id || index} style={[styles.timelineEvent, cardStyle, shadowSm]}>
                 <View style={styles.eventHeader}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <View style={[styles.timelineDot, { backgroundColor: riskColor }]} />
