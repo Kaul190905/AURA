@@ -9,16 +9,16 @@
   "owner": "sakthiselvams-team",
   "slug": "aura",
   "runtimeVersion": "1.0.0",
-  "icon": "./assets/AURA.jpg",
+  "icon": "./assets/AURA.png",
   "splash": {
-    "image": "./assets/AURA.jpg",
+    "image": "./assets/AURA.png",
     "resizeMode": "contain",
     "backgroundColor": "#ffffff"
   },
   "android": {
     "package": "com.aura.mobile",
     "adaptiveIcon": {
-      "foregroundImage": "./assets/AURA.jpg",
+      "foregroundImage": "./assets/AURA.png",
       "backgroundColor": "#ffffff"
     }
   },
