@@ -191,6 +191,9 @@ function ProfileStackNavigator() {
   );
 }
 
+// Module-level set to track seen alerts across polling intervals
+export const seenCaretakerAlerts = new Set<string>();
+
 export default function App() {
   const [appScreen, setAppScreen] = useState<AppScreen>('welcome');
   const [primaryRole, setPrimaryRole] = useState<'user' | 'caretaker' | null>(null);
@@ -235,6 +238,7 @@ export default function App() {
       setHistory([]);
       setNotifications([]);
       stopLocationTracking();
+      seenCaretakerAlerts.clear();
       return;
     }
 
@@ -375,7 +379,16 @@ export default function App() {
         if (allAlerts.length > 0) {
           setNotifications(prev => {
             const map = new Map(prev.map(n => [n.id, n]));
-            allAlerts.forEach(a => map.set(a.id, a));
+            let updated = false;
+            allAlerts.forEach(a => {
+              if (!seenCaretakerAlerts.has(a.id)) {
+                updated = true;
+                seenCaretakerAlerts.add(a.id);
+                scheduleLocalNotification(a.title, a.description);
+                map.set(a.id, a);
+              }
+            });
+            if (!updated) return prev;
             return Array.from(map.values()).sort((a, b) => b.time - a.time);
           });
         }

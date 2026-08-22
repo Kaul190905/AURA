@@ -6,6 +6,8 @@ import { AppContext, AppNotification } from '../AppContext';
 import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 import { riskColor } from '../utils';
 import { connectCaregiverIoTData, getPendingInvitations, acceptInvitation, CaregiverResponse, getAssignedUsersDetails } from '../services/caregiverApi';
+import { scheduleLocalNotification } from '../services/NotificationService';
+import { seenCaretakerAlerts } from '../../App';
 
 function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string }) {
   const [bpm, setBpm] = useState(82);
@@ -20,6 +22,8 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
         setNotifications((prev: AppNotification[]) => {
           const exists = prev.find((n: AppNotification) => n.id === data.alert.id);
           if (exists) { return prev; }
+          seenCaretakerAlerts.add(data.alert.id);
+          scheduleLocalNotification('Critical Alert', data.alert.message);
           return [{
             id: data.alert.id,
             title: 'Critical Alert',
@@ -273,7 +277,6 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
                   <Text style={[styles.criticalCountText, { color: colors.riskLow }]}>{stats.safe}</Text>
                 </View>
               </View>
-              
               {mockUsers.filter(u => !u.isCrisis && u.risk < 5).map(user => {
                 const rColor = riskColor(user.risk);
                 return (
