@@ -19,6 +19,8 @@ import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEven
 import { registerForPushNotificationsAsync, scheduleLocalNotification } from './src/services/NotificationService';
 import { startLocationTracking, stopLocationTracking } from './src/services/LocationService';
 import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
+import * as TaskManager from 'expo-task-manager';
+import * as BackgroundFetch from 'expo-background-fetch';
 
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
@@ -193,6 +195,41 @@ function ProfileStackNavigator() {
 
 // Module-level set to track seen alerts across polling intervals
 export const seenCaretakerAlerts = new Set<string>();
+
+const BACKGROUND_FETCH_TASK = 'background-fetch-caretaker-alerts';
+
+TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      return BackgroundFetch.BackgroundFetchResult.NoData;
+    }
+
+    const assigned = await getAssignedUsers();
+    let hasNew = false;
+    
+    for (const assignment of assigned) {
+      try {
+        const userAlerts = await getCaregiverUserAlerts(assignment.user_id);
+        if (Array.isArray(userAlerts)) {
+          userAlerts.forEach((a: any) => {
+            if (!seenCaretakerAlerts.has(a.id)) {
+              seenCaretakerAlerts.add(a.id);
+              scheduleLocalNotification(
+                a.severity === 'critical' ? 'Critical Alert' : 'Alert',
+                a.message
+              );
+              hasNew = true;
+            }
+          });
+        }
+      } catch (e) {}
+    }
+    return hasNew ? BackgroundFetch.BackgroundFetchResult.NewData : BackgroundFetch.BackgroundFetchResult.NoData;
+  } catch (error) {
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
 
 export default function App() {
   const [appScreen, setAppScreen] = useState<AppScreen>('welcome');
@@ -401,7 +438,24 @@ export default function App() {
     loadCaretakerData();
     // Refresh every 30 seconds
     const interval = setInterval(loadCaretakerData, 30000);
-    return () => clearInterval(interval);
+
+    const registerBackgroundFetch = async () => {
+      try {
+        await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+          minimumInterval: 60 * 15, // 15 minutes
+          stopOnTerminate: false, 
+          startOnBoot: true, 
+        });
+      } catch (err) {
+        console.log("BackgroundFetch registration failed:", err);
+      }
+    };
+    registerBackgroundFetch();
+
+    return () => {
+      clearInterval(interval);
+      BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK).catch(() => {});
+    };
   }, [userId, primaryRole]);
 
   // Handle Deep Links for Google OAuth Redirect
