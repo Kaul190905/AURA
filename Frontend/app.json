@@ -18,7 +18,7 @@
   "android": {
     "package": "com.aura.mobile",
     "adaptiveIcon": {
-      "foregroundImage": "./assets/AURA.png",
+      "foregroundImage": "./assets/adaptive-icon.png",
       "backgroundColor": "#ffffff"
     }
   },
