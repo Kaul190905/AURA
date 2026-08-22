@@ -5,6 +5,12 @@ from fastapi import HTTPException, status
 from app.schemas.alert import AlertCreate, AlertResponse
 from app.repositories.alert_repository import AlertRepository
 
+from sqlalchemy import select
+import httpx
+from app.domain.models.caregiver import CaregiverAssignment
+from app.domain.models.push_token import UserPushToken
+from app.api.v1.routes.caregivers import manager
+
 class AlertService:
     """Service layer for Alert business logic."""
 
@@ -14,7 +20,50 @@ class AlertService:
     async def create_alert(self, data_in: AlertCreate) -> AlertResponse:
         """Process and create a new alert."""
         new_alert = await self.alert_repository.create(data_in)
-        return AlertResponse.model_validate(new_alert)
+        alert_resp = AlertResponse.model_validate(new_alert)
+
+        if data_in.severity in ("HIGH", "critical"):
+            try:
+                # 1. Broadcast via WebSocket
+                await manager.broadcast_to_caregivers(uuid.UUID(data_in.user_id), {
+                    "type": "SOS_ALERT" if data_in.type == "SOS" else "CRITICAL_ALERT",
+                    "alert": alert_resp.model_dump(mode="json")
+                })
+                
+                # 2. Send Expo Push Notifications
+                db = self.alert_repository.db
+                cg_result = await db.execute(
+                    select(CaregiverAssignment.caregiver_id)
+                    .where(CaregiverAssignment.user_id == uuid.UUID(data_in.user_id))
+                    .where(CaregiverAssignment.status == "active")
+                )
+                caregiver_ids = cg_result.scalars().all()
+
+                if caregiver_ids:
+                    token_result = await db.execute(
+                        select(UserPushToken.token)
+                        .where(UserPushToken.user_id.in_(caregiver_ids))
+                    )
+                    tokens = token_result.scalars().all()
+
+                    if tokens:
+                        messages = []
+                        title = "🚨 EMERGENCY SOS 🚨" if data_in.type == "SOS" else "🚨 CRITICAL ALERT 🚨"
+                        for token in tokens:
+                            messages.append({
+                                "to": token,
+                                "sound": "default",
+                                "title": title,
+                                "body": data_in.message,
+                                "data": {"type": "SOS_ALERT" if data_in.type == "SOS" else "CRITICAL_ALERT", "user_id": data_in.user_id}
+                            })
+                        
+                        async with httpx.AsyncClient() as client:
+                            await client.post("https://exp.host/--/api/v2/push/send", json=messages)
+            except Exception as e:
+                print(f"Failed to dispatch alert notifications: {e}")
+
+        return alert_resp
 
     async def get_alerts(
         self,

@@ -37,7 +37,7 @@ async def trigger_sos(
     db = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    # 1. Create Critical Alert in DB
+    # 1. Create Critical Alert in DB (which now automatically broadcasts & pushes)
     alert_data = AlertCreate(
         user_id=str(req.user_id),
         type="SOS",
@@ -45,49 +45,6 @@ async def trigger_sos(
         message="🚨 EMERGENCY SOS TRIGGERED 🚨"
     )
     alert = await alert_service.create_alert(alert_data)
-
-    # 2. Broadcast via WebSocket to connected caregivers
-    await manager.broadcast_to_caregivers(req.user_id, {
-        "type": "SOS_ALERT",
-        "alert": alert.model_dump(mode="json")
-    })
-
-    # 3. Send Expo Push Notifications to all assigned caregivers
-    # Find all caregiver IDs assigned to this user
-    cg_result = await db.execute(
-        select(CaregiverAssignment.caregiver_id)
-        .where(CaregiverAssignment.user_id == req.user_id)
-        .where(CaregiverAssignment.status == "active")
-    )
-    caregiver_ids = cg_result.scalars().all()
-
-    if caregiver_ids:
-        # Get their push tokens
-        token_result = await db.execute(
-            select(UserPushToken.token)
-            .where(UserPushToken.user_id.in_(caregiver_ids))
-        )
-        tokens = token_result.scalars().all()
-
-        if tokens:
-            messages = []
-            for token in tokens:
-                messages.append({
-                    "to": token,
-                    "sound": "default",
-                    "title": "🚨 EMERGENCY SOS 🚨",
-                    "body": "Your assigned patient has triggered an SOS alert. Please check the dashboard immediately.",
-                    "data": {"type": "SOS_ALERT", "user_id": str(req.user_id)}
-                })
-            
-            async with httpx.AsyncClient() as client:
-                try:
-                    await client.post(
-                        "https://exp.host/--/api/v2/push/send",
-                        json=messages
-                    )
-                except Exception as e:
-                    print(f"Failed to send Expo push: {e}")
 
     return {"status": "success", "alert_id": alert.id}
 
