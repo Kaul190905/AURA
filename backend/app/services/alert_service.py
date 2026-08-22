@@ -9,7 +9,6 @@ from sqlalchemy import select
 import httpx
 from app.domain.models.caregiver import CaregiverAssignment
 from app.domain.models.push_token import UserPushToken
-from app.api.v1.routes.caregivers import manager
 
 class AlertService:
     """Service layer for Alert business logic."""
@@ -24,6 +23,8 @@ class AlertService:
 
         if data_in.severity in ("HIGH", "critical"):
             try:
+                # Local import to avoid circular dependencies
+                from app.api.v1.routes.caregivers import manager
                 # 1. Broadcast via WebSocket
                 await manager.broadcast_to_caregivers(uuid.UUID(data_in.user_id), {
                     "type": "SOS_ALERT" if data_in.type == "SOS" else "CRITICAL_ALERT",
