@@ -23,6 +23,15 @@
     }
   },
   "plugins": [
-    "react-native-ble-plx"
+    [
+      "react-native-ble-plx",
+      {
+        "isBackgroundEnabled": true,
+        "modes": [
+          "central"
+        ],
+        "bluetoothAlwaysPermission": "Allow AURA to connect to your wearable device in the background"
+      }
+    ]
   ]
 }

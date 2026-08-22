@@ -1,6 +1,15 @@
 import { Platform, PermissionsAndroid } from 'react-native';
 import { BleManager, Device, Subscription } from 'react-native-ble-plx';
 import { Buffer } from 'buffer';
+import notifee, { AndroidImportance } from '@notifee/react-native';
+
+// Register the Notifee foreground service task
+notifee.registerForegroundService((notification) => {
+  return new Promise(() => {
+    // This promise will stay unresolved to keep the service alive
+    // until notifee.stopForegroundService() is called upon disconnect
+  });
+});
 
 // Nordic UART Service (NUS) UUIDs
 export const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
@@ -72,6 +81,40 @@ class BleManagerService {
     );
   }
 
+  private async startForegroundService() {
+    if (Platform.OS !== 'android') return;
+    try {
+      const channelId = await notifee.createChannel({
+        id: 'ble-background-service',
+        name: 'Bluetooth Background Service',
+        importance: AndroidImportance.LOW,
+      });
+
+      await notifee.displayNotification({
+        id: 'aura-ble-service',
+        title: 'AURA is connected',
+        body: 'Monitoring your vitals via Bluetooth.',
+        android: {
+          channelId,
+          asForegroundService: true,
+          ongoing: true,
+          color: '#FF4500',
+        },
+      });
+    } catch (e) {
+      console.warn('[BLE] Error starting foreground service:', e);
+    }
+  }
+
+  private async stopForegroundService() {
+    if (Platform.OS !== 'android') return;
+    try {
+      await notifee.stopForegroundService();
+    } catch (e) {
+      console.warn('[BLE] Error stopping foreground service:', e);
+    }
+  }
+
   stopDeviceScan() {
     this.manager.stopDeviceScan();
   }
@@ -84,6 +127,9 @@ class BleManagerService {
     try {
       const connected = await device.connect();
       this.connectedDevice = connected;
+
+      // Start the Notifee foreground service to keep BLE alive in background
+      await this.startForegroundService();
 
       // Discover services and characteristics
       await connected.discoverAllServicesAndCharacteristics();
@@ -141,6 +187,7 @@ class BleManagerService {
   }
 
   private cleanup() {
+    this.stopForegroundService();
     if (this.txSubscription) {
       this.txSubscription.remove();
       this.txSubscription = null;
