@@ -331,7 +331,7 @@ export default function App() {
               condition = 'SOS Triggered';
               risk = 10;
             } else if (userNoise && userNoise > 85) { risk = 8; condition = 'High Noise'; }
-            else if (userTemp && userTemp > 100) { risk = 7; condition = 'High Temperature'; }
+            else if (userTemp && userTemp > 37.8) { risk = 7; condition = 'High Temperature'; }
             else if (userHr && userHr > 100) { risk = 6; condition = 'High Heart Rate'; }
 
             return {
@@ -345,7 +345,7 @@ export default function App() {
               locationSharingStatus: 'Active' as const,
               lastUpdated: sensors?.timestamp ? new Date(sensors.timestamp).toLocaleTimeString() : 'Just now',
               sensoryProfile: { sound: userProfile.sound > 3, temperature: userProfile.temp > 3 },
-              currentSensorData: { heartRate: userHr || null, soundDb: userNoise || null, temperatureC: userTemp ? ((userTemp - 32) * 5 / 9) : null },
+              currentSensorData: { heartRate: userHr || null, soundDb: userNoise || null, temperatureC: userTemp || null },
               aboutMe: metadata.aboutMe || '',
               dob: metadata.dob || '',
               emergencyCaregiver: metadata.caregiver || null,
@@ -550,20 +550,20 @@ export default function App() {
 
   useEffect(() => {
     if (temperature === null) { return; }
-    const isDangerousTemp = temperature >= 104 || temperature <= 95;
+    const isDangerousTemp = temperature >= 40.0 || temperature <= 35.0;
     if (isDangerousTemp && !dangerousTempAlerted) {
       setDangerousTempAlerted(true);
-      const condition = temperature >= 104 ? 'Overheating (Heat Stroke)' : 'Hypothermia (Extreme Cold)';
+      const condition = temperature >= 40.0 ? 'Overheating (Heat Stroke)' : 'Hypothermia (Extreme Cold)';
       setNotifications(prev => [{
         id: Math.random().toString(),
         title: 'Dangerous Temperature Alert',
-        description: `Core body temperature is ${temperature}°F (${condition}).`,
+        description: `Core body temperature is ${temperature.toFixed(1)}°C (${condition}).`,
         time: Date.now(),
         read: false,
         type: 'alert',
       }, ...prev]);
 
-      setPopupState({ visible: true, message: `Core temperature is ${temperature}°F. An alert has been sent to your caretaker.` });
+      setPopupState({ visible: true, message: `Core temperature is ${temperature.toFixed(1)}°C. An alert has been sent to your caretaker.` });
       setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
     } else if (!isDangerousTemp && dangerousTempAlerted) {
       setDangerousTempAlerted(false);

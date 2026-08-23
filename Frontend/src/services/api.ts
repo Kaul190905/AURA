@@ -12,7 +12,7 @@ export interface SensorDataCreate {
   timestamp?: string; // ISO-8601; backend defaults to now()
   heart_rate?: number | null;
   blood_oxygen?: number | null;
-  temperature?: number | null; // °F
+  temperature?: number | null; // °C
   noise?: number | null; // dB
   latitude?: number | null;
   longitude?: number | null;

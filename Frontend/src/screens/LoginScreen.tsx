@@ -49,6 +49,31 @@ export default function LoginScreen({ onSuccess }: Props) {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
+  const parseAuthError = (err: any, isGoogle: boolean = false) => {
+    let msg = err?.message ?? 'Authentication failed. Please try again.';
+    if (typeof msg === 'string' && msg.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(msg);
+        if (parsed.status === 500) {
+          if (isGoogle) {
+            msg = 'Google Sign-In configuration error in Supabase. Please ensure your Google Web Client ID is configured in the Supabase Dashboard under Auth Providers.';
+          } else {
+            msg = 'Server error: Email sending may have failed. Please check your Supabase SMTP settings.';
+          }
+        } else {
+          msg = parsed.msg || parsed.message || parsed.error_description || 'Authentication failed.';
+        }
+      } catch (e) {
+        if (msg.includes('"status":500')) {
+          msg = isGoogle 
+            ? 'Google Sign-In configuration error in Supabase (500).'
+            : 'Server error (500). Please check your Supabase SMTP or project settings.';
+        }
+      }
+    }
+    return msg;
+  };
+
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
       setError('Please enter your email and password.');
@@ -72,18 +97,7 @@ export default function LoginScreen({ onSuccess }: Props) {
         onSuccess();
       }
     } catch (err: any) {
-      let msg = err?.message ?? 'Authentication failed. Please try again.';
-      if (typeof msg === 'string' && msg.startsWith('{')) {
-        try {
-          const parsed = JSON.parse(msg);
-          msg = parsed.msg || parsed.message || parsed.error_description || (parsed.status === 500 ? 'Server error: Email sending may have failed. Please check your Supabase SMTP settings.' : 'Authentication failed.');
-        } catch (e) {
-          if (msg.includes('"status":500')) {
-            msg = 'Server error (500). Please check your Supabase SMTP or project settings.';
-          }
-        }
-      }
-      setError(msg);
+      setError(parseAuthError(err, false));
     } finally {
       setLoading(false);
     }
@@ -97,7 +111,7 @@ export default function LoginScreen({ onSuccess }: Props) {
       // For web/redirect-based OAuth, the app will reload on redirect and trigger onAuthStateChange
       onSuccess();
     } catch (err: any) {
-      setError(err?.message ?? 'Google Sign-In failed.');
+      setError(parseAuthError(err, true));
     } finally {
       setLoading(false);
     }
