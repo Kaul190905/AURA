@@ -1,10 +1,11 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, FlatList, ActivityIndicator, Alert,
+  Vibration,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Bluetooth, Zap, Volume2, Sun, Shield, RefreshCw } from 'lucide-react-native';
+import { Bluetooth, Zap, Volume2, Sun, Shield, RefreshCw, Siren } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 import { colors, neuSm, radius, spacing, fonts } from '../theme';
@@ -12,14 +13,52 @@ import { submitSensorData } from '../services/api';
 import { bleManagerService } from '../services/bleManagerService';
 import { Device } from 'react-native-ble-plx';
 
+// Repeating vibrate pattern used as the in-app SOS ring. Passing `true`
+// to Vibration.vibrate loops it until stopSosRing() cancels it.
+const SOS_PATTERN = [0, 700, 400, 700, 400];
+
 export default function WearableScreen() {
   const styles = getStyles();
-  const { bleConnected, setBleConnected, noise, setNoise, temperature, setTemperature, heartRate, setHeartRate, userId } = useContext(AppContext);
+  const { bleConnected, setBleConnected, noise, setNoise, temperature, setTemperature, heartRate, setHeartRate, userId, setTelemetryStale } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [pairing, setPairing] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [devices, setDevices] = useState<Device[]>([]);
   const [showScanModal, setShowScanModal] = useState(false);
+  const [sosActive, setSosActive] = useState(false);
+  const [sosOrigin, setSosOrigin] = useState<'band' | 'phone' | null>(null);
+
+  const ringing = useRef(false);
+  const lastTelemetryTime = useRef(0);
+
+  const startSosRing = useCallback(() => {
+    if (ringing.current) { return; }
+    ringing.current = true;
+    Vibration.vibrate(SOS_PATTERN, true);
+  }, []);
+
+  const stopSosRing = useCallback(() => {
+    ringing.current = false;
+    Vibration.cancel();
+  }, []);
+
+  // Never leave the phone buzzing if the screen goes away.
+  useEffect(() => stopSosRing, [stopSosRing]);
+
+  useEffect(() => {
+    if (!bleConnected) {
+      setTelemetryStale(false);
+      return;
+    }
+    const interval = setInterval(() => {
+      if (Date.now() - lastTelemetryTime.current > 3000) {
+        setTelemetryStale(true);
+      } else {
+        setTelemetryStale(false);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [bleConnected, setTelemetryStale]);
 
   const startScan = async () => {
     const granted = await bleManagerService.requestPermissions();
@@ -60,28 +99,44 @@ export default function WearableScreen() {
     try {
       await bleManagerService.connectToDevice(
         device,
-        (rawData) => {
-          console.log('[BLE] Raw Data:', rawData);
-          try {
-            if (rawData.startsWith('{')) {
-              const parsed = JSON.parse(rawData);
-              if (parsed.noise !== undefined) { setNoise(parsed.noise); }
-              if (parsed.temp !== undefined) { setTemperature(parsed.temp); }
-              if (parsed.bpm !== undefined) { setHeartRate(parsed.bpm); }
-            } else {
-              const noiseMatch = rawData.match(/(?:noise|N)[:=]\s*(\d+)/i);
-              const tempMatch = rawData.match(/(?:temp|T)[:=]\s*([\d.]+)/i);
-              const bpmMatch = rawData.match(/(?:bpm|H)[:=]\s*(\d+)/i);
-              if (noiseMatch) { setNoise(parseInt(noiseMatch[1], 10)); }
-              if (tempMatch) { setTemperature(parseFloat(tempMatch[1])); }
-              if (bpmMatch) { setHeartRate(parseInt(bpmMatch[1], 10)); }
+        {
+          onTelemetry: (t) => {
+            lastTelemetryTime.current = Date.now();
+            setTelemetryStale(false);
+            setNoise(Math.round(t.micDb));
+            if (t.bpm > 0) {
+              setHeartRate(Math.round(t.bpm));
             }
-          } catch (e) {
-            console.warn('[BLE] Error parsing data:', rawData, e);
-          }
+            setTemperature(t.tempC);
+          },
+          onSosFromBand: (source) => {
+            setSosActive(true);
+            setSosOrigin(source === 'PHONE' ? 'phone' : 'band');
+            if (source !== 'PHONE') {
+              // The wearer pressed the button. Ring the phone and tell
+              // the band we heard it so it eases off its buzzing.
+              startSosRing();
+              bleManagerService.acknowledgeSOS().catch(() => {});
+              Alert.alert(
+                'SOS from AURA band',
+                'The band SOS button was pressed.',
+                [{ text: 'Dismiss', onPress: stopSosRing }],
+                { cancelable: false }
+              );
+            }
+          },
+          onSosCleared: () => {
+            setSosActive(false);
+            setSosOrigin(null);
+            stopSosRing();
+          },
+          onRawLine: (line) => console.log('[BLE]', line),
         },
         () => {
           setBleConnected(false);
+          setSosActive(false);
+          setSosOrigin(null);
+          stopSosRing();
         }
       );
       setBleConnected(true);
@@ -95,21 +150,54 @@ export default function WearableScreen() {
   };
 
   const disconnectDevice = async () => {
+    stopSosRing();
+    setSosActive(false);
+    setSosOrigin(null);
     await bleManagerService.disconnect();
     setBleConnected(false);
   };
 
+  // Phone -> band: make the wearable vibrate and glow red.
+  const triggerBandSOS = async () => {
+    try {
+      await bleManagerService.sendSOS();
+      setSosActive(true);
+      setSosOrigin('phone');
+    } catch (e: any) {
+      Alert.alert('SOS Failed', e.message || 'Could not reach the AURA band.');
+    }
+  };
+
+  const clearBandSOS = async () => {
+    stopSosRing();
+    try {
+      await bleManagerService.clearSOS();
+    } catch (e: any) {
+      console.warn('[BLE] Clear SOS failed:', e);
+    }
+    setSosActive(false);
+    setSosOrigin(null);
+  };
+
+  const latestSensors = useRef({ noise, temperature, heartRate });
+  useEffect(() => {
+    latestSensors.current = { noise, temperature, heartRate };
+  }, [noise, temperature, heartRate]);
+
   // Push sensor data to backend when BLE is connected
   useEffect(() => {
     if (!bleConnected || !userId) { return; }
-    submitSensorData({
-      user_id: userId,
-      noise,
-      temperature,
-      heart_rate: heartRate,
-      blood_oxygen: null,
-    }).catch((e) => console.warn('[AURA] Wearable sensor push failed:', e));
-  }, [bleConnected, userId, noise, temperature, heartRate]);
+    const interval = setInterval(() => {
+      submitSensorData({
+        user_id: userId,
+        noise: latestSensors.current.noise,
+        temperature: latestSensors.current.temperature,
+        heart_rate: latestSensors.current.heartRate,
+        blood_oxygen: null,
+      }).catch((e) => console.warn('[AURA] Wearable sensor push failed:', e));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [bleConnected, userId]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -202,6 +290,41 @@ export default function WearableScreen() {
               style={{ marginTop: 10 }}
             />
           </View>
+        </View>
+        </View>
+
+        {/* SOS */}
+        <View style={styles.sectionContainer}>
+        <View style={[styles.sectionCard, sosActive && styles.sosCardActive]}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Siren size={18} color={sosActive ? '#d92d20' : colors.primary} />
+              <Text style={styles.sectionTitle}>Emergency</Text>
+            </View>
+          </View>
+          <Text style={styles.sensorHint}>
+            {!bleConnected
+              ? 'Pair the AURA band to use SOS.'
+              : sosActive
+                ? sosOrigin === 'band'
+                  ? 'SOS raised from the band button.'
+                  : 'Alerting the band — it is vibrating and glowing red.'
+                : 'Sends an alert to the band: it vibrates and glows red until stopped. Pressing the button on the band rings this phone.'}
+          </Text>
+          <TouchableOpacity
+            onPress={sosActive ? clearBandSOS : triggerBandSOS}
+            disabled={!bleConnected}
+            style={[
+              styles.sosBtn,
+              sosActive && styles.sosBtnStop,
+              !bleConnected && styles.sosBtnDisabled,
+            ]}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.sosBtnText}>
+              {sosActive ? 'Stop alert' : 'Send SOS to band'}
+            </Text>
+          </TouchableOpacity>
         </View>
         </View>
 
@@ -332,6 +455,14 @@ const getStyles = () => StyleSheet.create({
   sliderCardHint: { fontSize: 10, color: colors.mutedForeground },
   sliderValue: { fontSize: 13, color: colors.foreground, ...fonts.semibold },
   sliderUnit: { fontSize: 10, color: colors.mutedForeground },
+  sosCardActive: { borderWidth: 1, borderColor: '#d92d20' },
+  sosBtn: {
+    height: 46, borderRadius: radius.full, marginTop: 12,
+    alignItems: 'center', justifyContent: 'center', backgroundColor: '#d92d20',
+  },
+  sosBtnStop: { backgroundColor: colors.foreground },
+  sosBtnDisabled: { backgroundColor: colors.muted },
+  sosBtnText: { fontSize: 14, color: '#fff', ...fonts.bold, letterSpacing: 1 },
   statsRow: { flexDirection: 'row', gap: 10, marginTop: 8 },
   statCard: { flex: 1, backgroundColor: colors.background, borderRadius: radius.lg, padding: 12 },
   statLabel: { fontSize: 9, letterSpacing: 2, color: colors.mutedForeground, ...fonts.medium },

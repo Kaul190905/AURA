@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Heart, Thermometer, Mic } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
+import { connectCaregiverIoTData } from '../services/caregiverApi';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
 
 export default function SensoryStatusScreen({ navigation, route }: any) {
@@ -49,13 +50,36 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
   const soundIconColor = liveSound > 80 ? colors.riskHigh : colors.primary;
 
   useEffect(() => {
+    let realDataArrived = false;
+    const ws = connectCaregiverIoTData(userId, (payload) => {
+      realDataArrived = true;
+      const data = payload?.sensor_data || payload;
+      
+      if (data?.heart_rate !== undefined) setLiveBpm(data.heart_rate);
+      else if (data?.heartRate !== undefined) setLiveBpm(data.heartRate);
+      else if (data?.bpm !== undefined) setLiveBpm(data.bpm);
+
+      if (data?.temperature !== undefined) setLiveTemp(data.temperature);
+      else if (data?.temperatureC !== undefined) setLiveTemp(data.temperatureC);
+      else if (data?.temp !== undefined) setLiveTemp(data.temp);
+
+      if (data?.noise !== undefined) setLiveSound(data.noise);
+      else if (data?.soundDb !== undefined) setLiveSound(data.soundDb);
+      else if (data?.soundLevel !== undefined) setLiveSound(data.soundLevel);
+    });
+
     const interval = setInterval(() => {
+      if (realDataArrived) return;
       setLiveBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
       setLiveSound(prev => prev + (Math.floor(Math.random() * 11) - 5));
       setLiveTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
     }, 2500);
-    return () => clearInterval(interval);
-  }, []);
+
+    return () => {
+      clearInterval(interval);
+      ws.close();
+    };
+  }, [userId]);
 
   let activeTriggers: string[] = [];
   if (hasSound) activeTriggers.push('Sound');
@@ -115,9 +139,9 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
         </TouchableOpacity>
 
         {/* Sound Card (Conditional) */}
-        {hasSound && (
-          <TouchableOpacity
-            style={[styles.sensorCard, cardStyle, neuSm]}
+        {/* Sound Card */}
+        <TouchableOpacity
+          style={[styles.sensorCard, cardStyle, neuSm]}
             onPress={() => navigation.navigate('SoundHistory')}
             activeOpacity={0.7}
           >
@@ -146,11 +170,9 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
               </View>
             </View>
           </TouchableOpacity>
-        )}
 
-        {/* Temperature Card (Conditional) */}
-        {hasTemp && (
-          <View style={[styles.sensorCard, cardStyle, neuSm]}>
+        {/* Temperature Card */}
+        <View style={[styles.sensorCard, cardStyle, neuSm]}>
             <View style={styles.sensorCardHeader}>
               <View style={[styles.sensorIconBox, { backgroundColor: `${colors.riskMed}15` }]}>
                 <Thermometer size={22} color={colors.riskMed} />
@@ -164,7 +186,6 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
               </Text>
             </View>
           </View>
-        )}
 
       </View>
     </View>

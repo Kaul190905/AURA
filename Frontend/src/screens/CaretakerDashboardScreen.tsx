@@ -1,6 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { colors, radius, spacing, fonts, neuSm } from '../theme';
@@ -13,14 +14,27 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
   const [soundLevel, setSoundLevel] = useState(45);
 
   useEffect(() => {
-    const ws = connectCaregiverIoTData(userId, (data) => {
-      if (data.bpm) { setBpm(data.bpm); }
-      if (data.temp) { setTemp(data.temp); }
-      if (data.soundLevel) { setSoundLevel(data.soundLevel); }
+    let realDataArrived = false;
+    const ws = connectCaregiverIoTData(userId, (payload) => {
+      realDataArrived = true;
+      const data = payload?.sensor_data || payload;
+      
+      if (data?.heart_rate !== undefined) setBpm(data.heart_rate);
+      else if (data?.heartRate !== undefined) setBpm(data.heartRate);
+      else if (data?.bpm !== undefined) setBpm(data.bpm);
+
+      if (data?.temperature !== undefined) setTemp(data.temperature);
+      else if (data?.temperatureC !== undefined) setTemp(data.temperatureC);
+      else if (data?.temp !== undefined) setTemp(data.temp);
+
+      if (data?.noise !== undefined) setSoundLevel(data.noise);
+      else if (data?.soundDb !== undefined) setSoundLevel(data.soundDb);
+      else if (data?.soundLevel !== undefined) setSoundLevel(data.soundLevel);
     });
 
     // Fallback simulation if no real data is arriving yet (for UI demo purposes)
     const interval = setInterval(() => {
+      if (realDataArrived) return;
       setBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
       setTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
       setSoundLevel(prev => prev + (Math.floor(Math.random() * 11) - 5));
@@ -70,16 +84,18 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
     }
   };
 
-  useEffect(() => {
-    fetchPendingInvitations();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchPendingInvitations();
+    }, [])
+  );
 
   const handleAccept = async (assignmentId: string) => {
     try {
       await acceptInvitation(assignmentId);
       // Immediately remove from list
       setPendingInvitations(prev => prev.filter(inv => inv.id !== assignmentId));
-      // In a real app we might trigger a refresh of mockUsers via context here, but they refresh every 30s anyway.
+      Alert.alert('Accepted', 'You are now caring for this user. Their data will appear on your dashboard within a few moments.');
     } catch (e: any) {
       Alert.alert('Error', 'Failed to accept invitation: ' + e.message);
     }

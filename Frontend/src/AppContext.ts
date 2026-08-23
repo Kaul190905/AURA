@@ -45,6 +45,8 @@ export type AppState = {
   setSelfReport: (n: number) => void;
   bleConnected: boolean;
   setBleConnected: (v: boolean) => void;
+  telemetryStale: boolean;
+  setTelemetryStale: (v: boolean) => void;
   strategies: Strategy[];
   setStrategies: (s: Strategy[]) => void;
   history: HistoryEvent[];

@@ -13,9 +13,9 @@ import { TriggerKey, HistoryEvent, Strategy, Accommodation } from './src/types';
 import { computeRisk } from './src/utils';
 
 // Backend services
-import { getAssignedUsers, getCaregiverUserPreferences, getCaregiverUserSensorData } from './src/services/caregiverApi';
+import { getAssignedUsers, getCaregiverUserPreferences, getCaregiverUserSensorData, getCaregiverUserAlerts } from './src/services/caregiverApi';
 import { supabase } from './src/services/supabaseClient';
-import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEvents, getAlerts } from './src/services/api';
+import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEvents, getAlerts, createAlert } from './src/services/api';
 import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
 
 import WelcomeScreen from './src/screens/WelcomeScreen';
@@ -205,6 +205,7 @@ export default function App() {
   const [heartRate, setHeartRate] = useState<number | null>(null);
   const [selfReport, setSelfReport] = useState(3);
   const [bleConnected, setBleConnected] = useState(false);
+  const [telemetryStale, setTelemetryStale] = useState(false);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [history, setHistory] = useState<HistoryEvent[]>([]);
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
@@ -307,9 +308,10 @@ export default function App() {
 
         const userPromises = assigned.map(async (assignment) => {
           try {
-            const [prefs, sensors] = await Promise.all([
+            const [prefs, sensors, alerts] = await Promise.all([
               getCaregiverUserPreferences(assignment.user_id),
               getCaregiverUserSensorData(assignment.user_id).catch(() => null),
+              getCaregiverUserAlerts(assignment.user_id).catch(() => []),
             ]);
 
             const metadata = prefs.user_metadata || {};
@@ -323,7 +325,12 @@ export default function App() {
             const userTemp = sensors?.temperature;
             const userHr = sensors?.heart_rate;
 
-            if (userNoise && userNoise > 85) { risk = 8; condition = 'High Noise'; }
+            const activeSos = alerts?.find((a: any) => a.severity === 'critical' && !a.confirmed);
+            if (activeSos) {
+              isCrisis = true;
+              condition = 'SOS Triggered';
+              risk = 10;
+            } else if (userNoise && userNoise > 85) { risk = 8; condition = 'High Noise'; }
             else if (userTemp && userTemp > 100) { risk = 7; condition = 'High Temperature'; }
             else if (userHr && userHr > 100) { risk = 6; condition = 'High Heart Rate'; }
 
@@ -566,6 +573,10 @@ export default function App() {
   const handleSos = () => {
     setSosConfirmOpen(false);
     setSosSent(true);
+    if (userId) {
+      createAlert({ user_id: userId, severity: 'critical', message: 'SOS Triggered' })
+        .catch(err => console.warn('[AURA] Failed to send SOS alert:', err));
+    }
     setTimeout(() => {
       setSosSent(false);
     }, 10000);
@@ -580,7 +591,7 @@ export default function App() {
     caregiver, setCaregiver,
     profile, setProfile, dob, setDob,
     noise, setNoise, temperature, setTemperature, heartRate, setHeartRate, selfReport, setSelfReport,
-    bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
+    bleConnected, setBleConnected, telemetryStale, setTelemetryStale, strategies, setStrategies, history, logEvent,
     accommodations, setAccommodations, highContrast, setHighContrast,
     reduceMotion, setReduceMotion, darkMode, setDarkMode, colorVisionMode, setColorVisionMode: handleSetColorVisionMode, sensitivity, setSensitivity,
     risk, primaryTrigger, suggestions, goCrisis, triggerSos: () => setSosConfirmOpen(true),
