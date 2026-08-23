@@ -62,9 +62,18 @@ export default function WearableScreen() {
         device,
         (rawData) => {
           console.log('[BLE] Raw Data:', rawData);
+          
+          let parsed = null;
           try {
-            if (rawData.startsWith('{')) {
-              const parsed = JSON.parse(rawData);
+            if (rawData.trim().startsWith('{')) {
+              parsed = JSON.parse(rawData);
+            }
+          } catch (e) {
+            // It might be a chunked JSON string, let it fall through to regex
+          }
+
+          try {
+            if (parsed) {
               let n = parsed.noise !== undefined ? parsed.noise : (parsed.noiseLevel !== undefined ? parsed.noiseLevel : parsed.sound);
               if (n !== undefined) { setNoise(n); }
               let t = parsed.temperature !== undefined ? parsed.temperature : parsed.temp;
@@ -109,17 +118,7 @@ export default function WearableScreen() {
     setBleConnected(false);
   };
 
-  // Push sensor data to backend when BLE is connected
-  useEffect(() => {
-    if (!bleConnected || !userId) { return; }
-    submitSensorData({
-      user_id: userId,
-      noise,
-      temperature,
-      heart_rate: heartRate,
-      blood_oxygen: null,
-    }).catch((e) => console.warn('[AURA] Wearable sensor push failed:', e));
-  }, [bleConnected, userId, noise, temperature, heartRate]);
+
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>

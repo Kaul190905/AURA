@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -529,27 +529,34 @@ export default function App() {
   }, [profile]);
 
   // ── Periodic sensor data push ───────────────────────────────────────────────
+  const latestSensors = useRef({ noise, temperature, heartRate });
+  useEffect(() => {
+    latestSensors.current = { noise, temperature, heartRate };
+  }, [noise, temperature, heartRate]);
+
   useEffect(() => {
     if (!userId || !bleConnected) { return; }
     const push = async () => {
-      if (noise === null || temperature === null || heartRate === null) {return;}
+      const current = latestSensors.current;
+      if (current.noise === null || current.temperature === null || current.heartRate === null) {return;}
       try {
         await submitSensorData({
           user_id: userId,
-          noise,
-          temperature,
-          heart_rate: heartRate,
+          noise: current.noise,
+          temperature: current.temperature,
+          heart_rate: current.heartRate,
           blood_oxygen: null,
         });
       } catch (e) {
         console.warn('[AURA] Sensor push failed:', e);
       }
     };
-    // Push immediately on connect / userId change, then on interval
+    
+    // Push immediately on connect, then on interval
     push();
     const timer = setInterval(push, SENSOR_PUSH_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [userId, bleConnected, noise, temperature, heartRate]);
+  }, [userId, bleConnected]);
 
   const risk = useMemo(() => computeRisk(noise, temperature, selfReport, profile), [noise, temperature, selfReport, profile]);
 
