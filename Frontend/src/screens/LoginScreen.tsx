@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, KeyboardAvoidingView, Platform, Animated,
-  ScrollView, Image
+  ScrollView, Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, Globe, User, Heart } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, ChevronRight, Globe, User, Heart } from 'lucide-react-native';
 import Logo from '../../assets/AURA.png';
 import { signIn, signUp, signInWithGoogle } from '../services/supabaseClient';
 import { colors, fonts, radius, spacing } from '../theme';
@@ -65,7 +65,7 @@ export default function LoginScreen({ onSuccess }: Props) {
         }
       } catch (e) {
         if (msg.includes('"status":500')) {
-          msg = isGoogle 
+          msg = isGoogle
             ? 'Google Sign-In configuration error in Supabase (500).'
             : 'Server error (500). Please check your Supabase SMTP or project settings.';
         }
@@ -144,9 +144,9 @@ export default function LoginScreen({ onSuccess }: Props) {
             <Animated.View
               style={[styles.breatheRing, { transform: [{ scale: breathe }] }]}
             />
-            <Image 
+            <Image
               source={Logo}
-              style={{ width: 40, height: 40, borderRadius: 20 }} 
+              style={styles.logoImage}
             />
           </View>
 
@@ -385,6 +385,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 6, height: 6 },
     shadowOpacity: 0.5,
     shadowRadius: 16,
+  },
+  logoImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   breatheRing: {
     position: 'absolute',
