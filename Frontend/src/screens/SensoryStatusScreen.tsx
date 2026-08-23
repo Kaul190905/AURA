@@ -1,15 +1,15 @@
-import React, { useContext, useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Heart, Thermometer, Mic } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { connectCaregiverIoTData } from '../services/caregiverApi';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 
 export default function SensoryStatusScreen({ navigation, route }: any) {
   const { mockUsers, darkMode } = useContext(AppContext);
   const insets = useSafeAreaInsets();
-  
+
   const userId = route?.params?.userId;
   const connectedUser = mockUsers.find(u => u.id === userId);
 
@@ -18,30 +18,19 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
   const textStyle = darkMode ? { color: '#ffffff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaaaaa' } : { color: colors.mutedForeground };
 
-  if (!connectedUser) {
-    return (
-      <View style={[styles.container, bgStyle, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={textStyle}>User not found.</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20 }}>
-          <Text style={{ color: colors.primary, ...fonts.bold }}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   const getStatusLabel = (risk: number, isCrisis: boolean) => {
-    if (isCrisis || risk >= 9) return 'CRITICAL';
-    if (risk >= 5) return 'HIGH RISK';
-    if (risk >= 3) return 'MEDIUM RISK';
+    if (isCrisis || risk >= 9) { return 'CRITICAL'; }
+    if (risk >= 5) { return 'HIGH RISK'; }
+    if (risk >= 3) { return 'MEDIUM RISK'; }
     return 'SAFE';
   };
 
-  const status = getStatusLabel(connectedUser.risk, connectedUser.isCrisis);
-  const isElevated = connectedUser.risk >= 5 || connectedUser.isCrisis;
-  
-  const hasSound = connectedUser.sensoryProfile?.sound;
-  const hasTemp = connectedUser.sensoryProfile?.temperature;
-  const sensorData = connectedUser.currentSensorData;
+  const status = connectedUser ? getStatusLabel(connectedUser.risk, connectedUser.isCrisis) : 'SAFE';
+  const isElevated = connectedUser ? (connectedUser.risk >= 5 || connectedUser.isCrisis) : false;
+
+  const hasSound = connectedUser?.sensoryProfile?.sound;
+  const hasTemp = connectedUser?.sensoryProfile?.temperature;
+  const sensorData = connectedUser?.currentSensorData;
 
   const [liveBpm, setLiveBpm] = useState(sensorData?.heartRate || 80);
   const [liveSound, setLiveSound] = useState(sensorData?.soundDb || 45);
@@ -50,26 +39,27 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
   const soundIconColor = liveSound > 80 ? colors.riskHigh : colors.primary;
 
   useEffect(() => {
+    if (!userId) { return; }
     let realDataArrived = false;
     const ws = connectCaregiverIoTData(userId, (payload) => {
       realDataArrived = true;
       const data = payload?.sensor_data || payload;
-      
-      if (data?.heart_rate !== undefined) setLiveBpm(data.heart_rate);
-      else if (data?.heartRate !== undefined) setLiveBpm(data.heartRate);
-      else if (data?.bpm !== undefined) setLiveBpm(data.bpm);
 
-      if (data?.temperature !== undefined) setLiveTemp(data.temperature);
-      else if (data?.temperatureC !== undefined) setLiveTemp(data.temperatureC);
-      else if (data?.temp !== undefined) setLiveTemp(data.temp);
+      if (data?.heart_rate !== undefined) { setLiveBpm(data.heart_rate); }
+      else if (data?.heartRate !== undefined) { setLiveBpm(data.heartRate); }
+      else if (data?.bpm !== undefined) { setLiveBpm(data.bpm); }
 
-      if (data?.noise !== undefined) setLiveSound(data.noise);
-      else if (data?.soundDb !== undefined) setLiveSound(data.soundDb);
-      else if (data?.soundLevel !== undefined) setLiveSound(data.soundLevel);
+      if (data?.temperature !== undefined) { setLiveTemp(data.temperature); }
+      else if (data?.temperatureC !== undefined) { setLiveTemp(data.temperatureC); }
+      else if (data?.temp !== undefined) { setLiveTemp(data.temp); }
+
+      if (data?.noise !== undefined) { setLiveSound(data.noise); }
+      else if (data?.soundDb !== undefined) { setLiveSound(data.soundDb); }
+      else if (data?.soundLevel !== undefined) { setLiveSound(data.soundLevel); }
     });
 
     const interval = setInterval(() => {
-      if (realDataArrived) return;
+      if (realDataArrived) { return; }
       setLiveBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
       setLiveSound(prev => prev + (Math.floor(Math.random() * 11) - 5));
       setLiveTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
@@ -81,9 +71,20 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
     };
   }, [userId]);
 
+  if (!connectedUser) {
+    return (
+      <View style={[styles.container, bgStyle, styles.notFoundContainer, { paddingTop: insets.top }]}>
+        <Text style={textStyle}>User not found.</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.mt20}>
+          <Text style={styles.goBackText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   let activeTriggers: string[] = [];
-  if (hasSound) activeTriggers.push('Sound');
-  if (hasTemp) activeTriggers.push('Temperature');
+  if (hasSound) { activeTriggers.push('Sound'); }
+  if (hasTemp) { activeTriggers.push('Temperature'); }
 
   const primaryTriggerText = activeTriggers.join(' + ') || 'None';
 
@@ -95,15 +96,15 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
           <ArrowLeft size={24} color={textStyle.color} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, textStyle]}>Current Sensory Status</Text>
-        <View style={{ width: 40 }} />
+        <View style={styles.w40} />
       </View>
 
       <View style={styles.fixedContent}>
-        
+
         {/* Overall Status Summary */}
-        <View style={[styles.summaryCard, cardStyle, neuSm]}>
+        <View style={[styles.summaryCard, cardStyle, shadowSm]}>
           <Text style={[styles.cardSuperTitle, subTextStyle]}>CURRENT CONDITION</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, marginTop: 4 }}>
+          <View style={styles.conditionRow}>
             <View style={[styles.dotLg, { backgroundColor: isElevated ? colors.riskHigh : colors.primary }]} />
             <Text style={[styles.conditionValue, textStyle]}>{status}</Text>
           </View>
@@ -115,8 +116,8 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
         <Text style={[styles.sectionHeader, textStyle]}>CURRENT SENSORY DATA</Text>
 
         {/* Heart Rate Card (Always visible) */}
-        <TouchableOpacity 
-          style={[styles.sensorCard, cardStyle, neuSm]} 
+        <TouchableOpacity
+          style={[styles.sensorCard, cardStyle, shadowSm]}
           onPress={() => navigation.navigate('HeartRateHistory')}
           activeOpacity={0.7}
         >
@@ -131,9 +132,9 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
             <Text style={[styles.sensorCardSub, subTextStyle]}>
               Status: {liveBpm > 100 ? 'Elevated' : 'Normal'}
             </Text>
-            
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
-              <Text style={{ color: colors.primary, fontSize: 12, ...fonts.bold, marginRight: 4 }}>View detailed trends</Text>
+
+            <View style={styles.detailedTrendsRow}>
+              <Text style={styles.detailedTrendsText}>View detailed trends</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -141,7 +142,7 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
         {/* Sound Card (Conditional) */}
         {/* Sound Card */}
         <TouchableOpacity
-          style={[styles.sensorCard, cardStyle, neuSm]}
+          style={[styles.sensorCard, cardStyle, shadowSm]}
             onPress={() => navigation.navigate('SoundHistory')}
             activeOpacity={0.7}
           >
@@ -162,17 +163,17 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
                   {
                     width: `${Math.min(liveSound, 120) / 120 * 100}%`,
                     backgroundColor: liveSound > 80 ? colors.riskHigh : colors.primary,
-                  }
+                  },
                 ]} />
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
-                <Text style={{ color: colors.primary, fontSize: 12, ...fonts.bold, marginRight: 4 }}>View detailed trends</Text>
+              <View style={styles.detailedTrendsRow}>
+                <Text style={styles.detailedTrendsText}>View detailed trends</Text>
               </View>
             </View>
           </TouchableOpacity>
 
         {/* Temperature Card */}
-        <View style={[styles.sensorCard, cardStyle, neuSm]}>
+        <View style={[styles.sensorCard, cardStyle, shadowSm]}>
             <View style={styles.sensorCardHeader}>
               <View style={[styles.sensorIconBox, { backgroundColor: `${colors.riskMed}15` }]}>
                 <Thermometer size={22} color={colors.riskMed} />
@@ -194,13 +195,13 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { 
+  header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md 
+    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
   },
   iconBtn: { padding: 8, marginLeft: -8 },
   headerTitle: { fontSize: 20, ...fonts.bold },
-  
+
   fixedContent: { flex: 1, paddingHorizontal: spacing.xl, paddingBottom: spacing.lg, paddingTop: spacing.md },
 
   summaryCard: {
@@ -252,5 +253,37 @@ const styles = StyleSheet.create({
   progressBar: {
     height: 4,
     borderRadius: 2,
+  },
+  notFoundContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mt20: {
+    marginTop: 20,
+  },
+  goBackText: {
+    color: colors.primary,
+    ...fonts.bold,
+  },
+  w40: {
+    width: 40,
+  },
+  conditionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  detailedTrendsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  detailedTrendsText: {
+    color: colors.primary,
+    fontSize: 12,
+    ...fonts.bold,
+    marginRight: 4,
   },
 });
