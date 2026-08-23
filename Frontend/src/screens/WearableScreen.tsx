@@ -66,14 +66,22 @@ export default function WearableScreen() {
             if (rawData.startsWith('{')) {
               const parsed = JSON.parse(rawData);
               if (parsed.noise !== undefined) { setNoise(parsed.noise); }
-              if (parsed.temp !== undefined) { setTemperature(parsed.temp); }
+              let t = parsed.temperature !== undefined ? parsed.temperature : parsed.temp;
+              if (t !== undefined) {
+                if (t < 50) t = (t * 9) / 5 + 32;
+                setTemperature(t);
+              }
               if (parsed.bpm !== undefined) { setHeartRate(parsed.bpm); }
             } else {
               const noiseMatch = rawData.match(/(?:noise|N)[:=]\s*(\d+)/i);
-              const tempMatch = rawData.match(/(?:temp|T)[:=]\s*([\d.]+)/i);
+              const tempMatch = rawData.match(/(?:temperature|temp|T)[:=]\s*([\d.]+)/i);
               const bpmMatch = rawData.match(/(?:bpm|H)[:=]\s*(\d+)/i);
               if (noiseMatch) { setNoise(parseInt(noiseMatch[1], 10)); }
-              if (tempMatch) { setTemperature(parseFloat(tempMatch[1])); }
+              if (tempMatch) {
+                let t = parseFloat(tempMatch[1]);
+                if (t < 50) t = (t * 9) / 5 + 32;
+                setTemperature(t);
+              }
               if (bpmMatch) { setHeartRate(parseInt(bpmMatch[1], 10)); }
             }
           } catch (e) {
