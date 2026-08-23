@@ -43,7 +43,7 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
     let realDataArrived = false;
     const ws = connectCaregiverIoTData(userId, (payload) => {
       realDataArrived = true;
-      const data = payload?.sensor_data || payload;
+      const data = payload?.data || payload?.sensor_data || payload;
 
       if (data?.heart_rate !== undefined) { setLiveBpm(data.heart_rate); }
       else if (data?.heartRate !== undefined) { setLiveBpm(data.heartRate); }

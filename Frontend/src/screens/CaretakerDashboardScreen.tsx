@@ -17,7 +17,7 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
     let realDataArrived = false;
     const ws = connectCaregiverIoTData(userId, (payload) => {
       realDataArrived = true;
-      const data = payload?.sensor_data || payload;
+      const data = payload?.data || payload?.sensor_data || payload;
 
       if (data?.heart_rate !== undefined) { setBpm(data.heart_rate); }
       else if (data?.heartRate !== undefined) { setBpm(data.heartRate); }
