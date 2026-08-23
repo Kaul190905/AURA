@@ -65,24 +65,26 @@ export default function WearableScreen() {
           try {
             if (rawData.startsWith('{')) {
               const parsed = JSON.parse(rawData);
-              if (parsed.noise !== undefined) { setNoise(parsed.noise); }
+              let n = parsed.noise !== undefined ? parsed.noise : (parsed.noiseLevel !== undefined ? parsed.noiseLevel : parsed.sound);
+              if (n !== undefined) { setNoise(n); }
               let t = parsed.temperature !== undefined ? parsed.temperature : parsed.temp;
               if (t !== undefined) {
                 if (t < 50) t = (t * 9) / 5 + 32;
                 setTemperature(t);
               }
-              if (parsed.bpm !== undefined) { setHeartRate(parsed.bpm); }
+              let h = parsed.bpm !== undefined ? parsed.bpm : (parsed.heart_rate !== undefined ? parsed.heart_rate : parsed.heartRate);
+              if (h !== undefined) { setHeartRate(Math.round(h)); }
             } else {
-              const noiseMatch = rawData.match(/(?:noise|N)[:=]\s*(\d+)/i);
-              const tempMatch = rawData.match(/(?:temperature|temp|T)[:=]\s*([\d.]+)/i);
-              const bpmMatch = rawData.match(/(?:bpm|H)[:=]\s*(\d+)/i);
-              if (noiseMatch) { setNoise(parseInt(noiseMatch[1], 10)); }
+              const noiseMatch = rawData.match(/(?:noiseLevel|noise|sound|N)["']?\s*[:=]\s*([\d.]+)/i);
+              const tempMatch = rawData.match(/(?:temperature|temp|T)["']?\s*[:=]\s*([\d.]+)/i);
+              const bpmMatch = rawData.match(/(?:heart_rate|heartRate|bpm|hr|H)["']?\s*[:=]\s*([\d.]+)/i);
+              if (noiseMatch) { setNoise(parseFloat(noiseMatch[1])); }
               if (tempMatch) {
                 let t = parseFloat(tempMatch[1]);
                 if (t < 50) t = (t * 9) / 5 + 32;
                 setTemperature(t);
               }
-              if (bpmMatch) { setHeartRate(parseInt(bpmMatch[1], 10)); }
+              if (bpmMatch) { setHeartRate(Math.round(parseFloat(bpmMatch[1]))); }
             }
           } catch (e) {
             console.warn('[BLE] Error parsing data:', rawData, e);

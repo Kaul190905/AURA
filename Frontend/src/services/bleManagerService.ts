@@ -128,6 +128,14 @@ class BleManagerService {
       const connected = await device.connect();
       this.connectedDevice = connected;
 
+      if (Platform.OS === 'android') {
+        try {
+          await connected.requestMTU(512);
+        } catch (e) {
+          console.warn('[BLE] MTU request failed:', e);
+        }
+      }
+
       // Start the Notifee foreground service to keep BLE alive in background
       await this.startForegroundService();
 
