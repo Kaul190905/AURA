@@ -1,46 +1,40 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
-import { AppContext, AppNotification } from '../AppContext';
-import { colors, radius, spacing, fonts, shadowSm } from '../theme';
+import { AppContext } from '../AppContext';
+import { colors, radius, spacing, fonts, neuSm } from '../theme';
 import { riskColor } from '../utils';
-import { connectCaregiverIoTData, getPendingInvitations, acceptInvitation, CaregiverResponse, getAssignedUsersDetails } from '../services/caregiverApi';
-import { scheduleLocalNotification } from '../services/NotificationService';
-import { seenCaretakerAlerts } from '../../App';
+import { connectCaregiverIoTData, getPendingInvitations, acceptInvitation, CaregiverResponse } from '../services/caregiverApi';
 
 function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string }) {
   const [bpm, setBpm] = useState(82);
   const [temp, setTemp] = useState(98.4);
   const [soundLevel, setSoundLevel] = useState(45);
 
-  const { setNotifications } = useContext(AppContext);
-
   useEffect(() => {
-    const ws = connectCaregiverIoTData(userId, (data) => {
-      if (data.type === 'SOS_ALERT' && data.alert) {
-        setNotifications((prev: AppNotification[]) => {
-          const exists = prev.find((n: AppNotification) => n.id === data.alert.id);
-          if (exists) { return prev; }
-          seenCaretakerAlerts.add(data.alert.id);
-          scheduleLocalNotification('Critical Alert', data.alert.message);
-          return [{
-            id: data.alert.id,
-            title: 'Critical Alert',
-            description: data.alert.message,
-            time: new Date(data.alert.created_at).getTime(),
-            read: false,
-            type: 'alert' as const,
-          }, ...prev].sort((a, b) => b.time - a.time);
-        });
-      }
-      if (data.bpm) { setBpm(data.bpm); }
-      if (data.temp) { setTemp(data.temp); }
-      if (data.soundLevel) { setSoundLevel(data.soundLevel); }
+    let realDataArrived = false;
+    const ws = connectCaregiverIoTData(userId, (payload) => {
+      realDataArrived = true;
+      const data = payload?.sensor_data || payload;
+      
+      if (data?.heart_rate !== undefined) setBpm(data.heart_rate);
+      else if (data?.heartRate !== undefined) setBpm(data.heartRate);
+      else if (data?.bpm !== undefined) setBpm(data.bpm);
+
+      if (data?.temperature !== undefined) setTemp(data.temperature);
+      else if (data?.temperatureC !== undefined) setTemp(data.temperatureC);
+      else if (data?.temp !== undefined) setTemp(data.temp);
+
+      if (data?.noise !== undefined) setSoundLevel(data.noise);
+      else if (data?.soundDb !== undefined) setSoundLevel(data.soundDb);
+      else if (data?.soundLevel !== undefined) setSoundLevel(data.soundLevel);
     });
 
     // Fallback simulation if no real data is arriving yet (for UI demo purposes)
     const interval = setInterval(() => {
+      if (realDataArrived) return;
       setBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
       setTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
       setSoundLevel(prev => prev + (Math.floor(Math.random() * 11) - 5));
@@ -50,7 +44,7 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
       clearInterval(interval);
       ws.close();
     };
-  }, [userId, setNotifications]);
+  }, [userId]);
 
   const textStyle = darkMode ? { color: '#fff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
@@ -75,34 +69,33 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
 
 export default function CaretakerDashboardScreen({ navigation }: any) {
   const {
-    mockUsers, setMockUsers, recentlyViewedUserIds, setRecentlyViewedUserIds,
+    mockUsers, recentlyViewedUserIds, setRecentlyViewedUserIds,
     darkMode, setIsNotificationCenterOpen, isCaregiverOnline,
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   const [pendingInvitations, setPendingInvitations] = useState<CaregiverResponse[]>([]);
-  const fetchDashboardData = React.useCallback(async () => {
-    try {
-      const [pending, details] = await Promise.all([
-        getPendingInvitations(),
-        getAssignedUsersDetails(),
-      ]);
-      setPendingInvitations(pending);
-      setMockUsers(details as any);
-    } catch (e) {
-      console.warn('Failed to fetch dashboard data:', e);
-    }
-  }, [setMockUsers]);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+  const fetchPendingInvitations = async () => {
+    try {
+      const pending = await getPendingInvitations();
+      setPendingInvitations(pending);
+    } catch (e) {
+      console.warn('Failed to fetch pending invitations:', e);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchPendingInvitations();
+    }, [])
+  );
 
   const handleAccept = async (assignmentId: string) => {
     try {
       await acceptInvitation(assignmentId);
       // Immediately remove from list
       setPendingInvitations(prev => prev.filter(inv => inv.id !== assignmentId));
-      fetchDashboardData(); // Refresh the list
+      Alert.alert('Accepted', 'You are now caring for this user. Their data will appear on your dashboard within a few moments.');
     } catch (e: any) {
       Alert.alert('Error', 'Failed to accept invitation: ' + e.message);
     }
@@ -181,7 +174,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, textStyle]}>Pending Invitations</Text>
             {pendingInvitations.map(inv => (
-              <View key={inv.id} style={[styles.pendingCard, cardStyle, shadowSm]}>
+              <View key={inv.id} style={[styles.pendingCard, cardStyle, neuSm]}>
                 <View style={styles.flex1}>
                   <Text style={[styles.pendingTitle, textStyle]}>New Request</Text>
                   <Text style={[styles.pendingText, subTextStyle]}>You have been invited to be a caregiver by User ID: {inv.user_id}</Text>
@@ -222,8 +215,8 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
         </View>
 
         {/* Critical Alerts Section */}
-        {criticalUsers.length > 0 ? (
-          <View style={[styles.criticalContainer, shadowSm, cardStyle]}>
+        {criticalUsers.length > 0 && (
+          <View style={[styles.criticalContainer, neuSm, cardStyle]}>
             <View style={styles.criticalHeader}>
               <View style={styles.criticalHeaderLeft}>
                 <AlertTriangle size={20} color={colors.riskHigh} />
@@ -265,38 +258,6 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
               <Text style={styles.viewAllText}>View All Alerts</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          stats.safe > 0 && (
-            <View style={[styles.criticalContainer, shadowSm, cardStyle]}>
-              <View style={styles.criticalHeader}>
-                <View style={styles.criticalHeaderLeft}>
-                  <User size={20} color={colors.riskLow} />
-                  <Text style={[styles.sectionTitle, styles.safeTitle]}>Safe Users</Text>
-                </View>
-                <View style={[styles.criticalCountBadge, { backgroundColor: `${colors.riskLow}15` }]}>
-                  <Text style={[styles.criticalCountText, { color: colors.riskLow }]}>{stats.safe}</Text>
-                </View>
-              </View>
-              {mockUsers.filter(u => !u.isCrisis && u.risk < 5).map(user => {
-                const rColor = riskColor(user.risk);
-                return (
-                  <TouchableOpacity key={user.id} style={styles.alertItem} onPress={() => openUser(user.id, 'Overview')}>
-                    <View style={[styles.avatarSm, { backgroundColor: `${rColor}20` }]}>
-                      <User size={20} color={rColor} />
-                    </View>
-                    <View style={[styles.alertInfo, darkMode ? styles.borderDark333 : styles.borderLightF0]}>
-                      <View style={styles.rowBetweenCenter}>
-                        <Text style={[styles.alertName, textStyle]}>{user.name}</Text>
-                        <View style={[styles.riskBadge, { backgroundColor: `${rColor}15` }]}>
-                          <Text style={[styles.riskBadgeText, { color: rColor }]}>SAFE</Text>
-                        </View>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )
         )}
 
 
@@ -345,7 +306,6 @@ const styles = StyleSheet.create({
   criticalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingHorizontal: 4 },
   criticalCountBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 },
   criticalCountText: { fontSize: 12, ...fonts.bold },
-  safeTitle: { color: colors.riskLow, marginBottom: 0, marginLeft: 8 },
 
   alertItem: { flexDirection: 'row', marginBottom: 16, paddingHorizontal: 4 },
   avatarSm: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginRight: 12 },

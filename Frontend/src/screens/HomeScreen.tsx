@@ -28,7 +28,7 @@ export default function HomeScreen() {
   const {
     risk, selfReport, setSelfReport, setIsNotificationCenterOpen,
     notifications, bleConnected, triggerSos,
-    noise, temperature, heartRate,
+    noise, temperature, heartRate, telemetryStale,
   } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
@@ -54,13 +54,13 @@ export default function HomeScreen() {
   const unreadCount = notifications.filter(n => !n.read).length;
   const riskC = riskColor(risk.score);
 
-  // Derived display values: show nothing if disconnected
-  const displayHeartRate = bleConnected ? heartRate : null;
-  const displayTemperature = bleConnected ? temperature : null;
-  const displayNoise = bleConnected ? noise : null;
+  // Derived display values: show nothing if disconnected or stale
+  const displayHeartRate = bleConnected && !telemetryStale ? heartRate : null;
+  const displayTemperature = bleConnected && !telemetryStale ? temperature : null;
+  const displayNoise = bleConnected && !telemetryStale ? noise : null;
 
-  // Convert temperature from Fahrenheit to Celsius
-  const tempCelsius = displayTemperature !== null ? ((displayTemperature - 32) * 5) / 9 : null;
+  // Temperature is already stored in Celsius from BLE/simulation
+  const tempCelsius = displayTemperature;
 
   // Calculate live ring percentages
   const bpmPct = displayHeartRate ? Math.min(Math.max(displayHeartRate / 150, 0), 1) : 0;

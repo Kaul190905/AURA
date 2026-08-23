@@ -1,56 +1,27 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useContext, useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Heart, Thermometer, Mic } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, shadowSm } from '../theme';
-import { getCaregiverUserSensorData } from '../services/caregiverApi';
+import { connectCaregiverIoTData } from '../services/caregiverApi';
+import { colors, radius, spacing, fonts, neuSm } from '../theme';
 
 export default function SensoryStatusScreen({ navigation, route }: any) {
-  const { darkMode } = useContext(AppContext);
+  const { mockUsers, darkMode } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   
   const userId = route?.params?.userId;
-
-  const [loading, setLoading] = useState(true);
-  const [latestData, setLatestData] = useState<any>(null);
+  const connectedUser = mockUsers.find(u => u.id === userId);
 
   const bgStyle = darkMode ? { backgroundColor: '#000000' } : { backgroundColor: '#F8F9FA' };
   const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : { backgroundColor: '#ffffff' };
   const textStyle = darkMode ? { color: '#ffffff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaaaaa' } : { color: colors.mutedForeground };
 
-  useEffect(() => {
-    if (userId) {
-      getCaregiverUserSensorData(userId)
-        .then(data => {
-          if (data && data.length > 0) {
-            // Assuming the first item is the most recent
-            setLatestData(data[0]);
-          }
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error('Failed to fetch sensor data:', err);
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
-  }, [userId]);
-
-  if (loading) {
+  if (!connectedUser) {
     return (
       <View style={[styles.container, bgStyle, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  if (!latestData) {
-    return (
-      <View style={[styles.container, bgStyle, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={textStyle}>No sensory data available.</Text>
+        <Text style={textStyle}>User not found.</Text>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20 }}>
           <Text style={{ color: colors.primary, ...fonts.bold }}>Go Back</Text>
         </TouchableOpacity>
@@ -65,26 +36,54 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
     return 'SAFE';
   };
 
-  // Calculate simple mock risk until Risk Engine is fully integrated in UI
-  const risk = latestData.heart_rate > 100 || latestData.noise > 80 ? 5 : 1;
-  const isCrisis = latestData.heart_rate > 120;
+  const status = getStatusLabel(connectedUser.risk, connectedUser.isCrisis);
+  const isElevated = connectedUser.risk >= 5 || connectedUser.isCrisis;
   
-  const status = getStatusLabel(risk, isCrisis);
-  const isElevated = risk >= 5 || isCrisis;
-  
-  const hasSound = latestData.noise !== undefined;
-  const hasTemp = latestData.temperature !== undefined;
+  const hasSound = connectedUser.sensoryProfile?.sound;
+  const hasTemp = connectedUser.sensoryProfile?.temperature;
+  const sensorData = connectedUser.currentSensorData;
 
-  const liveBpm = latestData.heart_rate ? Math.round(latestData.heart_rate) : 0;
-  const liveSound = latestData.noise ? Math.round(latestData.noise) : 0;
-  const liveTemp = latestData.temperature ? parseFloat(latestData.temperature).toFixed(1) : 'N/A';
-
+  const [liveBpm, setLiveBpm] = useState(sensorData?.heartRate || 80);
+  const [liveSound, setLiveSound] = useState(sensorData?.soundDb || 45);
+  const [liveTemp, setLiveTemp] = useState(sensorData?.temperatureC || 36.5);
   const soundIconBg = `${liveSound > 80 ? colors.riskHigh : colors.primary}15`;
   const soundIconColor = liveSound > 80 ? colors.riskHigh : colors.primary;
 
+  useEffect(() => {
+    let realDataArrived = false;
+    const ws = connectCaregiverIoTData(userId, (payload) => {
+      realDataArrived = true;
+      const data = payload?.sensor_data || payload;
+      
+      if (data?.heart_rate !== undefined) setLiveBpm(data.heart_rate);
+      else if (data?.heartRate !== undefined) setLiveBpm(data.heartRate);
+      else if (data?.bpm !== undefined) setLiveBpm(data.bpm);
+
+      if (data?.temperature !== undefined) setLiveTemp(data.temperature);
+      else if (data?.temperatureC !== undefined) setLiveTemp(data.temperatureC);
+      else if (data?.temp !== undefined) setLiveTemp(data.temp);
+
+      if (data?.noise !== undefined) setLiveSound(data.noise);
+      else if (data?.soundDb !== undefined) setLiveSound(data.soundDb);
+      else if (data?.soundLevel !== undefined) setLiveSound(data.soundLevel);
+    });
+
+    const interval = setInterval(() => {
+      if (realDataArrived) return;
+      setLiveBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
+      setLiveSound(prev => prev + (Math.floor(Math.random() * 11) - 5));
+      setLiveTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
+    }, 2500);
+
+    return () => {
+      clearInterval(interval);
+      ws.close();
+    };
+  }, [userId]);
+
   let activeTriggers: string[] = [];
-  if (liveSound > 80) activeTriggers.push('Sound');
-  if (hasTemp && parseFloat(liveTemp as string) > 37.5) activeTriggers.push('Temperature');
+  if (hasSound) activeTriggers.push('Sound');
+  if (hasTemp) activeTriggers.push('Temperature');
 
   const primaryTriggerText = activeTriggers.join(' + ') || 'None';
 
@@ -102,7 +101,7 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
       <View style={styles.fixedContent}>
         
         {/* Overall Status Summary */}
-        <View style={[styles.summaryCard, cardStyle, shadowSm]}>
+        <View style={[styles.summaryCard, cardStyle, neuSm]}>
           <Text style={[styles.cardSuperTitle, subTextStyle]}>CURRENT CONDITION</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, marginTop: 4 }}>
             <View style={[styles.dotLg, { backgroundColor: isElevated ? colors.riskHigh : colors.primary }]} />
@@ -117,8 +116,8 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
 
         {/* Heart Rate Card (Always visible) */}
         <TouchableOpacity 
-          style={[styles.sensorCard, cardStyle, shadowSm]} 
-          onPress={() => navigation.navigate('HeartRateHistory', { userId })}
+          style={[styles.sensorCard, cardStyle, neuSm]} 
+          onPress={() => navigation.navigate('HeartRateHistory')}
           activeOpacity={0.7}
         >
           <View style={styles.sensorCardHeader}>
@@ -140,9 +139,9 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
         </TouchableOpacity>
 
         {/* Sound Card (Conditional) */}
-        {hasSound && (
-          <TouchableOpacity
-            style={[styles.sensorCard, cardStyle, shadowSm]}
+        {/* Sound Card */}
+        <TouchableOpacity
+          style={[styles.sensorCard, cardStyle, neuSm]}
             onPress={() => navigation.navigate('SoundHistory')}
             activeOpacity={0.7}
           >
@@ -171,11 +170,9 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
               </View>
             </View>
           </TouchableOpacity>
-        )}
 
-        {/* Temperature Card (Conditional) */}
-        {hasTemp && (
-          <View style={[styles.sensorCard, cardStyle, shadowSm]}>
+        {/* Temperature Card */}
+        <View style={[styles.sensorCard, cardStyle, neuSm]}>
             <View style={styles.sensorCardHeader}>
               <View style={[styles.sensorIconBox, { backgroundColor: `${colors.riskMed}15` }]}>
                 <Thermometer size={22} color={colors.riskMed} />
@@ -189,7 +186,6 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
               </Text>
             </View>
           </View>
-        )}
 
       </View>
     </View>

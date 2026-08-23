@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -8,19 +8,15 @@ import { View, StyleSheet, TouchableOpacity, Text, Modal, Linking } from 'react-
 import { House, Library, TrendingUp, Bluetooth, Settings, AlertTriangle, CheckCircle2, Users } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { colors, fonts, applyTheme } from './src/theme';
+import { colors, fonts, applyColorVisionMode } from './src/theme';
 import { TriggerKey, HistoryEvent, Strategy, Accommodation } from './src/types';
 import { computeRisk } from './src/utils';
 
 // Backend services
 import { getAssignedUsers, getCaregiverUserPreferences, getCaregiverUserSensorData, getCaregiverUserAlerts } from './src/services/caregiverApi';
 import { supabase } from './src/services/supabaseClient';
-import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEvents, getAlerts, triggerSosAlert } from './src/services/api';
-import { registerForPushNotificationsAsync, scheduleLocalNotification } from './src/services/NotificationService';
-import { startLocationTracking, stopLocationTracking } from './src/services/LocationService';
+import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEvents, getAlerts, createAlert } from './src/services/api';
 import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
-import * as TaskManager from 'expo-task-manager';
-import * as BackgroundFetch from 'expo-background-fetch';
 
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
@@ -193,44 +189,6 @@ function ProfileStackNavigator() {
   );
 }
 
-// Module-level set to track seen alerts across polling intervals
-export const seenCaretakerAlerts = new Set<string>();
-
-const BACKGROUND_FETCH_TASK = 'background-fetch-caretaker-alerts';
-
-TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      return BackgroundFetch.BackgroundFetchResult.NoData;
-    }
-
-    const assigned = await getAssignedUsers();
-    let hasNew = false;
-    
-    for (const assignment of assigned) {
-      try {
-        const userAlerts = await getCaregiverUserAlerts(assignment.user_id);
-        if (Array.isArray(userAlerts)) {
-          userAlerts.forEach((a: any) => {
-            if (!seenCaretakerAlerts.has(a.id)) {
-              seenCaretakerAlerts.add(a.id);
-              scheduleLocalNotification(
-                a.severity === 'critical' ? 'Critical Alert' : 'Alert',
-                a.message
-              );
-              hasNew = true;
-            }
-          });
-        }
-      } catch (e) {}
-    }
-    return hasNew ? BackgroundFetch.BackgroundFetchResult.NewData : BackgroundFetch.BackgroundFetchResult.NoData;
-  } catch (error) {
-    return BackgroundFetch.BackgroundFetchResult.Failed;
-  }
-});
-
 export default function App() {
   const [appScreen, setAppScreen] = useState<AppScreen>('welcome');
   const [primaryRole, setPrimaryRole] = useState<'user' | 'caretaker' | null>(null);
@@ -247,6 +205,7 @@ export default function App() {
   const [heartRate, setHeartRate] = useState<number | null>(null);
   const [selfReport, setSelfReport] = useState(3);
   const [bleConnected, setBleConnected] = useState(false);
+  const [telemetryStale, setTelemetryStale] = useState(false);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [history, setHistory] = useState<HistoryEvent[]>([]);
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
@@ -260,7 +219,7 @@ export default function App() {
 
   const [sosConfirmOpen, setSosConfirmOpen] = useState(false);
   const [sosSent, setSosSent] = useState(false);
-
+  const [currentTab, setCurrentTab] = useState('House');
 
   // ── Auth / Backend state ────────────────────────────────────────────────────
   const [userId, setUserId] = useState<string | null>(null);
@@ -274,13 +233,8 @@ export default function App() {
       setStrategies([]);
       setHistory([]);
       setNotifications([]);
-      stopLocationTracking();
-      seenCaretakerAlerts.clear();
       return;
     }
-
-    registerForPushNotificationsAsync();
-    startLocationTracking();
 
     const loadInitialData = async () => {
       try {
@@ -351,26 +305,14 @@ export default function App() {
     const loadCaretakerData = async () => {
       try {
         const assigned = await getAssignedUsers();
-        let allAlerts: AppNotification[] = [];
 
         const userPromises = assigned.map(async (assignment) => {
           try {
-            const [prefs, sensors, userAlerts] = await Promise.all([
+            const [prefs, sensors, alerts] = await Promise.all([
               getCaregiverUserPreferences(assignment.user_id),
               getCaregiverUserSensorData(assignment.user_id).catch(() => null),
               getCaregiverUserAlerts(assignment.user_id).catch(() => []),
             ]);
-
-            if (Array.isArray(userAlerts)) {
-              allAlerts.push(...userAlerts.map((a: any) => ({
-                id: a.id,
-                title: a.severity === 'critical' ? 'Critical Alert' : 'Alert',
-                description: a.message,
-                time: new Date(a.created_at).getTime(),
-                read: a.confirmed ?? false,
-                type: 'alert' as const,
-              })));
-            }
 
             const metadata = prefs.user_metadata || {};
             const userProfile = metadata.sensory_profile || {};
@@ -383,13 +325,18 @@ export default function App() {
             const userTemp = sensors?.temperature;
             const userHr = sensors?.heart_rate;
 
-            if (userNoise && userNoise > 85) { risk = 8; condition = 'High Noise'; }
+            const activeSos = alerts?.find((a: any) => a.severity === 'critical' && !a.confirmed);
+            if (activeSos) {
+              isCrisis = true;
+              condition = 'SOS Triggered';
+              risk = 10;
+            } else if (userNoise && userNoise > 85) { risk = 8; condition = 'High Noise'; }
             else if (userTemp && userTemp > 100) { risk = 7; condition = 'High Temperature'; }
             else if (userHr && userHr > 100) { risk = 6; condition = 'High Heart Rate'; }
 
             return {
               id: assignment.user_id,
-              name: metadata.name || (prefs.email ? prefs.email.split('@')[0] : 'Unknown User'),
+              name: metadata.name || prefs.email || 'Unknown User',
               risk,
               isCrisis,
               condition,
@@ -402,7 +349,6 @@ export default function App() {
               aboutMe: metadata.aboutMe || '',
               dob: metadata.dob || '',
               emergencyCaregiver: metadata.caregiver || null,
-              email: prefs.email || '',
             };
           } catch (err) {
             console.warn(`Failed to load data for assigned user ${assignment.user_id}:`, err);
@@ -413,23 +359,6 @@ export default function App() {
         const loadedUsers = (await Promise.all(userPromises)).filter(Boolean) as AppState['mockUsers'];
         setMockUsers(loadedUsers);
 
-        if (allAlerts.length > 0) {
-          setNotifications(prev => {
-            const map = new Map(prev.map(n => [n.id, n]));
-            let updated = false;
-            allAlerts.forEach(a => {
-              if (!seenCaretakerAlerts.has(a.id)) {
-                updated = true;
-                seenCaretakerAlerts.add(a.id);
-                scheduleLocalNotification(a.title, a.description);
-                map.set(a.id, a);
-              }
-            });
-            if (!updated) return prev;
-            return Array.from(map.values()).sort((a, b) => b.time - a.time);
-          });
-        }
-
       } catch (err) {
         console.error('[AURA] Error loading caretaker data:', err);
       }
@@ -438,24 +367,7 @@ export default function App() {
     loadCaretakerData();
     // Refresh every 30 seconds
     const interval = setInterval(loadCaretakerData, 30000);
-
-    const registerBackgroundFetch = async () => {
-      try {
-        await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-          minimumInterval: 60 * 15, // 15 minutes
-          stopOnTerminate: false, 
-          startOnBoot: true, 
-        });
-      } catch (err) {
-        console.log("BackgroundFetch registration failed:", err);
-      }
-    };
-    registerBackgroundFetch();
-
-    return () => {
-      clearInterval(interval);
-      BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK).catch(() => {});
-    };
+    return () => clearInterval(interval);
   }, [userId, primaryRole]);
 
   // Handle Deep Links for Google OAuth Redirect
@@ -529,56 +441,40 @@ export default function App() {
   }, [profile]);
 
   // ── Periodic sensor data push ───────────────────────────────────────────────
-  const latestSensors = useRef({ noise, temperature, heartRate });
-  useEffect(() => {
-    latestSensors.current = { noise, temperature, heartRate };
-  }, [noise, temperature, heartRate]);
-
   useEffect(() => {
     if (!userId || !bleConnected) { return; }
     const push = async () => {
-      const current = latestSensors.current;
-      if (current.noise === null || current.temperature === null || current.heartRate === null) {return;}
+      if (noise === null || temperature === null || heartRate === null) {return;}
       try {
         await submitSensorData({
           user_id: userId,
-          noise: current.noise,
-          temperature: current.temperature,
-          heart_rate: current.heartRate,
+          noise,
+          temperature,
+          heart_rate: heartRate,
           blood_oxygen: null,
         });
       } catch (e) {
         console.warn('[AURA] Sensor push failed:', e);
       }
     };
-    
-    // Push immediately on connect, then on interval
+    // Push immediately on connect / userId change, then on interval
     push();
     const timer = setInterval(push, SENSOR_PUSH_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [userId, bleConnected]);
+  }, [userId, bleConnected, noise, temperature, heartRate]);
 
   const risk = useMemo(() => computeRisk(noise, temperature, selfReport, profile), [noise, temperature, selfReport, profile]);
 
 
   useEffect(() => {
-    Promise.all([
-      AsyncStorage.getItem('colorVisionMode'),
-      AsyncStorage.getItem('darkMode'),
-      AsyncStorage.getItem('profilePhoto'),
-    ]).then(([cvMode, dMode, photo]) => {
-      let isDark = false;
-      if (dMode === 'true') {
-        setDarkMode(true);
-        isDark = true;
+    AsyncStorage.getItem('colorVisionMode').then(val => {
+      if (val === 'protanopia' || val === 'deuteranopia' || val === 'tritanopia' || val === 'default') {
+        setColorVisionMode(val);
+        applyColorVisionMode(val);
       }
-      if (cvMode === 'protanopia' || cvMode === 'deuteranopia' || cvMode === 'tritanopia' || cvMode === 'default') {
-        setColorVisionMode(cvMode as any);
-        applyTheme(isDark, cvMode as any);
-      } else {
-        applyTheme(isDark, 'default');
-      }
-      if (photo) { setProfilePhoto(photo); }
+    });
+    AsyncStorage.getItem('profilePhoto').then(val => {
+      if (val) { setProfilePhoto(val); }
     });
   }, []);
 
@@ -593,15 +489,9 @@ export default function App() {
 
   const handleSetColorVisionMode = (mode: 'default' | 'protanopia' | 'deuteranopia' | 'tritanopia') => {
     setColorVisionMode(mode);
-    applyTheme(darkMode, mode);
+    applyColorVisionMode(mode);
     AsyncStorage.setItem('colorVisionMode', mode);
   };
-
-  // Re-apply theme when dark mode changes
-  useEffect(() => {
-    applyTheme(darkMode, colorVisionMode);
-    AsyncStorage.setItem('darkMode', darkMode ? 'true' : 'false');
-  }, [darkMode, colorVisionMode]);
 
   const suggestions = useMemo(() => {
     const matched = strategies.filter((s) => s.trigger === primaryTrigger);
@@ -651,8 +541,6 @@ export default function App() {
         type: 'alert',
       }, ...prev]);
 
-      scheduleLocalNotification('High Noise Alert', `Noise level reached ${noise}dB, exceeding safe limits.`);
-
       setPopupState({ visible: true, message: `Noise level reached ${noise}dB. An alert has been sent to your caretaker.` });
       setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
     } else if (noise !== null && noise <= 75 && highNoiseAlerted) {
@@ -675,8 +563,6 @@ export default function App() {
         type: 'alert',
       }, ...prev]);
 
-      scheduleLocalNotification('Dangerous Temperature Alert', `Core body temperature is ${temperature}°F (${condition}).`);
-
       setPopupState({ visible: true, message: `Core temperature is ${temperature}°F. An alert has been sent to your caretaker.` });
       setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
     } else if (!isDangerousTemp && dangerousTempAlerted) {
@@ -684,23 +570,16 @@ export default function App() {
     }
   }, [temperature, dangerousTempAlerted]);
 
-  const handleSos = async () => {
-    try {
-      if (userId) {
-        await triggerSosAlert(userId);
-      }
-      setSosConfirmOpen(false);
-      setSosSent(true);
-      setTimeout(() => {
-        setSosSent(false);
-      }, 10000);
-    } catch (e) {
-      console.error('Failed to trigger SOS:', e);
-      // fallback if network fails
-      setSosConfirmOpen(false);
-      setSosSent(true);
-      setTimeout(() => setSosSent(false), 5000);
+  const handleSos = () => {
+    setSosConfirmOpen(false);
+    setSosSent(true);
+    if (userId) {
+      createAlert({ user_id: userId, severity: 'critical', message: 'SOS Triggered' })
+        .catch(err => console.warn('[AURA] Failed to send SOS alert:', err));
     }
+    setTimeout(() => {
+      setSosSent(false);
+    }, 10000);
   };
 
   const appState: AppState = {
@@ -712,7 +591,7 @@ export default function App() {
     caregiver, setCaregiver,
     profile, setProfile, dob, setDob,
     noise, setNoise, temperature, setTemperature, heartRate, setHeartRate, selfReport, setSelfReport,
-    bleConnected, setBleConnected, strategies, setStrategies, history, logEvent,
+    bleConnected, setBleConnected, telemetryStale, setTelemetryStale, strategies, setStrategies, history, logEvent,
     accommodations, setAccommodations, highContrast, setHighContrast,
     reduceMotion, setReduceMotion, darkMode, setDarkMode, colorVisionMode, setColorVisionMode: handleSetColorVisionMode, sensitivity, setSensitivity,
     risk, primaryTrigger, suggestions, goCrisis, triggerSos: () => setSosConfirmOpen(true),
@@ -730,7 +609,18 @@ export default function App() {
     <AppContext.Provider value={appState}>
       <SafeAreaProvider>
         <NavigationContainer
-          key={`${darkMode}-${colorVisionMode}-${appScreen}`}
+          key={`${colorVisionMode}-${appScreen}`}
+          onStateChange={(state) => {
+            if (!state) { return; }
+            const currentRoute = state.routes[state.index];
+            if (currentRoute.state && currentRoute.state.routes) {
+              const idx = currentRoute.state.index ?? 0;
+              const nestedRoute = currentRoute.state.routes[idx];
+              if (nestedRoute) { setCurrentTab(nestedRoute.name); }
+            } else {
+              setCurrentTab(currentRoute.name);
+            }
+          }}
         >
           {/* Route to Login if not authenticated, Welcome once signed in */}
           {!sessionLoading && !userId && (
@@ -769,6 +659,20 @@ export default function App() {
           {userId && (appScreen === 'home' || appScreen === 'settings') && (
             <View style={styles.flex1}>
               <TabNavigator initialRouteName={appScreen === 'settings' ? 'Settings' : 'House'} />
+              {currentTab !== 'House' && (
+                <TouchableOpacity
+                  onPress={goCrisis}
+                  // eslint-disable-next-line react-native/no-inline-styles
+                  style={[styles.overloadBtn, {
+                    backgroundColor: risk.score <= 2 ? '#4CAF82' : risk.score <= 4 ? '#E0A83A' : risk.score <= 6 ? '#E08A3A' : '#E06B3A',
+                  }]}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.overloadBtnText}>
+                    {risk.score <= 2 ? 'Calm' : risk.score <= 4 ? 'Stable' : risk.score <= 6 ? 'Elevated Response' : 'High Stress'}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
           <NotificationModal />
