@@ -11,6 +11,7 @@ from app.api.dependencies.caregiver import require_active_caregiver_access, requ
 # Need to import existing schemas to return data to caregivers
 # from app.schemas.sensor_data import SensorDataResponse
 # etc. Let's just return dict or any if schemas aren't explicitly imported, or rely on service layer return types.
+from app.api.websocket_manager import manager
 
 router = APIRouter()
 
@@ -147,30 +148,6 @@ async def get_user_preferences(
 # ---------------------------------------------------------
 # REAL-TIME IOT DATA WEBSOCKET
 # ---------------------------------------------------------
-
-class ConnectionManager:
-    def __init__(self):
-        # Maps target_user_id to a list of connected caregiver WebSockets
-        self.active_connections: Dict[UUID, List[WebSocket]] = {}
-
-    async def connect(self, websocket: WebSocket, target_user_id: UUID):
-        await websocket.accept()
-        if target_user_id not in self.active_connections:
-            self.active_connections[target_user_id] = []
-        self.active_connections[target_user_id].append(websocket)
-
-    def disconnect(self, websocket: WebSocket, target_user_id: UUID):
-        if target_user_id in self.active_connections:
-            self.active_connections[target_user_id].remove(websocket)
-            if not self.active_connections[target_user_id]:
-                del self.active_connections[target_user_id]
-
-    async def broadcast_to_caregivers(self, target_user_id: UUID, message: dict):
-        if target_user_id in self.active_connections:
-            for connection in self.active_connections[target_user_id]:
-                await connection.send_json(message)
-
-manager = ConnectionManager()
 
 @router.websocket("/ws/{target_user_id}")
 async def websocket_endpoint(

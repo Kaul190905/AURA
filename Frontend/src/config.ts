@@ -5,7 +5,7 @@
 
 import { Platform } from 'react-native';
 
-export const BACKEND_URL = 'https://aura-backend-av7z.onrender.com';
+export const BACKEND_URL = 'https://aura-backend-yit7.onrender.com';
 
 export const API_BASE_URL = `${BACKEND_URL}/api/v1`;
 
