@@ -25,7 +25,7 @@ export type AppState = {
   crisisRiskBefore: number | null;
   setCrisisRiskBefore: (val: number | null) => void;
   notifications: AppNotification[];
-  setNotifications: (n: AppNotification[]) => void;
+  setNotifications: React.Dispatch<React.SetStateAction<AppNotification[]>>;
   isNotificationCenterOpen: boolean;
   setIsNotificationCenterOpen: (val: boolean) => void;
   caregiver: { name: string; relationship: string; phone: string; email: string };
@@ -109,6 +109,7 @@ export type AppState = {
       phone: string;
       email: string;
     };
+    assignment?: any;
   }>;
   setMockUsers: (users: AppState['mockUsers']) => void;
   isCaregiverOnline: boolean;

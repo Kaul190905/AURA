@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppContext } from '../AppContext';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { Activity, Clock, ThumbsUp, ThumbsDown, CircleCheck } from 'lucide-react-native';
 
 interface Props {
@@ -36,7 +36,7 @@ export default function RecoverySummaryScreen({ onDone }: Props) {
 
       <View style={styles.content}>
         {/* Recovery Stats Card */}
-        <View style={[styles.card, neuSm]}>
+        <View style={[styles.card, shadowSm]}>
           <View style={styles.statRow}>
              <View style={styles.statItem}>
                 <Text style={styles.statLabel}>Risk Before</Text>
@@ -66,7 +66,7 @@ export default function RecoverySummaryScreen({ onDone }: Props) {
 
           <View style={styles.buttonRow}>
             <TouchableOpacity
-              style={[styles.feedbackBtn, neuSm]}
+              style={[styles.feedbackBtn, shadowSm]}
               activeOpacity={0.8}
               onPress={() => handleFeedback(true)}
             >
@@ -75,7 +75,7 @@ export default function RecoverySummaryScreen({ onDone }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.feedbackBtn, neuSm]}
+              style={[styles.feedbackBtn, shadowSm]}
               activeOpacity={0.8}
               onPress={() => handleFeedback(false)}
             >

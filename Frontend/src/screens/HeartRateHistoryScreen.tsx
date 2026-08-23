@@ -1,16 +1,39 @@
-import React, { useContext, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { useContext, useMemo, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, ArrowUp } from 'lucide-react-native';
 import { LineChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
+import { getCaregiverUserSensorData } from '../services/caregiverApi';
 
 const { width } = Dimensions.get('window');
 
-export default function HeartRateHistoryScreen({ navigation }: any) {
+export default function HeartRateHistoryScreen({ navigation, route }: any) {
   const { darkMode } = useContext(AppContext);
   const insets = useSafeAreaInsets();
+  const userId = route?.params?.userId;
+
+  const [sensorHistory, setSensorHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (userId) {
+      getCaregiverUserSensorData(userId)
+        .then(data => {
+          // Sort chronologically if API returns descending
+          const sorted = data.sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          setSensorHistory(sorted);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
+  }, [userId]);
 
   const bgStyle = darkMode ? { backgroundColor: '#000000' } : { backgroundColor: '#F8F9FA' };
   const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : { backgroundColor: '#ffffff' };
@@ -19,22 +42,17 @@ export default function HeartRateHistoryScreen({ navigation }: any) {
   const rulesColor = darkMode ? '#333333' : '#eeeeee';
   const trendColor = darkMode ? '#FFFFFF' : colors.primary;
 
-  // Generate mock data for the HRV / BPM graph matching the screenshot
+  // Process real data for the HRV / BPM graph
   const lineData = useMemo(() => {
-    const data = [];
-    let current = 50;
-    for (let i = 0; i < 40; i++) {
-      // Simulate random spikes and a general trend
-      let spike = Math.random() > 0.85 ? Math.random() * 60 : (Math.random() * 20 - 10);
-      current = Math.max(30, Math.min(130, current + spike));
-      
-      data.push({ 
-        value: current,
+    if (!sensorHistory || sensorHistory.length === 0) return [];
+    
+    return sensorHistory
+      .filter(item => item.heart_rate != null)
+      .map(item => ({
+        value: item.heart_rate,
         hideDataPoint: true,
-      });
-    }
-    return data;
-  }, []);
+      }));
+  }, [sensorHistory]);
 
   const stats = useMemo(() => {
     if (lineData.length === 0) return { latest: 0, min: 0, max: 0, avg: 0, resting: 0 };
@@ -57,7 +75,7 @@ export default function HeartRateHistoryScreen({ navigation }: any) {
       </View>
 
       <View style={[styles.content, { paddingBottom: spacing.lg }]}>
-        <View style={[styles.chartCard, neuSm, cardStyle]}>
+        <View style={[styles.chartCard, shadowSm, cardStyle]}>
           <Text style={[styles.cardTitle, textStyle]}>Heart Rate History</Text>
           
           <View style={styles.statsRow}>
@@ -73,13 +91,17 @@ export default function HeartRateHistoryScreen({ navigation }: any) {
               <View style={styles.statValueRow}>
                 <Text style={[styles.statValue, textStyle]}>{stats.resting}</Text>
                 <Text style={[styles.statUnit, subTextStyle]}> BPM</Text>
-                <ArrowUp size={20} color="#34C759" style={{ marginLeft: 4, marginTop: 4 }} />
               </View>
             </View>
           </View>
 
           <View style={styles.chartWrapper}>
-            <View pointerEvents="none">
+            {loading ? (
+              <View style={{ height: 160, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={colors.primary} />
+              </View>
+            ) : lineData.length > 0 ? (
+              <View pointerEvents="none">
               <LineChart
                 areaChart
                 data={lineData}
@@ -103,13 +125,15 @@ export default function HeartRateHistoryScreen({ navigation }: any) {
                 maxValue={130}
                 noOfSections={4}
                 stepHeight={40}
-                animateOnDataChange
-                animationDuration={1000}
-                onDataChangeAnimationDuration={300}
-                isAnimated
+                animateOnDataChange={false}
                 disableScroll={true}
               />
             </View>
+            ) : (
+              <View style={{ height: 160, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={subTextStyle}>No sensor history available.</Text>
+              </View>
+            )}
             
             {/* X Axis Labels matching screenshot */}
             <View style={styles.xAxisLabels}>
@@ -124,19 +148,19 @@ export default function HeartRateHistoryScreen({ navigation }: any) {
 
         {/* Detailed Stats List */}
         <View style={styles.listContainer}>
-          <View style={[styles.listItem, neuSm, cardStyle]}>
+          <View style={[styles.listItem, shadowSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Latest Reading</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.latest} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>
-          <View style={[styles.listItem, neuSm, cardStyle]}>
+          <View style={[styles.listItem, shadowSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Range</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.min}-{stats.max} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>
-          <View style={[styles.listItem, neuSm, cardStyle]}>
+          <View style={[styles.listItem, shadowSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Resting Rate</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.resting} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>
-          <View style={[styles.listItem, neuSm, cardStyle]}>
+          <View style={[styles.listItem, shadowSm, cardStyle]}>
             <Text style={[styles.listLabel, textStyle]}>Average</Text>
             <Text style={[styles.listValue, textStyle]}>{stats.avg} <Text style={[styles.listUnit, subTextStyle]}>BPM</Text></Text>
           </View>

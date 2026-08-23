@@ -115,6 +115,79 @@ export async function rejectInvitation(assignmentId: string): Promise<void> {
   });
 }
 
+// ── Helper to fetch full details for active assignments ──────────────────────
+
+export async function getAssignedUsersDetails() {
+  const assignments = await getAssignedUsers();
+  const activeAssignments = assignments.filter(a => a.status === 'active');
+  
+  const detailedUsers = await Promise.all(activeAssignments.map(async (assignment) => {
+    let sensorData: any = null;
+    let locationData: any = null;
+    let preferences: any = null;
+
+    try {
+      const sensorHistory = await getCaregiverUserSensorData(assignment.user_id);
+      if (sensorHistory && sensorHistory.length > 0) {
+        sensorData = sensorHistory[0];
+      }
+    } catch (e) {
+      console.warn('Failed to fetch sensor data for user', assignment.user_id);
+    }
+
+    try {
+      locationData = await getCaregiverUserLocation(assignment.user_id);
+    } catch (e) {
+      console.warn('Failed to fetch location data for user', assignment.user_id);
+    }
+
+    try {
+      if (assignment.can_view_preferences) {
+        preferences = await getCaregiverUserPreferences(assignment.user_id);
+      }
+    } catch (e) {
+      console.warn('Failed to fetch preferences for user', assignment.user_id);
+    }
+
+    // Determine basic risk similar to mock data logic
+    const heartRate = sensorData?.heart_rate || null;
+    const noise = sensorData?.noise || null;
+    const temp = sensorData?.temperature || null;
+    
+    let risk = 1;
+    let isCrisis = false;
+    
+    if (heartRate > 120) {
+      risk = 9;
+      isCrisis = true;
+    } else if (heartRate > 100 || noise > 80) {
+      risk = 5;
+    }
+
+    return {
+      id: assignment.user_id, // map to mockUsers.id
+      assignment, // keep assignment object for permission checks
+      name: `User ${assignment.user_id.substring(0, 4)}`, // Backend doesn't provide name in this payload directly unless added
+      risk,
+      isCrisis,
+      condition: preferences?.primary_condition || 'Autism Spectrum',
+      locationSharingStatus: locationData ? 'Active' : 'Unavailable',
+      lastUpdated: sensorData?.created_at || assignment.updated_at,
+      sensoryProfile: {
+        sound: true,
+        temperature: false,
+      },
+      currentSensorData: {
+        heartRate,
+        soundDb: noise,
+        temperatureC: temp,
+      }
+    };
+  }));
+
+  return detailedUsers;
+}
+
 // ── Caregiver Data Access ────────────────────────────────────────────────────
 
 export async function getCaregiverUserSensorData(userId: string) {
@@ -144,6 +217,11 @@ export async function getCaregiverUserAccommodations(userId: string) {
 
 export async function getCaregiverUserPreferences(userId: string) {
   const res = await authFetch(`/caregivers/users/${userId}/preferences`);
+  return res.json();
+}
+
+export async function getCaregiverUserLocation(userId: string) {
+  const res = await authFetch(`/caregivers/users/${userId}/location`);
   return res.json();
 }
 

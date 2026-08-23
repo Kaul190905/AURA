@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ear, Sun, User, Calendar, Phone, Mail } from 'lucide-react-native';
 
 import { AppContext } from '../AppContext';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { TriggerKey } from '../types';
 import { supabase } from '../services/supabaseClient';
 
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     paddingHorizontal: 16,
     height: 60,
-    ...neuSm,
+    ...shadowSm,
     borderWidth: 1,
     borderColor: 'transparent',
   },
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    ...neuSm,
+    ...shadowSm,
     borderWidth: 2,
     borderColor: 'transparent',
     minHeight: 180,

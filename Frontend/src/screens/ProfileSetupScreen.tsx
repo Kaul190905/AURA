@@ -4,12 +4,12 @@ import {
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ear, Sun, Star, Calendar, User, Activity, X } from 'lucide-react-native';
+import { Ear, Sun, Star, Calendar, Activity, X } from 'lucide-react-native';
 
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
 
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { TriggerKey } from '../types';
 import { TRIGGERS, PRESETS } from '../data';
 
@@ -21,7 +21,7 @@ interface Props { onDone: () => void; onBack?: () => void; }
 
 export default function ProfileSetupScreen({ onDone, onBack }: Props) {
   const styles = getStyles();
-  const { profile, setProfile, dob, setDob, caregiver, setCaregiver } = useContext(AppContext);
+  const { profile, setProfile, dob, setDob } = useContext(AppContext);
   const insets = useSafeAreaInsets();
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -44,19 +44,6 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
     let newErrors: Record<string, string> = {};
     if (!dob || dob.length !== 4 || isNaN(parseInt(dob, 10))) {
       newErrors.dob = 'Year of Birth is required (e.g., 1995)';
-    }
-    if (!caregiver?.name) {newErrors.name = 'Caregiver Name is required';}
-
-    if (!caregiver?.phone) {
-      newErrors.phone = 'Caregiver Phone is required';
-    } else if (!/^\d{10}$/.test(caregiver.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Phone number must be 10 digits';
-    }
-
-    if (!caregiver?.email) {
-      newErrors.email = 'Caregiver Email is required';
-    } else if (!/^[a-zA-Z0-9._%+-]+@(gmail\.com|edu\.in)$/i.test(caregiver.email)) {
-      newErrors.email = 'Must be a @gmail.com or @edu.in address';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -151,59 +138,7 @@ export default function ProfileSetupScreen({ onDone, onBack }: Props) {
           </View>
         </View>
 
-        {/* Caregiver Information */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.rowCenterGap}>
-              <User size={18} color={colors.primary} />
-              <Text style={styles.sectionTitle}>Caregiver Information</Text>
-            </View>
-          </View>
-          <View style={styles.paddingGap12}>
-            <View>
-              <TextInput
-                style={[styles.input, errors.name && styles.inputError]}
-                placeholder="Caregiver Name *"
-                placeholderTextColor={colors.mutedForeground}
-                value={caregiver?.name}
-                onChangeText={(t) => { setCaregiver({ ...caregiver, name: t }); setErrors(prev => ({ ...prev, name: '' })); }}
-              />
-              {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
-            </View>
-            <View>
-              <TextInput
-                style={styles.input}
-                placeholder="Relationship (e.g., Parent, Spouse)"
-                placeholderTextColor={colors.mutedForeground}
-                value={caregiver?.relationship}
-                onChangeText={(t) => setCaregiver({ ...caregiver, relationship: t })}
-              />
-            </View>
-            <View>
-              <TextInput
-                style={[styles.input, errors.phone && styles.inputError]}
-                placeholder="Phone Number *"
-                placeholderTextColor={colors.mutedForeground}
-                value={caregiver?.phone}
-                onChangeText={(t) => { setCaregiver({ ...caregiver, phone: t }); setErrors(prev => ({ ...prev, phone: '' })); }}
-                keyboardType="phone-pad"
-              />
-              {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
-            </View>
-            <View>
-              <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
-                placeholder="Caregiver Email ID *"
-                placeholderTextColor={colors.mutedForeground}
-                value={caregiver?.email}
-                onChangeText={(t) => { setCaregiver({ ...caregiver, email: t }); setErrors(prev => ({ ...prev, email: '' })); }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
-            </View>
-          </View>
-        </View>
+
         <View style={styles.spacer100} />
       </ScrollView>
 
@@ -250,7 +185,7 @@ const getStyles = () => StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingTop: 8 },
   triggerBtn: {
     width: '47%', minHeight: 80, backgroundColor: colors.background,
-    borderRadius: radius.lg, padding: 12, alignItems: 'flex-start', ...neuSm,
+    borderRadius: radius.lg, padding: 12, alignItems: 'flex-start', ...shadowSm,
   },
   triggerBtnActive: { backgroundColor: colors.muted },
   triggerLabel: { fontSize: 13, color: colors.mutedForeground, marginTop: 4, ...fonts.semibold },
@@ -258,14 +193,14 @@ const getStyles = () => StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingTop: 8 },
   chip: {
     paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.background,
-    borderRadius: radius.full, ...neuSm,
+    borderRadius: radius.full, ...shadowSm,
   },
   chipActive: { backgroundColor: colors.muted },
   chipText: { fontSize: 12, color: colors.foreground, ...fonts.medium },
   badge: { fontSize: 12, color: colors.mutedForeground },
   sectionCard: {
     backgroundColor: colors.background, borderRadius: radius.xl, padding: spacing.lg,
-    marginHorizontal: spacing.lg, marginBottom: spacing.md, ...neuSm,
+    marginHorizontal: spacing.lg, marginBottom: spacing.md, ...shadowSm,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   sectionTitle: { fontSize: 14, color: colors.foreground, ...fonts.semibold },
@@ -284,7 +219,7 @@ const getStyles = () => StyleSheet.create({
     color: colors.foreground,
     borderWidth: 1,
     borderColor: 'transparent',
-    ...neuSm,
+    ...shadowSm,
   },
   inputError: {
     borderColor: '#ff4444',
@@ -315,7 +250,7 @@ const getStyles = () => StyleSheet.create({
     width: '100%',
     borderRadius: radius.xl,
     padding: spacing.lg,
-    ...neuSm,
+    ...shadowSm,
   },
   modalHeader: {
     flexDirection: 'row',

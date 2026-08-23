@@ -1,20 +1,35 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, MapPin } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence, Easing } from 'react-native-reanimated';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
+import { getCaregiverUserLocation } from '../services/caregiverApi';
 
 export default function LocationMapScreen({ navigation, route }: any) {
-  const { mockUsers, darkMode } = useContext(AppContext);
+  const { darkMode } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   
   const userId = route?.params?.userId;
-  const connectedUser = mockUsers.find(u => u.id === userId);
+  const userName = route?.params?.userName || 'User';
 
   const pulseScale = useSharedValue(1);
   const pulseOpacity = useSharedValue(0.8);
+
+  const [locationData, setLocationData] = useState<{ latitude: number, longitude: number, updated_at: string } | null>(null);
+
+  useEffect(() => {
+    if (userId) {
+      getCaregiverUserLocation(userId)
+        .then(data => {
+          if (data && data.latitude) {
+            setLocationData(data);
+          }
+        })
+        .catch(err => console.warn('Failed to fetch user location', err));
+    }
+  }, [userId]);
 
   useEffect(() => {
     pulseScale.value = withRepeat(
@@ -47,7 +62,7 @@ export default function LocationMapScreen({ navigation, route }: any) {
   const mapBg = darkMode ? '#151515' : '#eef2f5';
   const gridColor = darkMode ? '#2a2a2a' : '#e0e5e9';
 
-  if (!connectedUser) {
+  if (!userId) {
     return (
       <View style={[styles.container, bgStyle, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
         <Text style={textStyle}>User not found.</Text>
@@ -65,12 +80,12 @@ export default function LocationMapScreen({ navigation, route }: any) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
           <ArrowLeft size={24} color={textStyle.color} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, textStyle]}>{connectedUser.name}'s Location</Text>
+        <Text style={[styles.headerTitle, textStyle]}>{userName}'s Location</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <View style={styles.content}>
-        <View style={[styles.mapPlaceholder, cardStyle, neuSm, { backgroundColor: mapBg, overflow: 'hidden' }]}>
+        <View style={[styles.mapPlaceholder, cardStyle, shadowSm, { backgroundColor: mapBg, overflow: 'hidden' }]}>
           {/* Grid lines for map feel */}
           <View style={[styles.gridLineH, { top: '25%', backgroundColor: gridColor }]} />
           <View style={[styles.gridLineH, { top: '50%', backgroundColor: gridColor }]} />
@@ -86,23 +101,29 @@ export default function LocationMapScreen({ navigation, route }: any) {
             </View>
           </View>
 
-          <View style={[styles.mapOverlayLabel, cardStyle, neuSm]}>
-            <Text style={[styles.mapOverlayText, textStyle]}>{connectedUser.phoneLocation || 'Unknown Location'}</Text>
-            <Text style={[styles.mapOverlaySub, subTextStyle]}>Lat: 34.0522  •  Lng: -118.2437</Text>
+          <View style={[styles.mapOverlayLabel, cardStyle, shadowSm]}>
+            <Text style={[styles.mapOverlayText, textStyle]}>Current Location</Text>
+            <Text style={[styles.mapOverlaySub, subTextStyle]}>
+              {locationData 
+                ? `Lat: ${locationData.latitude.toFixed(4)}  •  Lng: ${locationData.longitude.toFixed(4)}`
+                : 'Waiting for GPS signal...'}
+            </Text>
           </View>
         </View>
 
-        <View style={[styles.card, cardStyle, neuSm, { marginTop: spacing.md }]}>
+        <View style={[styles.card, cardStyle, shadowSm, { marginTop: spacing.md }]}>
           <Text style={[styles.cardSuperTitle, subTextStyle]}>LOCATION DETAILS</Text>
           <View style={styles.compactRow}>
             <Text style={[styles.infoLabel, subTextStyle]}>Sharing Status</Text>
-            <Text style={[styles.infoValue, { color: connectedUser.locationSharingStatus === 'Active' ? colors.primary : colors.mutedForeground, ...fonts.bold }]}>
-              {connectedUser.locationSharingStatus || 'Unknown'}
+            <Text style={[styles.infoValue, { color: colors.primary, ...fonts.bold }]}>
+              Active
             </Text>
           </View>
           <View style={[styles.compactRow, { marginBottom: 0 }]}>
             <Text style={[styles.infoLabel, subTextStyle]}>Last Updated</Text>
-            <Text style={[styles.infoValue, textStyle]}>{connectedUser.lastUpdated || 'Just now'}</Text>
+            <Text style={[styles.infoValue, textStyle]}>
+              {locationData ? new Date(locationData.updated_at).toLocaleTimeString() : 'Just now'}
+            </Text>
           </View>
         </View>
       </View>

@@ -66,8 +66,8 @@ async def test_create_user_invalid_email_returns_422(client, mock_user_service):
 # ---- get_user ----
 
 @pytest.mark.asyncio
-async def test_get_user_success(client, mock_user_service):
-    user_id = uuid4()
+async def test_get_user_success(client, override_auth, mock_user_service):
+    user_id = override_auth.id
     mock_user_service.get_user_by_id.return_value = make_user(user_id)
 
     resp = await client.get(f"/api/v1/users/{user_id}")
@@ -77,8 +77,8 @@ async def test_get_user_success(client, mock_user_service):
 
 
 @pytest.mark.asyncio
-async def test_get_user_not_found_returns_404(client, mock_user_service):
-    user_id = uuid4()
+async def test_get_user_not_found_returns_404(client, override_auth, mock_user_service):
+    user_id = override_auth.id
     mock_user_service.get_user_by_id.side_effect = NotFoundException(
         message=f"User with id {user_id} not found"
     )
@@ -91,8 +91,8 @@ async def test_get_user_not_found_returns_404(client, mock_user_service):
 # ---- update_user ----
 
 @pytest.mark.asyncio
-async def test_update_user_success(client, mock_user_service):
-    user_id = uuid4()
+async def test_update_user_success(client, override_auth, mock_user_service):
+    user_id = override_auth.id
     mock_user_service.update_user.return_value = make_user(user_id, email="updated@example.com")
 
     resp = await client.put(f"/api/v1/users/{user_id}", json={"email": "updated@example.com"})
@@ -102,8 +102,8 @@ async def test_update_user_success(client, mock_user_service):
 
 
 @pytest.mark.asyncio
-async def test_update_user_email_conflict_returns_400(client, mock_user_service):
-    user_id = uuid4()
+async def test_update_user_email_conflict_returns_400(client, override_auth, mock_user_service):
+    user_id = override_auth.id
     mock_user_service.update_user.side_effect = AURAException(
         message="Email taken@example.com is already in use by another account",
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -117,8 +117,8 @@ async def test_update_user_email_conflict_returns_400(client, mock_user_service)
 # ---- delete_user ----
 
 @pytest.mark.asyncio
-async def test_delete_user_success(client, mock_user_service):
-    user_id = uuid4()
+async def test_delete_user_success(client, override_auth, mock_user_service):
+    user_id = override_auth.id
     mock_user_service.delete_user.return_value = True
 
     resp = await client.delete(f"/api/v1/users/{user_id}")
@@ -128,8 +128,8 @@ async def test_delete_user_success(client, mock_user_service):
 
 
 @pytest.mark.asyncio
-async def test_delete_user_not_found_returns_404(client, mock_user_service):
-    user_id = uuid4()
+async def test_delete_user_not_found_returns_404(client, override_auth, mock_user_service):
+    user_id = override_auth.id
     mock_user_service.delete_user.side_effect = NotFoundException(
         message=f"User with id {user_id} not found"
     )

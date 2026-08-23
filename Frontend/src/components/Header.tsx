@@ -2,7 +2,7 @@ import React from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
-import { colors, neu, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadow, shadowSm, radius, spacing, fonts } from '../theme';
 
 interface HeaderProps {
   title: string;
@@ -45,7 +45,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    ...neuSm,
+    ...shadowSm,
   },
   backArrow: {
     fontSize: 18,

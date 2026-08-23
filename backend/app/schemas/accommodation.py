@@ -1,10 +1,10 @@
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from uuid import UUID
 
 class AccommodationBase(BaseModel):
-    text: str = Field(..., example="Allowed headphones during math class")
+    text: str = Field(..., json_schema_extra={"example": "Allowed headphones during math class"})
     time: Optional[datetime] = None
 
 class AccommodationCreate(AccommodationBase):
@@ -20,5 +20,4 @@ class AccommodationResponse(AccommodationBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

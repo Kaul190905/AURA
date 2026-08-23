@@ -11,7 +11,7 @@ import { Heart, Zap, Bell, X, Activity, Thermometer, Volume2 } from 'lucide-reac
 
 import { AppContext } from '../AppContext';
 
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { riskColor } from '../utils';
 import { supabase } from '../services/supabaseClient';
 
@@ -120,7 +120,7 @@ export default function HomeScreen() {
             <Text style={{ color: '#fff', fontSize: 14, ...fonts.bold }}>SOS</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.sparkleBtn, neuSm]}
+            style={[styles.sparkleBtn, shadowSm]}
             onPress={() => setIsNotificationCenterOpen(true)}
             activeOpacity={0.8}
           >
@@ -144,16 +144,16 @@ export default function HomeScreen() {
               <Svg width="140" height="140" viewBox="0 0 160 160">
                 <G rotation="-90" originX="80" originY="80">
                   {/* Outer - BPM */}
-                  <Circle cx="80" cy="80" r="65" stroke="#00C48C" strokeWidth="12" fill="none" strokeOpacity="0.2" />
-                  <Circle cx="80" cy="80" r="65" stroke="#00C48C" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 65}`} strokeDashoffset={`${2 * Math.PI * 65 * (1 - bpmPct)}`} strokeLinecap="round" />
+                  <Circle cx="80" cy="80" r="65" stroke={colors.riskLow} strokeWidth="12" fill="none" strokeOpacity="0.2" />
+                  <Circle cx="80" cy="80" r="65" stroke={colors.riskLow} strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 65}`} strokeDashoffset={`${2 * Math.PI * 65 * (1 - bpmPct)}`} strokeLinecap="round" />
 
                   {/* Middle - Temp */}
-                  <Circle cx="80" cy="80" r="47" stroke="#FF9F43" strokeWidth="12" fill="none" strokeOpacity="0.2" />
-                  <Circle cx="80" cy="80" r="47" stroke="#FF9F43" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 47}`} strokeDashoffset={`${2 * Math.PI * 47 * (1 - tempPct)}`} strokeLinecap="round" />
+                  <Circle cx="80" cy="80" r="47" stroke={colors.riskMed} strokeWidth="12" fill="none" strokeOpacity="0.2" />
+                  <Circle cx="80" cy="80" r="47" stroke={colors.riskMed} strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 47}`} strokeDashoffset={`${2 * Math.PI * 47 * (1 - tempPct)}`} strokeLinecap="round" />
 
                   {/* Inner - Noise */}
-                  <Circle cx="80" cy="80" r="29" stroke="#5F88FF" strokeWidth="12" fill="none" strokeOpacity="0.2" />
-                  <Circle cx="80" cy="80" r="29" stroke="#5F88FF" strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 29}`} strokeDashoffset={`${2 * Math.PI * 29 * (1 - noisePct)}`} strokeLinecap="round" />
+                  <Circle cx="80" cy="80" r="29" stroke={colors.secondary} strokeWidth="12" fill="none" strokeOpacity="0.2" />
+                  <Circle cx="80" cy="80" r="29" stroke={colors.secondary} strokeWidth="12" fill="none" strokeDasharray={`${2 * Math.PI * 29}`} strokeDashoffset={`${2 * Math.PI * 29 * (1 - noisePct)}`} strokeLinecap="round" />
                 </G>
               </Svg>
             </View>
@@ -162,7 +162,7 @@ export default function HomeScreen() {
             <View style={{ flex: 1, marginLeft: 20, justifyContent: 'center' }}>
               <View style={{ marginBottom: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#00C48C' }} />
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.riskLow }} />
                   <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>BPM</Text>
                 </View>
                 <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{displayHeartRate ?? '--'} bpm</Text>
@@ -170,7 +170,7 @@ export default function HomeScreen() {
 
               <View style={{ marginBottom: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#FF9F43' }} />
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.riskMed }} />
                   <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Temp</Text>
                 </View>
                 <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{tempCelsius !== null ? tempCelsius.toFixed(1) : '--'}°C</Text>
@@ -178,7 +178,7 @@ export default function HomeScreen() {
 
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#5F88FF' }} />
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: colors.secondary }} />
                   <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Noise</Text>
                 </View>
                 <Text style={{ fontSize: 13, color: colors.mutedForeground, marginLeft: 18 }}>{displayNoise !== null ? Math.round(displayNoise) : '--'} dB</Text>
@@ -191,7 +191,7 @@ export default function HomeScreen() {
           {/* Bottom Left: Heart Rate Line Chart */}
           <View style={[styles.sectionCard, { flex: 1, height: 160, marginBottom: 0 }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Heart size={16} color="#FF4D4F" />
+              <Heart size={16} color={colors.riskHigh} />
               <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Heart rate</Text>
             </View>
             <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{displayHeartRate ?? '--'} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>bpm</Text></Text>
@@ -200,19 +200,19 @@ export default function HomeScreen() {
               <Svg height="80" width="100%" viewBox="0 0 100 50" preserveAspectRatio="none">
                 <Defs>
                   <LinearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <Stop offset="0%" stopColor="#FF4D4F" stopOpacity="0.2" />
-                    <Stop offset="100%" stopColor="#FF4D4F" stopOpacity="0" />
+                    <Stop offset="0%" stopColor={colors.riskHigh} stopOpacity="0.2" />
+                    <Stop offset="100%" stopColor={colors.riskHigh} stopOpacity="0" />
                   </LinearGradient>
                 </Defs>
                 {displayHeartRate ? (
                   <G x={-hrPhase}>
                     <Path d="M0,40 C10,40 15,35 20,20 C25,5 28,5 32,30 C38,40 42,40 48,40 C52,40 55,33 58,20 C62,10 68,10 72,30 C75,40 80,40 85,40 L100,40 C110,40 115,35 120,20 C125,5 128,5 132,30 C138,40 142,40 148,40 C152,40 155,33 158,20 C162,10 168,10 172,30 C175,40 180,40 185,40 L200,40 L200,50 L0,50 Z" fill="url(#grad)" />
-                    <Path d="M0,40 C10,40 15,35 20,20 C25,5 28,5 32,30 C38,40 42,40 48,40 C52,40 55,33 58,20 C62,10 68,10 72,30 C75,40 80,40 85,40 L100,40 C110,40 115,35 120,20 C125,5 128,5 132,30 C138,40 142,40 148,40 C152,40 155,33 158,20 C162,10 168,10 172,30 C175,40 180,40 185,40 L200,40" fill="none" stroke="#FF4D4F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <Path d="M0,40 C10,40 15,35 20,20 C25,5 28,5 32,30 C38,40 42,40 48,40 C52,40 55,33 58,20 C62,10 68,10 72,30 C75,40 80,40 85,40 L100,40 C110,40 115,35 120,20 C125,5 128,5 132,30 C138,40 142,40 148,40 C152,40 155,33 158,20 C162,10 168,10 172,30 C175,40 180,40 185,40 L200,40" fill="none" stroke={colors.riskHigh} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   </G>
                 ) : (
                   <>
                     <Path d="M0,40 L100,40 L100,50 L0,50 Z" fill="url(#grad)" />
-                    <Path d="M0,40 L100,40" fill="none" stroke="#FF4D4F" strokeWidth="2.5" strokeLinecap="round" />
+                    <Path d="M0,40 L100,40" fill="none" stroke={colors.riskHigh} strokeWidth="2.5" strokeLinecap="round" />
                   </>
                 )}
               </Svg>
@@ -222,7 +222,7 @@ export default function HomeScreen() {
           {/* Bottom Right: Noise Level Bar Chart */}
           <View style={[styles.sectionCard, { flex: 1, height: 160, marginBottom: 0 }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Volume2 size={16} color="#00C48C" />
+              <Volume2 size={16} color={colors.riskLow} />
               <Text style={{ fontSize: 15, color: colors.foreground, ...fonts.bold }}>Noise level</Text>
             </View>
             <Text style={{ fontSize: 24, color: colors.foreground, ...fonts.bold, marginTop: 4 }}>{displayNoise !== null ? Math.round(displayNoise) : '--'} <Text style={{ fontSize: 12, color: colors.mutedForeground, ...fonts.medium }}>dB</Text></Text>
@@ -233,7 +233,7 @@ export default function HomeScreen() {
                   const finalH = displayNoise ? Math.max(h, 0) : 0;
                   const y = 50 - finalH;
                   return (
-                    <Rect key={i} x={5 + i * 15} y={y} width="8" height={finalH} rx={finalH > 4 ? 4 : finalH / 2} fill={i % 2 === 0 ? '#A7F3D0' : '#00C48C'} />
+                    <Rect key={i} x={5 + i * 15} y={y} width="8" height={finalH} rx={finalH > 4 ? 4 : finalH / 2} fill={i % 2 === 0 ? colors.riskLowSoft : colors.riskLow} />
                   );
                 })}
               </Svg>
@@ -320,7 +320,7 @@ export default function HomeScreen() {
             {/* Sensor cards */}
             <View style={styles.sensorGrid}>
               {/* Heart Rate */}
-              <View style={[styles.sensorCard, neuSm]}>
+              <View style={[styles.sensorCard, shadowSm]}>
                 <View style={[styles.sensorIconWrap, { backgroundColor: `${colors.riskHigh}15` }]}>
                   <Activity size={22} color={colors.riskHigh} />
                 </View>
@@ -330,7 +330,7 @@ export default function HomeScreen() {
               </View>
 
               {/* Temperature */}
-              <View style={[styles.sensorCard, neuSm]}>
+              <View style={[styles.sensorCard, shadowSm]}>
                 <View style={[styles.sensorIconWrap, { backgroundColor: `${colors.primary}15` }]}>
                   <Thermometer size={22} color={colors.primary} />
                 </View>
@@ -340,7 +340,7 @@ export default function HomeScreen() {
               </View>
 
               {/* Noise Level */}
-              <View style={[styles.sensorCard, neuSm]}>
+              <View style={[styles.sensorCard, shadowSm]}>
                 <View style={[styles.sensorIconWrap, { backgroundColor: `${colors.riskMed ?? '#E0A83A'}15` }]}>
                   <Volume2 size={22} color={colors.riskMed ?? '#E0A83A'} />
                 </View>
@@ -366,7 +366,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.background,
     borderRadius: radius.xl,
     padding: 16,
-    ...neuSm,
+    ...shadowSm,
     borderWidth: 1,
     borderColor: colors.border + '80',
   },

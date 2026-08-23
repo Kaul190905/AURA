@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Search, Filter, User, ChevronRight, Plus, X } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 import { riskColor } from '../utils';
 
 type FilterType = 'All' | 'Safe' | 'Need Attention' | 'Critical';

@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, KeyboardAvoidingView, Platform, Animated,
-  ScrollView,
+  ScrollView, Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Star, Mail, Lock, Eye, EyeOff, ChevronRight, Globe, User, Heart } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, ChevronRight, Globe, User, Heart } from 'lucide-react-native';
+import Logo from '../../assets/AURA.png';
 import { signIn, signUp, signInWithGoogle } from '../services/supabaseClient';
 import { colors, fonts, radius, spacing } from '../theme';
 
@@ -48,6 +49,31 @@ export default function LoginScreen({ onSuccess }: Props) {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
+  const parseAuthError = (err: any, isGoogle: boolean = false) => {
+    let msg = err?.message ?? 'Authentication failed. Please try again.';
+    if (typeof msg === 'string' && msg.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(msg);
+        if (parsed.status === 500) {
+          if (isGoogle) {
+            msg = 'Google Sign-In configuration error in Supabase. Please ensure your Google Web Client ID is configured in the Supabase Dashboard under Auth Providers.';
+          } else {
+            msg = 'Server error: Email sending may have failed. Please check your Supabase SMTP settings.';
+          }
+        } else {
+          msg = parsed.msg || parsed.message || parsed.error_description || 'Authentication failed.';
+        }
+      } catch (e) {
+        if (msg.includes('"status":500')) {
+          msg = isGoogle
+            ? 'Google Sign-In configuration error in Supabase (500).'
+            : 'Server error (500). Please check your Supabase SMTP or project settings.';
+        }
+      }
+    }
+    return msg;
+  };
+
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
       setError('Please enter your email and password.');
@@ -71,7 +97,7 @@ export default function LoginScreen({ onSuccess }: Props) {
         onSuccess();
       }
     } catch (err: any) {
-      setError(err?.message ?? 'Authentication failed. Please try again.');
+      setError(parseAuthError(err, false));
     } finally {
       setLoading(false);
     }
@@ -85,7 +111,7 @@ export default function LoginScreen({ onSuccess }: Props) {
       // For web/redirect-based OAuth, the app will reload on redirect and trigger onAuthStateChange
       onSuccess();
     } catch (err: any) {
-      setError(err?.message ?? 'Google Sign-In failed.');
+      setError(parseAuthError(err, true));
     } finally {
       setLoading(false);
     }
@@ -118,7 +144,10 @@ export default function LoginScreen({ onSuccess }: Props) {
             <Animated.View
               style={[styles.breatheRing, { transform: [{ scale: breathe }] }]}
             />
-            <Star size={40} color={colors.primary} strokeWidth={1.8} />
+            <Image
+              source={Logo}
+              style={styles.logoImage}
+            />
           </View>
 
           <Text style={styles.appName}>AURA</Text>
@@ -330,7 +359,7 @@ const styles = StyleSheet.create({
   roleToggleActive: {
     backgroundColor: colors.background,
     elevation: 2,
-    shadowColor: '#A3B1C6',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -352,10 +381,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 8,
-    shadowColor: '#A3B1C6',
+    shadowColor: '#000000',
     shadowOffset: { width: 6, height: 6 },
     shadowOpacity: 0.5,
     shadowRadius: 16,
+  },
+  logoImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   breatheRing: {
     position: 'absolute',
@@ -408,7 +442,7 @@ const styles = StyleSheet.create({
   tabActive: {
     backgroundColor: colors.background,
     elevation: 2,
-    shadowColor: '#A3B1C6',
+    shadowColor: '#000000',
     shadowOffset: { width: 2, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -533,7 +567,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     elevation: 2,
-    shadowColor: '#A3B1C6',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,

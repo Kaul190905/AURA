@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { Strategy } from '../types';
 import { Wind, Star, X } from 'lucide-react-native';
 import { computeRisk } from '../utils';
@@ -78,7 +78,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.background,
     borderRadius: radius.xl + 4,
     padding: spacing.xl,
-    ...neuSm,
+    ...shadowSm,
   },
   row: {
     flexDirection: 'row',
@@ -93,7 +93,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    ...neuSm,
+    ...shadowSm,
   },
   sheetTitle: {
     fontSize: 15,
@@ -111,7 +111,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    ...neuSm,
+    ...shadowSm,
   },
   question: {
     fontSize: 13,
@@ -135,7 +135,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    ...neuSm,
+    ...shadowSm,
   },
   suggText: {
     flex: 1,
@@ -169,7 +169,7 @@ const getStyles = () => StyleSheet.create({
   },
   btnSecondary: {
     backgroundColor: colors.background,
-    ...neuSm,
+    ...shadowSm,
   },
   btnSecondaryText: {
     color: colors.foreground,

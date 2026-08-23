@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, User, ArrowUpRight, Activity, ChevronRight, MapPin } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 
 export default function ConnectedUserDetailsScreen({ navigation, route }: any) {
   const { mockUsers, darkMode } = useContext(AppContext);
@@ -75,7 +75,7 @@ export default function ConnectedUserDetailsScreen({ navigation, route }: any) {
         </View>
 
         {/* About User Card */}
-        <View style={[styles.card, cardStyle, neuSm]}>
+        <View style={[styles.card, cardStyle, shadowSm]}>
           <Text style={[styles.cardSuperTitle, subTextStyle]}>ABOUT USER</Text>
           <View style={styles.compactRow}>
             <Text style={[styles.infoLabel, subTextStyle]}>Name</Text>
@@ -85,24 +85,35 @@ export default function ConnectedUserDetailsScreen({ navigation, route }: any) {
             <Text style={[styles.infoLabel, subTextStyle]}>Email</Text>
             <Text style={[styles.infoValue, textStyle]}>{connectedUser.email || 'Not set'}</Text>
           </View>
-          <View style={styles.compactRow}>
-            <Text style={[styles.infoLabel, subTextStyle]}>Condition</Text>
-            <Text style={[styles.infoValue, textStyle]}>{primaryTriggerText || 'Not set'}</Text>
-          </View>
+          
+          {connectedUser.assignment?.can_view_preferences === false ? (
+            <View style={[styles.compactRow, { marginTop: 10 }]}>
+              <Text style={[styles.infoLabel, { color: colors.riskMed, ...fonts.medium }]}>
+                🔒 Preferences hidden by user
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.compactRow}>
+              <Text style={[styles.infoLabel, subTextStyle]}>Condition</Text>
+              <Text style={[styles.infoValue, textStyle]}>{connectedUser.condition || 'Not set'}</Text>
+            </View>
+          )}
         </View>
 
         {/* Sensory Profile Card */}
-        <View style={[styles.card, cardStyle, neuSm]}>
-          <Text style={[styles.cardSuperTitle, subTextStyle]}>SENSORY PROFILE</Text>
-          <View style={styles.compactRow}>
-            <Text style={[styles.infoLabel, subTextStyle]}>Primary Trigger{activeTriggers.length > 1 ? 's' : ''}</Text>
-            <Text style={[styles.infoValue, textStyle]}>{primaryTriggerText}</Text>
+        {connectedUser.assignment?.can_view_preferences !== false && (
+          <View style={[styles.card, cardStyle, shadowSm]}>
+            <Text style={[styles.cardSuperTitle, subTextStyle]}>SENSORY PROFILE</Text>
+            <View style={styles.compactRow}>
+              <Text style={[styles.infoLabel, subTextStyle]}>Primary Trigger{activeTriggers.length > 1 ? 's' : ''}</Text>
+              <Text style={[styles.infoValue, textStyle]}>{primaryTriggerText}</Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Current Sensory Status Link Card */}
         <TouchableOpacity 
-          style={[styles.statusLinkCard, cardStyle, neuSm]}
+          style={[styles.statusLinkCard, cardStyle, shadowSm]}
           activeOpacity={0.8}
           onPress={() => navigation.navigate('SensoryStatus', { userId: connectedUser.id })}
         >
@@ -121,7 +132,7 @@ export default function ConnectedUserDetailsScreen({ navigation, route }: any) {
 
         {/* Location Link Card */}
         <TouchableOpacity 
-          style={[styles.statusLinkCard, cardStyle, neuSm]}
+          style={[styles.statusLinkCard, cardStyle, shadowSm]}
           activeOpacity={0.8}
           onPress={() => navigation.navigate('LocationMap', { userId: connectedUser.id })}
         >
@@ -140,7 +151,7 @@ export default function ConnectedUserDetailsScreen({ navigation, route }: any) {
 
         {/* View History Card */}
         <TouchableOpacity 
-          style={[styles.historyCard, cardStyle, neuSm]} 
+          style={[styles.historyCard, cardStyle, shadowSm]} 
           activeOpacity={0.8}
           onPress={() => navigation.navigate('UserHistory', { userId: connectedUser.id })}
         >

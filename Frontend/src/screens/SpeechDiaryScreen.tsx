@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Mic, Search, ListFilter, Play, Trash2, Pen, X, Square } from 'lucide-react-native';
 import { Header } from '../components/Header';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
@@ -179,7 +179,7 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
           <Text style={styles.emptyText}>No entries found.</Text>
         ) : (
           filteredEntries.map(e => (
-            <View key={e.id} style={[styles.card, neuSm]}>
+            <View key={e.id} style={[styles.card, shadowSm]}>
               <View style={styles.cardHeader}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardTitleText}>{e.title}</Text>
@@ -212,7 +212,7 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
       {/* Recording Modal */}
       <Modal visible={isRecording} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={[styles.recordingCard, neuSm]}>
+          <View style={[styles.recordingCard, shadowSm]}>
             <View style={styles.recordingPulse}>
               <Mic size={32} color={colors.background} />
             </View>
@@ -229,7 +229,7 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
       {/* Naming Modal */}
       <Modal visible={isNaming} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={[styles.namingCard, neuSm]}>
+          <View style={[styles.namingCard, shadowSm]}>
             <Text style={styles.namingTitle}>Name Your Recording</Text>
             <TextInput
               style={styles.namingInput}
@@ -254,7 +254,7 @@ export default function SpeechDiaryScreen({ onBack }: { onBack: () => void }) {
       {/* Edit Entry Modal */}
       <Modal visible={!!editingEntry} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={[styles.namingCard, neuSm]}>
+          <View style={[styles.namingCard, shadowSm]}>
             <Text style={styles.namingTitle}>Edit Entry</Text>
             <TextInput
               style={[styles.namingInput, { marginBottom: 12 }]}

@@ -12,7 +12,7 @@ export interface SensorDataCreate {
   timestamp?: string; // ISO-8601; backend defaults to now()
   heart_rate?: number | null;
   blood_oxygen?: number | null;
-  temperature?: number | null; // °F
+  temperature?: number | null; // °C
   noise?: number | null; // dB
   latitude?: number | null;
   longitude?: number | null;
@@ -225,6 +225,18 @@ export async function confirmAlert(
   return res.json();
 }
 
+/**
+ * POST /alerts/sos
+ * Trigger a high-priority SOS emergency alert.
+ */
+export async function triggerSosAlert(userId: string) {
+  const res = await authFetch('/alerts/sos', {
+    method: 'POST',
+    body: JSON.stringify({ user_id: userId }),
+  });
+  return res.json();
+}
+
 // ── Overload Events ───────────────────────────────────────────────────────────
 
 /**
@@ -343,6 +355,13 @@ export async function submitWellnessCheckin(
  */
 export async function getWellnessScore(userId: string): Promise<WellnessScoreResponse> {
   const res = await authFetch(`/wellness/${userId}/score`);
+  return res.json();
+}
+
+// ── Locations ─────────────────────────────────────────────────────────────────
+
+export async function getUserHighRiskLocations(userId: string) {
+  const res = await authFetch(`/locations/high-risk?user_id=${userId}`);
   return res.json();
 }
 

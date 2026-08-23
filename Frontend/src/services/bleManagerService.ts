@@ -1,5 +1,6 @@
 import { Platform, PermissionsAndroid } from 'react-native';
 import { BleManager, Device, Subscription } from 'react-native-ble-plx';
+import { encode, decode } from 'base-64';
 
 // Nordic UART Service (NUS) UUIDs
 export const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
@@ -12,7 +13,7 @@ export const NUS_RX_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'; // nRF RX (Wr
  *   $<body>*<XX>\n      XX = XOR of every char of <body>, two hex digits
  *
  * Telemetry body:
- *   A,seq,bpm,ppg,tempC,tempF,mic,beat,beatCount,finger,tempValid,sos
+ *   A,seq,bpm,tempC,mic,sos
  *
  * Event body:
  *   E,<what>[,...]      e.g. E,SOS,1,BAND
@@ -184,8 +185,7 @@ class BleManagerService {
           }
           if (characteristic?.value) {
             try {
-              // @ts-ignore: atob is available globally in React Native JS engines
-              const chunk = atob(characteristic.value);
+              const chunk = decode(characteristic.value);
               this.ingest(chunk);
             } catch (err) {
               console.error('[BLE] Base64 decode error:', err);
@@ -325,8 +325,7 @@ class BleManagerService {
     if (!this.connectedDevice) {
       throw new Error('No device connected');
     }
-    // @ts-ignore: btoa is available globally in React Native JS engines
-    const base64Data = btoa(data);
+    const base64Data = encode(data);
     await this.connectedDevice.writeCharacteristicWithResponseForService(
       NUS_SERVICE_UUID,
       NUS_RX_UUID,

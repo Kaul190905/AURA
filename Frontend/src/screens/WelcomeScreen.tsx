@@ -1,11 +1,12 @@
 import React, { useRef, useEffect, useContext } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Animated,
+  View, Text, StyleSheet, TouchableOpacity, Animated, Image
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Star, Shield, User, Heart } from 'lucide-react-native';
+import Logo from '../../assets/AURA.png';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 
 interface Props {
   onNext: (role: 'user' | 'caretaker') => void;
@@ -36,7 +37,10 @@ export default function WelcomeScreen({ onNext }: Props) {
       <View style={styles.top}>
         <View style={styles.logoOuter}>
           <Animated.View style={[styles.breatheRing, { transform: [{ scale: breathe }] }]} />
-          <Star size={44} color={colors.primary} strokeWidth={1.8} />
+          <Image 
+            source={Logo}
+            style={{ width: 44, height: 44, borderRadius: 22 }} 
+          />
         </View>
 
         <View style={styles.textBlock}>
@@ -58,7 +62,7 @@ export default function WelcomeScreen({ onNext }: Props) {
       <View style={styles.roleContainer}>
         <Text style={styles.roleLabel}>Who is using AURA today?</Text>
 
-        <TouchableOpacity onPress={() => onNext('user')} style={[styles.roleCard, neuSm]} activeOpacity={0.85}>
+        <TouchableOpacity onPress={() => onNext('user')} style={[styles.roleCard, shadowSm]} activeOpacity={0.85}>
           <View style={styles.roleIconUser}>
             <User color={colors.primary} size={28} />
           </View>
@@ -68,7 +72,7 @@ export default function WelcomeScreen({ onNext }: Props) {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => onNext('caretaker')} style={[styles.roleCard, neuSm]} activeOpacity={0.85}>
+        <TouchableOpacity onPress={() => onNext('caretaker')} style={[styles.roleCard, shadowSm]} activeOpacity={0.85}>
           <View style={[styles.roleIconCaregiver]}>
             <Heart color={colors.riskLow} size={28} />
           </View>
@@ -103,7 +107,7 @@ const getStyles = () => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 8,
-    shadowColor: '#A3B1C6',
+    shadowColor: '#000000',
     shadowOffset: { width: 8, height: 8 },
     shadowOpacity: 0.55,
     shadowRadius: 20,

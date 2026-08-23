@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, Star, Trash2, Ear, Sun, User, Pen } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { TRIGGERS } from '../data';
 import { TriggerKey, Strategy } from '../types';
 
@@ -328,7 +328,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.background, 
     borderRadius: radius.xl, 
     padding: 16, 
-    ...neuSm,
+    ...shadowSm,
     borderWidth: 1,
     borderColor: colors.border + '80'
   },
@@ -336,12 +336,12 @@ const getStyles = () => StyleSheet.create({
   input: {
     backgroundColor: colors.background, borderRadius: radius.lg,
     paddingHorizontal: 14, paddingVertical: 12, fontSize: 13, color: colors.foreground,
-    ...neuSm,
+    ...shadowSm,
   },
   triggerChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   tChip: {
     paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.full,
-    backgroundColor: colors.background, ...neuSm,
+    backgroundColor: colors.background, ...shadowSm,
   },
   tChipActive: { backgroundColor: colors.muted },
   tChipText: { fontSize: 11, color: colors.foreground, ...fonts.medium },
@@ -353,7 +353,7 @@ const getStyles = () => StyleSheet.create({
   saveBtnText: { color: '#fff', fontSize: 13, ...fonts.semibold },
   cancelBtn: {
     flex: 1, height: 44, backgroundColor: colors.background, borderRadius: radius.lg,
-    alignItems: 'center', justifyContent: 'center', ...neuSm,
+    alignItems: 'center', justifyContent: 'center', ...shadowSm,
   },
   cancelBtnText: { color: colors.foreground, fontSize: 13, ...fonts.medium },
   badge: { fontSize: 12, color: colors.mutedForeground, marginRight: 4 },
@@ -367,12 +367,12 @@ const getStyles = () => StyleSheet.create({
   helpedBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6,
     backgroundColor: colors.background, alignSelf: 'flex-start',
-    paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full, ...neuSm,
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full, ...shadowSm,
   },
   helpedText: { fontSize: 10, color: colors.mutedForeground, ...fonts.semibold },
   deleteBtn: {
     width: 32, height: 32, borderRadius: radius.full,
-    backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...neuSm,
+    backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...shadowSm,
   },
   editOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,

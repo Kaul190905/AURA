@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bluetooth, Zap, Volume2, Sun, Shield, RefreshCw, Siren } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { submitSensorData } from '../services/api';
 import { bleManagerService } from '../services/bleManagerService';
 import { Device } from 'react-native-ble-plx';
@@ -210,7 +210,7 @@ export default function WearableScreen() {
         <View style={[styles.bleIcon, bleConnected && { backgroundColor: colors.muted }]}>
           <Bluetooth size={22} color={colors.primary} />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={styles.flex1}>
           <Text style={styles.deviceName}>AURA band</Text>
           <Text style={styles.deviceStatus}>
             {pairing ? 'Pairing…' : bleConnected ? 'Connected' : 'Not paired'}
@@ -222,7 +222,7 @@ export default function WearableScreen() {
           style={[styles.pairBtn, !bleConnected && styles.pairBtnActive]}
           activeOpacity={0.85}
         >
-          <Text style={[styles.pairBtnText, !bleConnected && { color: '#fff' }]}>
+          <Text style={[styles.pairBtnText, !bleConnected && styles.textWhite]}>
             {bleConnected ? 'Disconnect' : pairing ? '…' : 'Pair'}
           </Text>
         </TouchableOpacity>
@@ -230,11 +230,11 @@ export default function WearableScreen() {
       </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.sectionContainer}>
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.sectionHeaderInner}>
               <Zap size={18} color={colors.primary} />
               <Text style={styles.sectionTitle}>{bleConnected ? 'Real-time sensors' : 'Simulated sensors'}</Text>
             </View>
@@ -246,12 +246,12 @@ export default function WearableScreen() {
           </Text>
 
           {/* Noise slider */}
-          <View style={[styles.sliderCard, { marginTop: 12 }]}>
+          <View style={[styles.sliderCard, styles.mt12]}>
             <View style={styles.sliderCardTop}>
-              <View style={[styles.sliderIcon, neuSm]}>
+              <View style={[styles.sliderIcon, shadowSm]}>
                 <Volume2 size={18} color={colors.primary} />
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={styles.flex1}>
                 <Text style={styles.sliderCardTitle}>Noise</Text>
                 <Text style={styles.sliderCardHint}>{noise === null ? 'No Data' : noise < 60 ? 'Quiet' : noise < 80 ? 'Busy' : 'Loud'}</Text>
               </View>
@@ -264,30 +264,30 @@ export default function WearableScreen() {
               minimumTrackTintColor={colors.primary}
               maximumTrackTintColor={colors.border}
               thumbTintColor={bleConnected ? colors.muted : colors.primary}
-              style={{ marginTop: 10 }}
+              style={styles.mt10}
             />
           </View>
 
           {/* Temperature slider */}
-          <View style={[styles.sliderCard, { marginTop: 10 }]}>
+          <View style={[styles.sliderCard, styles.mt10]}>
             <View style={styles.sliderCardTop}>
-              <View style={[styles.sliderIcon, neuSm]}>
+              <View style={[styles.sliderIcon, shadowSm]}>
                 <Sun size={18} color={colors.primary} />
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={styles.flex1}>
                 <Text style={styles.sliderCardTitle}>Temperature</Text>
-                <Text style={styles.sliderCardHint}>{temperature === null ? 'No Data' : temperature < 97 ? 'Cold' : temperature < 100 ? 'Normal' : 'Fever'}</Text>
+                <Text style={styles.sliderCardHint}>{temperature === null ? 'No Data' : temperature < 36.1 ? 'Cold' : temperature < 37.8 ? 'Normal' : 'Fever'}</Text>
               </View>
-              <Text style={styles.sliderValue}>{temperature !== null ? Math.round(((temperature - 32) * 5) / 9) : '--'}<Text style={styles.sliderUnit}> °C</Text></Text>
+              <Text style={styles.sliderValue}>{temperature !== null ? temperature.toFixed(1) : '--'}<Text style={styles.sliderUnit}> °C</Text></Text>
             </View>
             <Slider
-              minimumValue={30} maximumValue={110} step={1}
-              value={temperature ?? 98.6} onValueChange={(v) => !bleConnected && setTemperature(Math.round(v))}
+              minimumValue={32} maximumValue={43} step={0.1}
+              value={temperature ?? 37.0} onValueChange={(v) => !bleConnected && setTemperature(parseFloat(v.toFixed(1)))}
               disabled={bleConnected}
               minimumTrackTintColor={colors.primary}
               maximumTrackTintColor={colors.border}
               thumbTintColor={bleConnected ? colors.muted : colors.primary}
-              style={{ marginTop: 10 }}
+              style={styles.mt10}
             />
           </View>
         </View>
@@ -297,7 +297,7 @@ export default function WearableScreen() {
         <View style={styles.sectionContainer}>
         <View style={[styles.sectionCard, sosActive && styles.sosCardActive]}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.sectionHeaderInner}>
               <Siren size={18} color={sosActive ? '#d92d20' : colors.primary} />
               <Text style={styles.sectionTitle}>Emergency</Text>
             </View>
@@ -331,17 +331,17 @@ export default function WearableScreen() {
         <View style={styles.sectionContainer}>
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.sectionHeaderInner}>
               <Shield size={18} color={colors.primary} />
               <Text style={styles.sectionTitle}>Device status</Text>
             </View>
           </View>
           <View style={styles.statsRow}>
-            <View style={[styles.statCard, neuSm]}>
+            <View style={[styles.statCard, shadowSm]}>
               <Text style={styles.statLabel}>BATTERY</Text>
               <Text style={styles.statValue}>{bleConnected ? '82%' : '—'}</Text>
             </View>
-            <View style={[styles.statCard, neuSm]}>
+            <View style={[styles.statCard, shadowSm]}>
               <Text style={styles.statLabel}>SIGNAL</Text>
               <Text style={styles.statValue}>{bleConnected ? 'Strong' : '—'}</Text>
             </View>
@@ -376,7 +376,7 @@ export default function WearableScreen() {
             ) : (
               <View style={styles.scanStatus}>
                 <TouchableOpacity onPress={startScan} style={styles.rescanBtn}>
-                  <RefreshCw size={14} color={colors.primary} style={{ marginRight: 6 }} />
+                  <RefreshCw size={14} color={colors.primary} style={styles.mr6} />
                   <Text style={styles.rescanBtnText}>Scan Again</Text>
                 </TouchableOpacity>
               </View>
@@ -385,7 +385,7 @@ export default function WearableScreen() {
             <FlatList
               data={devices}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={{ paddingVertical: 10 }}
+              contentContainerStyle={styles.pv10}
               ListEmptyComponent={
                 <Text style={styles.emptyListText}>
                   {scanning ? 'No devices found yet...' : 'No devices found. Ensure the band is powered on.'}
@@ -396,8 +396,8 @@ export default function WearableScreen() {
                   onPress={() => connectDevice(item)}
                   style={styles.deviceItem}
                 >
-                  <Bluetooth size={18} color={colors.primary} style={{ marginRight: 12 }} />
-                  <View style={{ flex: 1 }}>
+                  <Bluetooth size={18} color={colors.primary} style={styles.mr12} />
+                  <View style={styles.flex1}>
                     <Text style={styles.deviceItemName}>{item.name || 'Unnamed Device'}</Text>
                     <Text style={styles.deviceItemId}>{item.id}</Text>
                   </View>
@@ -434,13 +434,13 @@ const getStyles = () => StyleSheet.create({
   },
   bleIcon: {
     width: 48, height: 48, borderRadius: radius.full,
-    backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...neuSm,
+    backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...shadowSm,
   },
   deviceName: { fontSize: 15, color: colors.foreground, ...fonts.semibold },
   deviceStatus: { fontSize: 12, color: colors.mutedForeground },
   pairBtn: {
     height: 40, paddingHorizontal: 16, borderRadius: radius.full,
-    alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, ...neuSm,
+    alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, ...shadowSm,
   },
   pairBtnActive: {
     backgroundColor: colors.primary,
@@ -548,5 +548,34 @@ const getStyles = () => StyleSheet.create({
     color: colors.mutedForeground,
     marginVertical: 20,
     fontSize: 13,
+  },
+  flex1: {
+    flex: 1,
+  },
+  textWhite: {
+    color: '#fff',
+  },
+  scrollContent: {
+    paddingBottom: 80,
+  },
+  sectionHeaderInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  mt12: {
+    marginTop: 12,
+  },
+  mt10: {
+    marginTop: 10,
+  },
+  mr6: {
+    marginRight: 6,
+  },
+  mr12: {
+    marginRight: 12,
+  },
+  pv10: {
+    paddingVertical: 10,
   },
 });

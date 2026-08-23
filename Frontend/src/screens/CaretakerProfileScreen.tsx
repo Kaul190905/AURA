@@ -3,10 +3,10 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Users, Phone, Moon, LogOut, ChevronRight, User } from 'lucide-react-native';
+import { Phone, Moon, LogOut, ChevronRight, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { supabase } from '../services/supabaseClient';
 
 export default function CaretakerProfileScreen({ navigation }: any) {
@@ -22,10 +22,14 @@ export default function CaretakerProfileScreen({ navigation }: any) {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user && user.email) {
-        const prefix = user.email.split('@')[0];
-        const formattedName = prefix.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
-        setUserName(formattedName);
+      if (user) {
+        if (user.user_metadata?.name) {
+          setUserName(user.user_metadata.name);
+        } else if (user.email) {
+          const prefix = user.email.split('@')[0];
+          const formattedName = prefix.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+          setUserName(formattedName);
+        }
       }
     });
   }, []);
@@ -35,8 +39,7 @@ export default function CaretakerProfileScreen({ navigation }: any) {
   const textStyle = darkMode ? { color: '#ffffff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaa' } : { color: colors.mutedForeground };
 
-  const activeUserId = recentlyViewedUserIds[0] || 'u1';
-  const activeUser = mockUsers.find(u => u.id === activeUserId) || mockUsers[0];
+
 
   return (
     <View style={[styles.container, containerStyle, { paddingTop: insets.top }]}>
@@ -45,7 +48,7 @@ export default function CaretakerProfileScreen({ navigation }: any) {
 
         {/* Profile Card */}
         <TouchableOpacity
-          style={[styles.menuCard, neuSm, cardStyle]}
+          style={[styles.menuCard, shadowSm, cardStyle]}
           activeOpacity={0.8}
           onPress={() => navigation.navigate('ProfileDetails')}
         >
@@ -61,7 +64,7 @@ export default function CaretakerProfileScreen({ navigation }: any) {
 
         {/* Emergency Contacts Card */}
         <TouchableOpacity
-          style={[styles.menuCard, neuSm, cardStyle]}
+          style={[styles.menuCard, shadowSm, cardStyle]}
           activeOpacity={0.8}
           onPress={() => navigation.navigate('EmergencyContacts')}
         >
@@ -75,28 +78,11 @@ export default function CaretakerProfileScreen({ navigation }: any) {
           <ChevronRight size={20} color={colors.mutedForeground} />
         </TouchableOpacity>
 
-        {/* Connected User Card (Only for Personal Caretaker) */}
-        {primaryRole === 'caretaker' && (
-          <TouchableOpacity
-            style={[styles.menuCard, neuSm, cardStyle]}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('ConnectedUserDetails')}
-          >
-            <View style={[styles.iconBox, { backgroundColor: `${colors.primary}20` }]}>
-              <Users size={22} color={colors.primary} />
-            </View>
-            <View style={styles.menuTextContainer}>
-              <Text style={[styles.menuTitle, textStyle]}>Connected User</Text>
-              <Text style={[styles.menuSubtitle, subTextStyle]}>View condition and inputs</Text>
-            </View>
-            <ChevronRight size={20} color={colors.mutedForeground} />
-          </TouchableOpacity>
-        )}
 
         <Text style={[styles.sectionHeader, textStyle]}>Preferences</Text>
 
         {/* Accessibility (Flat Card) */}
-        <View style={[styles.menuCard, neuSm, cardStyle, { paddingVertical: 12 }]}>
+        <View style={[styles.menuCard, shadowSm, cardStyle, { paddingVertical: 12 }]}>
           <ToggleRow
             icon={<Moon size={20} color={colors.primary} />}
             label="Dark Mode"

@@ -1,29 +1,50 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useContext, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Filter } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
+import { getCaregiverUserAlerts } from '../services/caregiverApi';
 
 const formatTime = (ts: number) => {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
 export default function CaretakerUserHistoryScreen({ navigation, route }: any) {
-  const { mockUsers, history, darkMode } = useContext(AppContext);
+  const { darkMode } = useContext(AppContext);
   const insets = useSafeAreaInsets();
   
   const userId = route?.params?.userId;
-  const connectedUser = mockUsers.find(u => u.id === userId);
+  const userName = route?.params?.userName || 'User';
 
   const [filter, setFilter] = useState('7 Days');
+  const [history, setHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (userId) {
+      getCaregiverUserAlerts(userId)
+        .then(data => {
+          // Sort descending
+          const sorted = data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          setHistory(sorted);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Failed to fetch history:', err);
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
+  }, [userId]);
 
   const bgStyle = darkMode ? { backgroundColor: '#000000' } : { backgroundColor: '#F8F9FA' };
   const cardStyle = darkMode ? { backgroundColor: '#1c1c1e' } : { backgroundColor: '#ffffff' };
   const textStyle = darkMode ? { color: '#ffffff' } : { color: colors.foreground };
   const subTextStyle = darkMode ? { color: '#aaaaaa' } : { color: colors.mutedForeground };
 
-  if (!connectedUser) {
+  if (!userId) {
     return (
       <View style={[styles.container, bgStyle, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
         <Text style={textStyle}>User not found.</Text>
@@ -34,12 +55,9 @@ export default function CaretakerUserHistoryScreen({ navigation, route }: any) {
     );
   }
 
-  const hasSound = connectedUser.sensoryProfile?.sound;
-  const hasTemp = connectedUser.sensoryProfile?.temperature;
-
   const sensoryEvents = history.length;
-  const highRiskEvents = history.filter(e => e.score >= 7).length;
-  const successfulInterventions = history.filter(e => e.action === 'tried').length;
+  const highRiskEvents = history.filter(e => e.severity === 'HIGH' || e.severity === 'CRITICAL').length;
+  const successfulInterventions = history.filter(e => e.is_resolved).length;
 
   return (
     <View style={[styles.container, bgStyle, { paddingTop: insets.top }]}>
@@ -48,7 +66,7 @@ export default function CaretakerUserHistoryScreen({ navigation, route }: any) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
           <ArrowLeft size={24} color={textStyle.color} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, textStyle]}>{connectedUser.name}'s History</Text>
+        <Text style={[styles.headerTitle, textStyle]}>{userName}'s History</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -56,7 +74,7 @@ export default function CaretakerUserHistoryScreen({ navigation, route }: any) {
         
         {/* History & Insights Overview */}
         <Text style={[styles.sectionHeader, textStyle]}>HISTORY & INSIGHTS</Text>
-        <View style={[styles.overviewCard, cardStyle, neuSm]}>
+        <View style={[styles.overviewCard, cardStyle, shadowSm]}>
           <View style={styles.filterRow}>
             <Text style={[styles.overviewTitle, textStyle]}>Overview</Text>
             <TouchableOpacity style={styles.filterBtn}>
@@ -84,8 +102,12 @@ export default function CaretakerUserHistoryScreen({ navigation, route }: any) {
         {/* Timeline */}
         <Text style={[styles.sectionHeader, textStyle]}>TIMELINE</Text>
         
-        {history.length === 0 ? (
-          <View style={[styles.emptyState, cardStyle, neuSm]}>
+        {loading ? (
+          <View style={[styles.emptyState, cardStyle, shadowSm]}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : history.length === 0 ? (
+          <View style={[styles.emptyState, cardStyle, shadowSm]}>
             <Text style={[styles.emptyStateTitle, textStyle]}>No sensory history yet</Text>
             <Text style={[styles.emptyStateSub, subTextStyle]}>
               AURA will show sensory events here as they are recorded.
@@ -93,55 +115,31 @@ export default function CaretakerUserHistoryScreen({ navigation, route }: any) {
           </View>
         ) : (
           history.map((event, index) => {
-            const isHighRisk = event.score >= 7;
-            const riskColor = isHighRisk ? colors.riskHigh : (event.score >= 4 ? colors.riskMed : colors.riskLow);
-            const riskLabel = isHighRisk ? 'High Risk' : (event.score >= 4 ? 'Medium Risk' : 'Safe');
-
-            // Derive realistic values based on score for demo purposes to match UI requirements
-            const simulatedBpm = 80 + (event.score * 3);
-            const simulatedSound = 50 + (event.score * 5);
-            const simulatedTemp = 36.5 + (event.score * 0.2);
+            const isHighRisk = event.severity === 'HIGH' || event.severity === 'CRITICAL';
+            const riskColor = isHighRisk ? colors.riskHigh : (event.severity === 'MEDIUM' ? colors.riskMed : colors.riskLow);
+            const riskLabel = event.severity || 'Normal';
 
             return (
-              <View key={event.id || index} style={[styles.timelineEvent, cardStyle, neuSm]}>
+              <View key={event.id || index} style={[styles.timelineEvent, cardStyle, shadowSm]}>
                 <View style={styles.eventHeader}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <View style={[styles.timelineDot, { backgroundColor: riskColor }]} />
-                    <Text style={[styles.eventTime, textStyle]}>{formatTime(event.time)}</Text>
+                    <Text style={[styles.eventTime, textStyle]}>{formatTime(new Date(event.created_at).getTime())}</Text>
                   </View>
                   <Text style={[styles.eventRiskLabel, { color: riskColor }]}>{riskLabel}</Text>
                 </View>
 
                 <View style={styles.eventDataRow}>
-                  {/* Always show BPM */}
                   <View style={styles.eventDataBox}>
-                    <Text style={[styles.dataLabel, subTextStyle]}>Heart Rate</Text>
-                    <Text style={[styles.dataValue, textStyle]}>{simulatedBpm} BPM</Text>
+                    <Text style={[styles.dataLabel, subTextStyle]}>Alert Message</Text>
+                    <Text style={[styles.dataValue, textStyle, { fontSize: 14, fontWeight: 'normal' }]}>{event.message}</Text>
                   </View>
-                  
-                  {/* Conditional Sound */}
-                  {hasSound && (
-                    <View style={styles.eventDataBox}>
-                      <Text style={[styles.dataLabel, subTextStyle]}>Sound</Text>
-                      <Text style={[styles.dataValue, textStyle]}>{simulatedSound} dB</Text>
-                    </View>
-                  )}
-
-                  {/* Conditional Temp */}
-                  {hasTemp && (
-                    <View style={styles.eventDataBox}>
-                      <Text style={[styles.dataLabel, subTextStyle]}>Temperature</Text>
-                      <Text style={[styles.dataValue, textStyle]}>{simulatedTemp.toFixed(1)}°C</Text>
-                    </View>
-                  )}
                 </View>
 
                 <View style={styles.eventActionRow}>
-                  <Text style={[styles.actionLabel, subTextStyle]}>Action:</Text>
+                  <Text style={[styles.actionLabel, subTextStyle]}>Status:</Text>
                   <Text style={[styles.actionValue, textStyle]}>
-                    {event.action === 'tried' ? 'Strategy Tried' : 
-                     event.action === 'dismissed' ? 'Dismissed' : 
-                     event.action === 'crisis' ? 'SOS Triggered' : 'Acknowledged'}
+                    {event.is_resolved ? 'Resolved' : 'Active'}
                   </Text>
                 </View>
               </View>

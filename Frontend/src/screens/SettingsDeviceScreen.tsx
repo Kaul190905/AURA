@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Watch, Battery, Smartphone, Zap, Check } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { colors, neuSm, neuInset, radius, fonts } from '../theme';
+import { colors, shadowSm, shadowInset, radius, fonts } from '../theme';
 
 export default function SettingsDeviceScreen() {
   const styles = getStyles();
@@ -109,7 +109,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.background, 
     borderRadius: radius.xl, 
     padding: 16, 
-    ...neuSm,
+    ...shadowSm,
     borderWidth: 1,
     borderColor: colors.border + '80',
     marginTop: 16
@@ -135,7 +135,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.background, 
     borderRadius: radius.xl, 
     padding: 16, 
-    ...neuSm,
+    ...shadowSm,
     borderWidth: 1,
     borderColor: colors.border + '80',
     marginTop: 20
@@ -148,6 +148,6 @@ const getStyles = () => StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: colors.muted, borderRadius: radius.lg, padding: 14,
   },
-  radioItemActive: { ...neuInset, backgroundColor: colors.muted, borderColor: colors.primary, borderWidth: 1 },
+  radioItemActive: { ...shadowInset, backgroundColor: colors.muted, borderColor: colors.primary, borderWidth: 1 },
   radioLabel: { fontSize: 14, color: colors.foreground, ...fonts.medium },
 });

@@ -16,7 +16,7 @@ async def test_high_risk_score_triggers_recommendation(engine):
 
     recs = await engine.generate_recommendations(uuid4(), context)
 
-    assert any("HIGH" in r for r in recs)
+    assert any("HIGH" in r.get("description", "") for r in recs)
 
 
 @pytest.mark.asyncio
@@ -25,7 +25,7 @@ async def test_risk_score_below_threshold_does_not_trigger(engine):
 
     recs = await engine.generate_recommendations(uuid4(), context)
 
-    assert not any("HIGH" in r for r in recs)
+    assert not any("HIGH" in r.get("description", "") for r in recs)
 
 
 @pytest.mark.asyncio
@@ -34,7 +34,7 @@ async def test_high_heart_rate_triggers_breathing_exercise_recommendation(engine
 
     recs = await engine.generate_recommendations(uuid4(), context)
 
-    assert any("breathing exercise" in r for r in recs)
+    assert any("breathing exercise" in r.get("description", "") for r in recs)
 
 
 @pytest.mark.asyncio
@@ -47,7 +47,7 @@ async def test_noise_exceeding_preference_by_threshold_triggers_recommendation(e
 
     recs = await engine.generate_recommendations(uuid4(), context)
 
-    assert any("noise-cancelling" in r for r in recs)
+    assert any("noise-cancelling" in r.get("description", "") for r in recs)
 
 
 @pytest.mark.asyncio
@@ -73,7 +73,7 @@ async def test_temperature_above_preference_triggers_cooling_recommendation(engi
 
     recs = await engine.generate_recommendations(uuid4(), context)
 
-    assert any("cooler environment" in r for r in recs)
+    assert any("cooler environment" in r.get("description", "") for r in recs)
 
 
 @pytest.mark.asyncio
@@ -86,7 +86,7 @@ async def test_temperature_below_preference_triggers_warming_recommendation(engi
 
     recs = await engine.generate_recommendations(uuid4(), context)
 
-    assert any("warmer clothing" in r for r in recs)
+    assert any("warmer clothing" in r.get("description", "") for r in recs)
 
 
 @pytest.mark.asyncio
@@ -153,7 +153,7 @@ def test_custom_rules_file_is_respected(tmp_path):
                 "metric": "heart_rate",
                 "condition": "absolute_greater_than",
                 "threshold": 50,
-                "recommendation": "Custom recommendation triggered.",
+                "recommendation": {"title": "Custom", "description": "Custom recommendation triggered."},
             }
         ]
     }

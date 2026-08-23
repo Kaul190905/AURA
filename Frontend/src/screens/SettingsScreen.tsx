@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Users, Eye, Shield, ChevronRight, Watch, LogOut, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
 import { Header } from '../components/Header';
-import { colors, neuSm, radius, fonts } from '../theme';
+import { colors, shadowSm, radius, fonts } from '../theme';
 import { supabase } from '../services/supabaseClient';
 
 export default function SettingsScreen() {
@@ -111,7 +111,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.background,
     borderRadius: radius.xl,
     padding: 16,
-    ...neuSm,
+    ...shadowSm,
     borderWidth: 1,
     borderColor: colors.border + '80',
   },

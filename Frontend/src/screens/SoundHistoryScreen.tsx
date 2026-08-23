@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, AlertTriangle } from 'lucide-react-native';
 import { BarChart } from 'react-native-gifted-charts';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 
 const { width } = Dimensions.get('window');
 
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.muted,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    ...neuSm,
+    ...shadowSm,
   },
   label: {
     fontSize: 12, color: colors.primary, ...fonts.bold,

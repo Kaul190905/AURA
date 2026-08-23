@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Bell, AlertTriangle, Users, User } from 'lucide-react-native';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 import { riskColor } from '../utils';
 import { connectCaregiverIoTData, getPendingInvitations, acceptInvitation, CaregiverResponse } from '../services/caregiverApi';
 
@@ -18,23 +18,23 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
     const ws = connectCaregiverIoTData(userId, (payload) => {
       realDataArrived = true;
       const data = payload?.sensor_data || payload;
-      
-      if (data?.heart_rate !== undefined) setBpm(data.heart_rate);
-      else if (data?.heartRate !== undefined) setBpm(data.heartRate);
-      else if (data?.bpm !== undefined) setBpm(data.bpm);
 
-      if (data?.temperature !== undefined) setTemp(data.temperature);
-      else if (data?.temperatureC !== undefined) setTemp(data.temperatureC);
-      else if (data?.temp !== undefined) setTemp(data.temp);
+      if (data?.heart_rate !== undefined) { setBpm(data.heart_rate); }
+      else if (data?.heartRate !== undefined) { setBpm(data.heartRate); }
+      else if (data?.bpm !== undefined) { setBpm(data.bpm); }
 
-      if (data?.noise !== undefined) setSoundLevel(data.noise);
-      else if (data?.soundDb !== undefined) setSoundLevel(data.soundDb);
-      else if (data?.soundLevel !== undefined) setSoundLevel(data.soundLevel);
+      if (data?.temperature !== undefined) { setTemp(data.temperature); }
+      else if (data?.temperatureC !== undefined) { setTemp(data.temperatureC); }
+      else if (data?.temp !== undefined) { setTemp(data.temp); }
+
+      if (data?.noise !== undefined) { setSoundLevel(data.noise); }
+      else if (data?.soundDb !== undefined) { setSoundLevel(data.soundDb); }
+      else if (data?.soundLevel !== undefined) { setSoundLevel(data.soundLevel); }
     });
 
     // Fallback simulation if no real data is arriving yet (for UI demo purposes)
     const interval = setInterval(() => {
-      if (realDataArrived) return;
+      if (realDataArrived) { return; }
       setBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
       setTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
       setSoundLevel(prev => prev + (Math.floor(Math.random() * 11) - 5));
@@ -174,7 +174,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, textStyle]}>Pending Invitations</Text>
             {pendingInvitations.map(inv => (
-              <View key={inv.id} style={[styles.pendingCard, cardStyle, neuSm]}>
+              <View key={inv.id} style={[styles.pendingCard, cardStyle, shadowSm]}>
                 <View style={styles.flex1}>
                   <Text style={[styles.pendingTitle, textStyle]}>New Request</Text>
                   <Text style={[styles.pendingText, subTextStyle]}>You have been invited to be a caregiver by User ID: {inv.user_id}</Text>
@@ -216,7 +216,7 @@ export default function CaretakerDashboardScreen({ navigation }: any) {
 
         {/* Critical Alerts Section */}
         {criticalUsers.length > 0 && (
-          <View style={[styles.criticalContainer, neuSm, cardStyle]}>
+          <View style={[styles.criticalContainer, shadowSm, cardStyle]}>
             <View style={styles.criticalHeader}>
               <View style={styles.criticalHeaderLeft}>
                 <AlertTriangle size={20} color={colors.riskHigh} />

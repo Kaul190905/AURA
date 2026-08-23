@@ -1,10 +1,10 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, User, Mail, Shield, Users } from 'lucide-react-native';
+import { ArrowLeft, Camera, User, Mail, Shield, Users, Pencil, Check, X } from 'lucide-react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { AppContext } from '../AppContext';
-import { colors, radius, spacing, fonts, neuSm } from '../theme';
+import { colors, radius, spacing, fonts, shadowSm } from '../theme';
 import { supabase } from '../services/supabaseClient';
 
 export default function ProfileDetailsScreen({ navigation }: any) {
@@ -15,6 +15,9 @@ export default function ProfileDetailsScreen({ navigation }: any) {
   const [userName, setUserName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -24,10 +27,14 @@ export default function ProfileDetailsScreen({ navigation }: any) {
           setAvatarUrl(user.user_metadata.avatar_url);
         }
         
-        if (user.email) {
+        if (user.user_metadata?.name) {
+          setUserName(user.user_metadata.name);
+          setEditName(user.user_metadata.name);
+        } else if (user.email) {
           const prefix = user.email.split('@')[0];
           const formattedName = prefix.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
           setUserName(formattedName);
+          setEditName(formattedName);
         }
       }
     });
@@ -45,6 +52,15 @@ export default function ProfileDetailsScreen({ navigation }: any) {
       await supabase.auth.updateUser({ data: { avatar_url: uri } });
       setUploading(false);
     }
+  };
+
+  const handleSaveName = async () => {
+    if (!editName.trim()) return;
+    setSavingName(true);
+    await supabase.auth.updateUser({ data: { name: editName.trim() } });
+    setUserName(editName.trim());
+    setIsEditingName(false);
+    setSavingName(false);
   };
 
   const bgStyle = darkMode ? { backgroundColor: '#000000' } : { backgroundColor: colors.background };
@@ -94,17 +110,48 @@ export default function ProfileDetailsScreen({ navigation }: any) {
 
         {/* Details List */}
         <View style={styles.infoSection}>
-          <View style={[styles.infoRow, neuSm, cardStyle]}>
+          <View style={[styles.infoRow, shadowSm, cardStyle]}>
             <View style={[styles.iconBox, { backgroundColor: `${colors.primary}20` }]}>
               <User size={20} color={colors.primary} />
             </View>
             <View style={styles.infoTextContainer}>
               <Text style={[styles.infoLabel, subTextStyle]}>Name</Text>
-              <Text style={[styles.infoValue, textStyle]}>{userName || 'N/A'}</Text>
+              {isEditingName ? (
+                <TextInput
+                  style={[styles.nameInput, textStyle]}
+                  value={editName}
+                  onChangeText={setEditName}
+                  autoFocus
+                  onSubmitEditing={handleSaveName}
+                  returnKeyType="done"
+                />
+              ) : (
+                <Text style={[styles.infoValue, textStyle]}>{userName || 'N/A'}</Text>
+              )}
             </View>
+            {isEditingName ? (
+              <View style={styles.actionRow}>
+                {savingName ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <>
+                    <TouchableOpacity onPress={() => { setIsEditingName(false); setEditName(userName); }} style={styles.actionBtn}>
+                      <X size={20} color={colors.riskHigh} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleSaveName} style={styles.actionBtn}>
+                      <Check size={20} color={colors.riskLow} />
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            ) : (
+              <TouchableOpacity onPress={() => setIsEditingName(true)} style={styles.actionBtn}>
+                <Pencil size={18} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            )}
           </View>
 
-          <View style={[styles.infoRow, neuSm, cardStyle]}>
+          <View style={[styles.infoRow, shadowSm, cardStyle]}>
             <View style={[styles.iconBox, { backgroundColor: `${colors.primary}20` }]}>
               <Mail size={20} color={colors.primary} />
             </View>
@@ -114,7 +161,7 @@ export default function ProfileDetailsScreen({ navigation }: any) {
             </View>
           </View>
 
-          <View style={[styles.infoRow, neuSm, cardStyle]}>
+          <View style={[styles.infoRow, shadowSm, cardStyle]}>
             <View style={[styles.iconBox, { backgroundColor: `${colors.primary}20` }]}>
               <Shield size={20} color={colors.primary} />
             </View>
@@ -124,7 +171,7 @@ export default function ProfileDetailsScreen({ navigation }: any) {
             </View>
           </View>
 
-          <View style={[styles.infoRow, neuSm, cardStyle]}>
+          <View style={[styles.infoRow, shadowSm, cardStyle]}>
             <View style={[styles.iconBox, { backgroundColor: `${colors.primary}20` }]}>
               <Users size={20} color={colors.primary} />
             </View>
@@ -193,4 +240,10 @@ const styles = StyleSheet.create({
   infoTextContainer: { flex: 1 },
   infoLabel: { fontSize: 12, marginBottom: 4, ...fonts.medium },
   infoValue: { fontSize: 15, ...fonts.semibold },
+  nameInput: {
+    fontSize: 15, ...fonts.semibold, padding: 0, margin: 0,
+    borderBottomWidth: 1, borderBottomColor: colors.primary,
+  },
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  actionBtn: { padding: 4 },
 });

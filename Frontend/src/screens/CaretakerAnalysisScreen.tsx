@@ -8,7 +8,7 @@ import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { AppContext } from '../AppContext';
 import { Accordion, AccItem } from '../components/Accordion';
 import { DetailedInsightsModal } from '../components/DetailedInsightsModal';
-import { colors, neuSm, radius, spacing, fonts } from '../theme';
+import { colors, shadowSm, radius, spacing, fonts } from '../theme';
 import { riskColor, timeAgo } from '../utils';
 import { getBehavioralPatterns, BehavioralPatternResponse } from '../services/api';
 
@@ -71,7 +71,7 @@ export default function CaretakerAnalysisScreen() {
         </View>
         <TouchableOpacity
           activeOpacity={0.7}
-          style={[styles.sparkleBtn, cardStyle, neuSm]}
+          style={[styles.sparkleBtn, cardStyle, shadowSm]}
           onPress={() => setInsightsVisible(true)}
         >
           <BrainCircuit size={20} color={colors.primary} />
@@ -302,7 +302,7 @@ const getStyles = () => StyleSheet.create({
     backgroundColor: colors.muted, borderRadius: radius.xl, padding: 6,
   },
   rangeBtn: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: radius.lg },
-  rangeBtnActive: { backgroundColor: colors.background, ...neuSm },
+  rangeBtnActive: { backgroundColor: colors.background, ...shadowSm },
   rangeBtnText: { fontSize: 12, color: colors.mutedForeground, ...fonts.semibold },
   badge: { fontSize: 12, color: colors.mutedForeground, marginRight: 4 },
   emptyCard: { backgroundColor: colors.muted, borderRadius: radius.md, padding: 12 },
