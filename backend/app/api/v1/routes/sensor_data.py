@@ -29,7 +29,8 @@ async def submit_sensor_data(
     analysis = await sensor_data_service.create_sensor_data(user_id_to_use, data_in)
     
     # Broadcast live sensor data to caregivers
-    await manager.broadcast_to_caregivers(user_id_to_use, {
+    from uuid import UUID
+    await manager.broadcast_to_caregivers(UUID(user_id_to_use), {
         "type": "SENSOR_DATA",
         "data": analysis.sensor_data.model_dump(mode="json")
     })
