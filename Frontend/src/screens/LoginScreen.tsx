@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Mail, Lock, Eye, EyeOff, ChevronRight, Globe, User, Heart } from 'lucide-react-native';
-import Logo from '../../assets/AURA.png';
+const Logo = require('../../assets/AURA.png');
 import { signIn, signUp, signInWithGoogle } from '../services/supabaseClient';
 import { colors, fonts, radius, spacing } from '../theme';
 
