@@ -17,6 +17,7 @@ import { getAssignedUsers, getCaregiverUserPreferences, getCaregiverUserSensorDa
 import { supabase } from './src/services/supabaseClient';
 import { submitSensorData, logOverloadEvent, getRecommendations, getOverloadEvents, getAlerts, createAlert } from './src/services/api';
 import { SENSOR_PUSH_INTERVAL_MS } from './src/config';
+import { registerForPushNotificationsAsync, scheduleLocalNotification } from './src/services/NotificationService';
 
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
@@ -401,6 +402,9 @@ export default function App() {
       const storedRole = user?.user_metadata?.role;
       const roleSelected = user?.user_metadata?.roleSelected;
 
+      // Register for push notifications
+      registerForPushNotificationsAsync().catch(err => console.warn('Failed to register for push notifications', err));
+
       if (roleSelected && storedRole === 'user') {
         setPrimaryRole('user');
         setAppScreen('home');
@@ -543,6 +547,11 @@ export default function App() {
 
       setPopupState({ visible: true, message: `Noise level reached ${noise}dB. An alert has been sent to your caretaker.` });
       setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
+      
+      scheduleLocalNotification(
+        'High Noise Alert',
+        `Noise level reached ${noise}dB, exceeding safe limits.`
+      ).catch(console.warn);
     } else if (noise !== null && noise <= 75 && highNoiseAlerted) {
       setHighNoiseAlerted(false);
     }
@@ -565,6 +574,11 @@ export default function App() {
 
       setPopupState({ visible: true, message: `Core temperature is ${temperature.toFixed(1)}°C. An alert has been sent to your caretaker.` });
       setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
+
+      scheduleLocalNotification(
+        'Dangerous Temperature Alert',
+        `Core body temperature is ${temperature.toFixed(1)}°C (${condition}).`
+      ).catch(console.warn);
     } else if (!isDangerousTemp && dangerousTempAlerted) {
       setDangerousTempAlerted(false);
     }
