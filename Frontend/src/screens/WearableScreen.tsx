@@ -179,26 +179,6 @@ export default function WearableScreen() {
     setSosOrigin(null);
   };
 
-  const latestSensors = useRef({ noise, temperature, heartRate });
-  useEffect(() => {
-    latestSensors.current = { noise, temperature, heartRate };
-  }, [noise, temperature, heartRate]);
-
-  // Push sensor data to backend when BLE is connected
-  useEffect(() => {
-    if (!bleConnected || !userId) { return; }
-    const interval = setInterval(() => {
-      submitSensorData({
-        user_id: userId,
-        noise: latestSensors.current.noise,
-        temperature: latestSensors.current.temperature,
-        heart_rate: latestSensors.current.heartRate,
-        blood_oxygen: null,
-      }).catch((e) => console.warn('[AURA] Wearable sensor push failed:', e));
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [bleConnected, userId]);
-
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Header title="Wearable" subtitle="AURA band" />

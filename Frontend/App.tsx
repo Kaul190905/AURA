@@ -241,9 +241,9 @@ export default function App() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user && user.user_metadata) {
-          if (user.user_metadata.sensory_profile) {setProfile(user.user_metadata.sensory_profile);}
-          if (user.user_metadata.dob) {setDob(user.user_metadata.dob);}
-          if (user.user_metadata.caregiver) {setCaregiver(user.user_metadata.caregiver);}
+          if (user.user_metadata.sensory_profile) { setProfile(user.user_metadata.sensory_profile); }
+          if (user.user_metadata.dob) { setDob(user.user_metadata.dob); }
+          if (user.user_metadata.caregiver) { setCaregiver(user.user_metadata.caregiver); }
         }
         const [recsRes, historyRes, alertsRes] = await Promise.allSettled([
           getRecommendations(userId),
@@ -301,7 +301,7 @@ export default function App() {
   const [mockUsers, setMockUsers] = useState<AppState['mockUsers']>([]);
 
   useEffect(() => {
-    if (!userId || primaryRole !== 'caretaker') {return;}
+    if (!userId || primaryRole !== 'caretaker') { return; }
 
     const loadCaretakerData = async () => {
       try {
@@ -446,9 +446,9 @@ export default function App() {
 
   // ── Periodic sensor data push ───────────────────────────────────────────────
   useEffect(() => {
-    if (!userId || !bleConnected) { return; }
+    if (!userId) { return; }
     const push = async () => {
-      if (noise === null || temperature === null || heartRate === null) {return;}
+      if (noise === null || temperature === null || heartRate === null) { return; }
       try {
         await submitSensorData({
           user_id: userId,
@@ -547,7 +547,6 @@ export default function App() {
 
       setPopupState({ visible: true, message: `Noise level reached ${noise}dB. An alert has been sent to your caretaker.` });
       setTimeout(() => setPopupState(prev => ({ ...prev, visible: false })), 3000);
-      
       scheduleLocalNotification(
         'High Noise Alert',
         `Noise level reached ${noise}dB, exceeding safe limits.`

@@ -14,9 +14,7 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
   const [soundLevel, setSoundLevel] = useState(45);
 
   useEffect(() => {
-    let realDataArrived = false;
     const ws = connectCaregiverIoTData(userId, (payload) => {
-      realDataArrived = true;
       const data = payload?.data || payload?.sensor_data || payload;
 
       if (data?.heart_rate !== undefined) { setBpm(data.heart_rate); }
@@ -32,16 +30,7 @@ function LiveSensorRow({ darkMode, userId }: { darkMode: boolean, userId: string
       else if (data?.soundLevel !== undefined) { setSoundLevel(data.soundLevel); }
     });
 
-    // Fallback simulation if no real data is arriving yet (for UI demo purposes)
-    const interval = setInterval(() => {
-      if (realDataArrived) { return; }
-      setBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
-      setTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
-      setSoundLevel(prev => prev + (Math.floor(Math.random() * 11) - 5));
-    }, 5000);
-
     return () => {
-      clearInterval(interval);
       ws.close();
     };
   }, [userId]);

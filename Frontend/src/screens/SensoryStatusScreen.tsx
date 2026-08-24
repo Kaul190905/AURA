@@ -40,9 +40,7 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
 
   useEffect(() => {
     if (!userId) { return; }
-    let realDataArrived = false;
     const ws = connectCaregiverIoTData(userId, (payload) => {
-      realDataArrived = true;
       const data = payload?.data || payload?.sensor_data || payload;
 
       if (data?.heart_rate !== undefined) { setLiveBpm(data.heart_rate); }
@@ -58,15 +56,7 @@ export default function SensoryStatusScreen({ navigation, route }: any) {
       else if (data?.soundLevel !== undefined) { setLiveSound(data.soundLevel); }
     });
 
-    const interval = setInterval(() => {
-      if (realDataArrived) { return; }
-      setLiveBpm(prev => prev + (Math.floor(Math.random() * 5) - 2));
-      setLiveSound(prev => prev + (Math.floor(Math.random() * 11) - 5));
-      setLiveTemp(prev => parseFloat((prev + (Math.random() * 0.2 - 0.1)).toFixed(1)));
-    }, 2500);
-
     return () => {
-      clearInterval(interval);
       ws.close();
     };
   }, [userId]);
